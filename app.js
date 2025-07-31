@@ -10,6 +10,7 @@ let mode = "pvp";
 let aiThinking = false;
 let stockfish = null;
 let stockfishReady = false;
+let selectedSquare = null;
 
 // Initialize Stockfish Worker
 function initStockfish() {
@@ -29,8 +30,9 @@ function initStockfish() {
     if (line.startsWith("bestmove")) {
       const move = line.split(" ")[1];
       game.move(move, { sloppy: true });
-      renderBoard();
       aiThinking = false;
+      selectedSquare = null;
+      renderBoard();
       updateStatus();
     }
   };
@@ -44,30 +46,30 @@ initStockfish();
 function renderBoard() {
   boardElement.innerHTML = "";
   const board = game.board();
+
   for (let row = 0; row < 8; row++) {
-    const rank = document.createElement("div");
-    rank.className = "rank";
     for (let col = 0; col < 8; col++) {
       const square = document.createElement("div");
       square.className = "square " + ((row + col) % 2 === 0 ? "light" : "dark");
+
       const piece = board[row][col];
       if (piece) {
         const pieceEl = document.createElement("span");
         pieceEl.textContent = getPieceUnicode(piece);
         square.appendChild(pieceEl);
       }
+
       square.dataset.row = row;
       square.dataset.col = col;
       square.addEventListener("click", () => handleSquareClick(row, col));
-      rank.appendChild(square);
+
+      boardElement.appendChild(square);
     }
-    boardElement.appendChild(rank);
   }
 
   // Update move history
   moveListElement.innerHTML = "";
-  const history = game.history();
-  history.forEach((move, idx) => {
+  game.history().forEach((move, idx) => {
     const li = document.createElement("li");
     li.textContent = move;
     moveListElement.appendChild(li);
@@ -82,7 +84,6 @@ function getPieceUnicode(piece) {
   return symbols[piece.color === "w" ? piece.type.toUpperCase() : piece.type] || "";
 }
 
-let selectedSquare = null;
 function handleSquareClick(row, col) {
   if (aiThinking) return;
 
@@ -92,15 +93,12 @@ function handleSquareClick(row, col) {
   if (selectedSquare) {
     const move = { from: selectedSquare, to: square, promotion: "q" };
     const result = game.move(move);
+    selectedSquare = null;
+
     if (result) {
-      selectedSquare = null;
       renderBoard();
       updateStatus();
-      if (mode === "ai" && game.turn() === "b") {
-        makeAIMove();
-      }
-    } else {
-      selectedSquare = null;
+      if (mode === "ai" && game.turn() === "b") makeAIMove();
     }
   } else if (piece && piece.color === game.turn()) {
     selectedSquare = square;
@@ -146,7 +144,9 @@ function updateStatus() {
 
 function undoMove() {
   game.undo();
+  selectedSquare = null;
   renderBoard();
+  updateStatus();
 }
 
 function exportPGN() {
@@ -159,7 +159,9 @@ function importPGN() {
   const pgn = prompt("Paste PGN here:");
   if (pgn) {
     game.load_pgn(pgn);
+    selectedSquare = null;
     renderBoard();
+    updateStatus();
   }
 }
 
@@ -167,5 +169,5 @@ function toggleTheme() {
   document.body.classList.toggle("dark");
 }
 
-// Start
+// Start the game
 renderBoard();
