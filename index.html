@@ -14,7 +14,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore-compat.js"></script>
 
-  <!-- Chess.js (must come BEFORE your app.js) -->
+  <!-- Chess.js (must load before app logic) -->
   <script src="https://cdn.jsdelivr.net/npm/chess.js@1.0.0/chess.min.js"></script>
 
   <!-- Stockfish WebAssembly Worker -->
@@ -49,10 +49,8 @@
       <button onclick="startNewGame()">New Game</button>
       <button onclick="undoMove()">Undo</button>
       <button onclick="playWithAI()">Play vs AI</button>
-      <button onclick="openMultiplayer()">Multiplayer</button>
-      <button onclick="playMultiplayer()">Play Multiplayer</button>
-      <button onclick="sendRematchRequest()" id="rematchBtn" style="display: none;">Rematch</button>
-      <button onclick="leaveMultiplayerGame()" id="leaveBtn" style="display: none;">Leave</button>
+      <button onclick="openMultiplayer()">Open/Create Room</button>
+      <button onclick="playMultiplayer()">Join Multiplayer</button>
     </div>
 
     <div id="status"></div>
@@ -66,70 +64,60 @@
   <!-- Firebase Auth Handler -->
   <script>
     const firebaseConfig = {
-      apiKey: "AIzaSyDkHtAbzuLSJwCQvB89s7j_J_6JzpxN480",
-      authDomain: "chessproevolution.firebaseapp.com",
-      projectId: "chessproevolution",
-      storageBucket: "chessproevolution.appspot.com",
-      messagingSenderId: "409029482190",
-      appId: "1:409029482190:web:8c5801c616c0e89395a29f",
-      measurementId: "G-KTFDBKGFZQ"
+      apiKey: "...",
+      authDomain: "...",
+      projectId: "...",
+      storageBucket: "...",
+      messagingSenderId: "...",
+      appId: "...",
+      measurementId: "..."
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const provider = new firebase.auth.GoogleAuthProvider();
 
-    const loginBtn = document.getElementById("loginBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const userStatus = document.getElementById("userStatus");
+    const loginBtn = document.getElementById("loginBtn"),
+          logoutBtn = document.getElementById("logoutBtn"),
+          userStatus = document.getElementById("userStatus");
 
-    loginBtn.onclick = () => {
-      auth.signInWithPopup(provider)
-        .then(result => {
-          userStatus.textContent = `Signed in as ${result.user.displayName}`;
-          loginBtn.style.display = "none";
-          logoutBtn.style.display = "inline-block";
-        })
-        .catch(error => alert("Login failed: " + error.message));
-    };
+    loginBtn.onclick = () => auth.signInWithPopup(provider)
+      .then(r => {
+        userStatus.textContent = `Signed in as ${r.user.displayName}`;
+        loginBtn.style.display="none"; logoutBtn.style.display="inline-block";
+      }).catch(e => alert("Sign‑in failed: " + e.message));
 
-    logoutBtn.onclick = () => {
-      auth.signOut().then(() => {
-        userStatus.textContent = "Not signed in";
-        loginBtn.style.display = "inline-block";
-        logoutBtn.style.display = "none";
-      });
-    };
+    logoutBtn.onclick = () => auth.signOut().then(() => {
+      userStatus.textContent = "Not signed in";
+      loginBtn.style.display="inline-block"; logoutBtn.style.display="none";
+    });
 
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        userStatus.textContent = `Signed in as ${user.displayName || user.email}`;
-        loginBtn.style.display = "none";
-        logoutBtn.style.display = "inline-block";
+    auth.onAuthStateChanged(u => {
+      if(u) {
+        userStatus.textContent = `Signed in as ${u.displayName||u.email}`;
+        loginBtn.style.display="none"; logoutBtn.style.display="inline-block";
       } else {
         userStatus.textContent = "Not signed in";
-        loginBtn.style.display = "inline-block";
-        logoutBtn.style.display = "none";
+        loginBtn.style.display="inline-block"; logoutBtn.style.display="none";
       }
     });
 
     function emailLogin() {
-      const email = document.getElementById("email").value;
-      const pass = document.getElementById("password").value;
-      auth.signInWithEmailAndPassword(email, pass)
-        .then(res => alert("Welcome " + res.user.email))
-        .catch(err => alert("Login error: " + err.message));
+      const e = document.getElementById("email").value,
+            p = document.getElementById("password").value;
+      auth.signInWithEmailAndPassword(e, p)
+        .then(r => alert("Welcome "+r.user.email))
+        .catch(err=> alert("Login error: " + err.message));
     }
-
     function emailRegister() {
-      const email = document.getElementById("email").value;
-      const pass = document.getElementById("password").value;
-      auth.createUserWithEmailAndPassword(email, pass)
-        .then(res => alert("Registered: " + res.user.email))
-        .catch(err => alert("Signup error: " + err.message));
+      const e = document.getElementById("email").value,
+            p = document.getElementById("password").value;
+      auth.createUserWithEmailAndPassword(e, p)
+        .then(r => alert("Registered: "+r.user.email))
+        .catch(err=> alert("Signup error: " + err.message));
     }
   </script>
 
-  <!-- Your Game Scripts (after all dependencies are loaded) -->
+  <!-- Game Scripts -->
   <script src="multiplayer.js"></script>
   <script src="app.js"></script>
 </body>
