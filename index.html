@@ -24,7 +24,9 @@
             <option value="pvp">Player vs Player</option>
             <option value="ai">Player vs AI</option>
           </select>
-          <label>AI Difficulty: <input type="range" id="aiLevel" min="1" max="20" value="5" /></label>
+          <label>AI Difficulty: 
+            <input type="range" id="aiLevel" min="1" max="20" value="5" />
+          </label>
         </div>
 
         <div id="history">
@@ -43,8 +45,9 @@
     </div>
   </div>
 
+  <!-- Chess engine and logic -->
   <script src="https://cdn.jsdelivr.net/npm/chess.js@1.0.0/chess.min.js"></script>
-  <script src="stockfish.js"></script>
+  <script src="stockfish-worker.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
