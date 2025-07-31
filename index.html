@@ -7,7 +7,7 @@
   <title>Ultimate Chess</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="style.css" />
-  <!-- Firebase SDK (Compat version) -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore-compat.js"></script>
@@ -15,7 +15,7 @@
 <body>
   <div id="chess-app">
     <h1>Ultimate Chess</h1>
-    
+
     <div id="auth-section">
       <button id="loginBtn">Sign in with Google</button>
       <button id="logoutBtn" style="display: none;">Sign out</button>
@@ -29,6 +29,10 @@
       <button onclick="emailRegister()">Register</button>
     </div>
 
+    <div id="opponent-info">
+      <p id="opponent-name">No opponent</p>
+    </div>
+
     <div id="board"></div>
 
     <div id="controls">
@@ -37,13 +41,19 @@
       <button onclick="playWithAI()">Play vs AI</button>
       <button onclick="openMultiplayer()">Multiplayer</button>
       <button onclick="playMultiplayer()">Play Multiplayer</button>
+      <button onclick="sendRematchRequest()" id="rematchBtn" style="display: none;">Rematch</button>
+      <button onclick="leaveMultiplayerGame()" id="leaveBtn" style="display: none;">Leave</button>
     </div>
 
     <div id="status"></div>
+    <div id="move-history">
+      <h3>Move History</h3>
+      <ol id="historyList"></ol>
+    </div>
   </div>
 
+  <!-- Firebase config & auth -->
   <script>
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyDkHtAbzuLSJwCQvB89s7j_J_6JzpxN480",
       authDomain: "chessproevolution.firebaseapp.com",
@@ -53,8 +63,6 @@
       appId: "1:409029482190:web:8c5801c616c0e89395a29f",
       measurementId: "G-KTFDBKGFZQ"
     };
-
-    // Init Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const provider = new firebase.auth.GoogleAuthProvider();
