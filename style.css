@@ -7,6 +7,10 @@ body {
   padding: 0;
 }
 
+#chess-app {
+  padding: 1em;
+}
+
 #board {
   width: 90vmin;
   height: 90vmin;
@@ -45,4 +49,35 @@ button {
 
 button:hover {
   background: #2563eb;
+}
+
+#auth-section,
+#email-auth {
+  margin: 1em 0;
+}
+
+#move-history {
+  margin-top: 2em;
+  max-height: 200px;
+  overflow-y: auto;
+  background: #222;
+  padding: 0.5em;
+  border-radius: 8px;
+  width: 80%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#move-history h3 {
+  margin-bottom: 0.5em;
+}
+
+#move-history ol {
+  text-align: left;
+  font-size: 0.9em;
+}
+
+#opponent-info {
+  margin: 1em 0;
+  font-style: italic;
 }
