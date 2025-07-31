@@ -5,17 +5,22 @@ let playerId = null;
 let moveHistory = [];
 
 const db = firebase.firestore();
-const statusEl = document.getElementById("status");
-const game = new Chess(); // Ensure chess.js is loaded before this
+const auth = firebase.auth(); // make sure this is set
+const game = new Chess(); // Chess must be defined before this
 
-// Get user ID
+const statusEl = document.getElementById("status") || (() => {
+  const el = document.createElement("div");
+  el.id = "status";
+  document.body.appendChild(el);
+  return el;
+})();
+
+// Wait for user login
 auth.onAuthStateChanged(user => {
-  if (user) {
-    playerId = user.uid;
-  }
+  if (user) playerId = user.uid;
 });
 
-// Open or create a multiplayer game
+// Create or Join Multiplayer Room
 async function openMultiplayer() {
   const roomId = prompt("Enter Room ID (leave blank to create new):");
 
@@ -25,7 +30,6 @@ async function openMultiplayer() {
   }
 
   if (!roomId) {
-    // Create a new room
     roomRef = await db.collection("games").add({
       fen: game.fen(),
       turn: "w",
@@ -37,7 +41,6 @@ async function openMultiplayer() {
     playerColor = "w";
     alert("Room created! Share this ID: " + roomRef.id);
   } else {
-    // Join an existing room
     roomRef = db.collection("games").doc(roomId);
     const roomSnap = await roomRef.get();
 
@@ -47,24 +50,30 @@ async function openMultiplayer() {
     }
 
     const data = roomSnap.data();
-    if (data.players.b) {
+    if (data.players.b && data.players.w && !Object.values(data.players).includes(playerId)) {
       alert("Room already full!");
       return;
     }
 
-    await roomRef.set({
-      players: { ...data.players, b: playerId }
-    }, { merge: true });
+    // Determine player color
+    if (data.players.w && !data.players.b) {
+      playerColor = "b";
+      await roomRef.set({ players: { ...data.players, b: playerId } }, { merge: true });
+    } else if (!data.players.w) {
+      playerColor = "w";
+      await roomRef.set({ players: { ...data.players, w: playerId } }, { merge: true });
+    } else {
+      playerColor = Object.entries(data.players).find(([color, uid]) => uid === playerId)?.[0];
+    }
 
-    playerColor = "b";
-    alert("Joined game as Black.");
+    alert(`Joined game as ${playerColor === 'w' ? 'White' : 'Black'}.`);
   }
 
   listenForMoves();
   showMultiplayerControls();
 }
 
-// Realtime sync with Firebase
+// Realtime Firestore Sync
 function listenForMoves() {
   if (!roomRef) return;
 
@@ -72,31 +81,26 @@ function listenForMoves() {
     const data = doc.data();
     if (!data) return;
 
-    if (data.fen !== game.fen()) {
+    if (data.fen && data.fen !== game.fen()) {
       game.load(data.fen);
       renderBoard();
     }
 
     if (data.moveHistory) moveHistory = data.moveHistory;
 
-    if (data.turn === playerColor) {
-      statusEl.textContent = "Your move";
-    } else {
-      statusEl.textContent = "Opponent's move";
-    }
-
     if (data.status === "ended") {
       statusEl.textContent = "Game over. Winner: " + data.winner;
+    } else {
+      statusEl.textContent = data.turn === playerColor ? "Your move" : "Opponent's move";
     }
 
     showOpponent(data.players);
   });
 }
 
-// Make a multiplayer move
+// Make a Multiplayer Move
 function multiplayerMove(from, to) {
-  if (!roomRef) return;
-  if (game.turn() !== playerColor) return;
+  if (!roomRef || game.turn() !== playerColor) return;
 
   const move = game.move({ from, to, promotion: "q" });
   if (!move) return;
@@ -125,22 +129,26 @@ function multiplayerMove(from, to) {
   roomRef.set(updates, { merge: true });
 }
 
-// Show opponent's UID
+// Display Opponent UID
 function showOpponent(players) {
-  const opponentId = Object.entries(players).find(([color, uid]) => uid !== playerId)?.[1];
-  const status = document.getElementById("userStatus");
+  const opponentId = Object.entries(players).find(([_, uid]) => uid !== playerId)?.[1];
+  const status = document.getElementById("userStatus") || (() => {
+    const el = document.createElement("div");
+    el.id = "userStatus";
+    document.body.appendChild(el);
+    return el;
+  })();
 
   if (opponentId && !status.textContent.includes("Opponent:")) {
     status.textContent += ` | Opponent: ${opponentId}`;
   }
 }
 
-// Leave game
+// Leave Game
 function leaveGame() {
   if (unsubscribe) unsubscribe();
   roomRef = null;
   playerColor = null;
-  isMultiplayer = false;
 
   game.reset();
   renderBoard();
@@ -150,7 +158,7 @@ function leaveGame() {
   document.getElementById("rematchBtn")?.remove();
 }
 
-// Request a rematch
+// Rematch
 function requestRematch() {
   if (!roomRef) return;
   game.reset();
@@ -166,17 +174,24 @@ function requestRematch() {
   renderBoard();
 }
 
-// Show "Leave" and "Rematch" buttons
+// Show Buttons
 function showMultiplayerControls() {
-  const controls = document.getElementById("controls");
+  const controls = document.getElementById("controls") || (() => {
+    const el = document.createElement("div");
+    el.id = "controls";
+    document.body.appendChild(el);
+    return el;
+  })();
 
-  if (!document.getElementById("leaveBtn") && !document.getElementById("rematchBtn")) {
+  if (!document.getElementById("leaveBtn")) {
     const leaveBtn = document.createElement("button");
     leaveBtn.textContent = "Leave Game";
     leaveBtn.id = "leaveBtn";
     leaveBtn.onclick = leaveGame;
     controls.appendChild(leaveBtn);
+  }
 
+  if (!document.getElementById("rematchBtn")) {
     const rematchBtn = document.createElement("button");
     rematchBtn.textContent = "Rematch";
     rematchBtn.id = "rematchBtn";
