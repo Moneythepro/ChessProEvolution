@@ -5,15 +5,17 @@ let playerId = null;
 let moveHistory = [];
 
 const db = firebase.firestore();
+const statusEl = document.getElementById("status");
+const game = new Chess(); // Ensure chess.js is loaded before this
 
-// Helper to get UID/email
+// Get user ID
 auth.onAuthStateChanged(user => {
   if (user) {
     playerId = user.uid;
   }
 });
 
-// Open/create multiplayer room
+// Open or create a multiplayer game
 async function openMultiplayer() {
   const roomId = prompt("Enter Room ID (leave blank to create new):");
 
@@ -23,7 +25,7 @@ async function openMultiplayer() {
   }
 
   if (!roomId) {
-    // Create new game
+    // Create a new room
     roomRef = await db.collection("games").add({
       fen: game.fen(),
       turn: "w",
@@ -35,7 +37,7 @@ async function openMultiplayer() {
     playerColor = "w";
     alert("Room created! Share this ID: " + roomRef.id);
   } else {
-    // Join existing room
+    // Join an existing room
     roomRef = db.collection("games").doc(roomId);
     const roomSnap = await roomRef.get();
 
@@ -62,7 +64,7 @@ async function openMultiplayer() {
   showMultiplayerControls();
 }
 
-// Listen for board updates
+// Realtime sync with Firebase
 function listenForMoves() {
   if (!roomRef) return;
 
@@ -77,19 +79,16 @@ function listenForMoves() {
 
     if (data.moveHistory) moveHistory = data.moveHistory;
 
-    // Turn logic
     if (data.turn === playerColor) {
       statusEl.textContent = "Your move";
     } else {
       statusEl.textContent = "Opponent's move";
     }
 
-    // Game end
     if (data.status === "ended") {
       statusEl.textContent = "Game over. Winner: " + data.winner;
     }
 
-    // Show opponent UID
     showOpponent(data.players);
   });
 }
@@ -103,44 +102,55 @@ function multiplayerMove(from, to) {
   if (!move) return;
 
   renderBoard();
-
   moveHistory.push(`${from}-${to}`);
 
-  roomRef.set({
+  const isCheckmate = game.in_checkmate();
+  const isDraw = game.in_draw();
+  const winner = isCheckmate
+    ? (game.turn() === "w" ? "Black" : "White")
+    : isDraw ? "Draw" : null;
+
+  const updates = {
     fen: game.fen(),
     turn: game.turn(),
     moveHistory,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  }, { merge: true });
+  };
 
-  // Check for game end
-  if (game.in_checkmate() || game.in_draw()) {
-    roomRef.set({
-      status: "ended",
-      winner: game.in_checkmate() ? (playerColor === "w" ? "White" : "Black") : "Draw"
-    }, { merge: true });
+  if (winner) {
+    updates.status = "ended";
+    updates.winner = winner;
   }
+
+  roomRef.set(updates, { merge: true });
 }
 
-// Show opponent info
+// Show opponent's UID
 function showOpponent(players) {
   const opponentId = Object.entries(players).find(([color, uid]) => uid !== playerId)?.[1];
-  if (opponentId) {
-    document.getElementById("userStatus").textContent += ` | Opponent: ${opponentId}`;
+  const status = document.getElementById("userStatus");
+
+  if (opponentId && !status.textContent.includes("Opponent:")) {
+    status.textContent += ` | Opponent: ${opponentId}`;
   }
 }
 
-// Leave current room
+// Leave game
 function leaveGame() {
   if (unsubscribe) unsubscribe();
   roomRef = null;
   playerColor = null;
   isMultiplayer = false;
-  alert("Left the multiplayer game.");
+
+  game.reset();
   renderBoard();
+  statusEl.textContent = "Left multiplayer game.";
+
+  document.getElementById("leaveBtn")?.remove();
+  document.getElementById("rematchBtn")?.remove();
 }
 
-// Ask for rematch (resets board)
+// Request a rematch
 function requestRematch() {
   if (!roomRef) return;
   game.reset();
@@ -156,10 +166,11 @@ function requestRematch() {
   renderBoard();
 }
 
-// Extra multiplayer buttons
+// Show "Leave" and "Rematch" buttons
 function showMultiplayerControls() {
   const controls = document.getElementById("controls");
-  if (!document.getElementById("leaveBtn")) {
+
+  if (!document.getElementById("leaveBtn") && !document.getElementById("rematchBtn")) {
     const leaveBtn = document.createElement("button");
     leaveBtn.textContent = "Leave Game";
     leaveBtn.id = "leaveBtn";
