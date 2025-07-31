@@ -1,12 +1,18 @@
 // stockfish.worker.js
-importScripts('stockfish.js');
+self.importScripts("stockfish.js");
 
-const engine = STOCKFISH();
+let engine = null;
 
-onmessage = function (e) {
-  engine.postMessage(e.data);
-};
+if (typeof Stockfish === "function") {
+  engine = Stockfish();
+} else {
+  engine = self.Module;
+}
 
 engine.onmessage = function (e) {
-  postMessage(e.data);
+  self.postMessage(e.data ? e.data : e);
+};
+
+self.onmessage = function (e) {
+  engine.postMessage(e.data);
 };
