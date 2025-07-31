@@ -154,3 +154,23 @@ String.prototype.unicode = function () {
 
 renderBoard();
 updateStatus();
+
+// Load Web Worker
+const stockfish = new Worker("stockfish-worker.js");
+
+// Listen for Stockfish responses
+stockfish.onmessage = function (e) {
+  console.log("Stockfish says:", e.data);
+  if (e.data.startsWith("bestmove")) {
+    const move = e.data.split(" ")[1];
+    applyAIMove(move);
+  }
+};
+
+// Send position and request best move
+function requestAIMove(fen, depth = 15) {
+  stockfish.postMessage("uci");
+  stockfish.postMessage("ucinewgame");
+  stockfish.postMessage("position fen " + fen);
+  stockfish.postMessage("go depth " + depth);
+}
