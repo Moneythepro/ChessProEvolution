@@ -11,46 +11,36 @@ let aiThinking = false;
 let stockfish = null;
 let stockfishReady = false;
 
-// Load and initialize Stockfish properly
+// Initialize Stockfish Worker
 function initStockfish() {
   stockfish = new Worker("stockfish-worker.js");
 
-  fetch("stockfish.js")
-    .then(res => res.text())
-    .then(jsCode => {
-      return fetch("stockfish.wasm").then(res => res.arrayBuffer()).then(wasmBinary => {
-        const blob = new Blob([jsCode], { type: "application/javascript" });
-        stockfish.postMessage({
-          cmd: "load",
-          urlOrBlob: blob,
-          wasmModule: new WebAssembly.Module(wasmBinary),
-          wasmMemory: new WebAssembly.Memory({ initial: 256 }),
-        });
-      });
-    });
-
   stockfish.onmessage = (e) => {
-    if (typeof e.data !== "string") return;
-    console.log("Stockfish:", e.data);
+    const line = e.data;
+    if (typeof line !== "string") return;
 
-    if (e.data === "uciok") {
+    console.log("Stockfish:", line);
+
+    if (line === "uciok") {
       stockfishReady = true;
       console.log("✅ Stockfish ready!");
     }
 
-    if (e.data.startsWith("bestmove")) {
-      const move = e.data.split(" ")[1];
+    if (line.startsWith("bestmove")) {
+      const move = line.split(" ")[1];
       game.move(move, { sloppy: true });
       renderBoard();
       aiThinking = false;
       updateStatus();
     }
   };
+
+  stockfish.postMessage("uci");
 }
 
 initStockfish();
 
-// Render chessboard
+// Render the board
 function renderBoard() {
   boardElement.innerHTML = "";
   const board = game.board();
@@ -126,8 +116,6 @@ function makeAIMove() {
   if (!stockfishReady || aiThinking) return;
   aiThinking = true;
 
-  stockfish.postMessage("uci");
-  stockfish.postMessage("isready");
   stockfish.postMessage("ucinewgame");
   stockfish.postMessage("position fen " + game.fen());
   stockfish.postMessage("go depth " + aiLevelSlider.value);
@@ -179,5 +167,5 @@ function toggleTheme() {
   document.body.classList.toggle("dark");
 }
 
-// Start game
+// Start
 renderBoard();
