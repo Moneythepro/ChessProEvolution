@@ -19,35 +19,44 @@
 
       <aside>
         <div id="info">
-          <h3>Status: <span id="status">Ready</span></h3>
-          <select id="modeSelect" onchange="changeMode()">
-            <option value="pvp">Player vs Player</option>
-            <option value="ai">Player vs AI</option>
-          </select>
-          <label>AI Difficulty: 
+          <label>
+            Mode:
+            <select id="modeSelect" onchange="changeMode()">
+              <option value="pvp">Player vs Player</option>
+              <option value="ai">Player vs AI</option>
+            </select>
+          </label>
+
+          <label id="aiControls">
+            Difficulty:
             <input type="range" id="aiLevel" min="1" max="20" value="5" />
           </label>
-        </div>
 
-        <div id="history">
-          <h4>Move History</h4>
-          <ol id="moveList"></ol>
+          <p>Status: <span id="status">Ready</span></p>
         </div>
 
         <div id="controls">
           <button onclick="undoMove()">↶ Undo</button>
-          <!-- Redo button removed (not implemented in JS) -->
+          <button onclick="redoMove()">↷ Redo</button>
           <button onclick="newGame()">♻️ New Game</button>
           <button onclick="exportPGN()">⬇️ Export PGN</button>
           <button onclick="importPGN()">⬆️ Import PGN</button>
+          <button onclick="showHistoryModal()">📜 History</button>
         </div>
       </aside>
     </div>
   </div>
 
-  <!-- Chess engine and Stockfish -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js" defer></script>
-  <script src="stockfish-worker.js" defer></script>
-  <script src="app.js" defer></script>
+  <!-- Modal for move history -->
+  <div id="historyModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="hideHistoryModal()">&times;</span>
+      <h2>Move History</h2>
+      <ol id="moveList"></ol>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
