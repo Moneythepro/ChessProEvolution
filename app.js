@@ -1,5 +1,4 @@
 const boardEl = document.getElementById("board");
-const statusEl = document.getElementById("status");
 const historyList = document.getElementById("historyList");
 
 const game = new Chess(); // Requires chess.js to be loaded via <script>
