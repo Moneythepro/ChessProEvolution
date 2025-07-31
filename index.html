@@ -7,6 +7,7 @@
   <title>Ultimate Chess</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="style.css" />
+  
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-auth-compat.js"></script>
@@ -46,13 +47,14 @@
     </div>
 
     <div id="status"></div>
+
     <div id="move-history">
       <h3>Move History</h3>
       <ol id="historyList"></ol>
     </div>
   </div>
 
-  <!-- Firebase config & auth -->
+  <!-- Firebase Config & Auth -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDkHtAbzuLSJwCQvB89s7j_J_6JzpxN480",
@@ -118,7 +120,7 @@
     }
   </script>
 
-  <!-- Chess engine and app logic -->
+  <!-- Chess Engine and App Logic -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/1.0.0/chess.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/stockfish/stockfish.js"></script>
   <script src="app.js"></script>
