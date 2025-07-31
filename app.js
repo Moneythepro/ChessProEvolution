@@ -35,7 +35,6 @@ function renderBoard() {
   updateStatus();
 }
 
-// <- CHANGED FUNCTION
 function handleSquareClick(r, c) {
   const square = "abcdefgh"[c] + (r + 1);
   if (!selectedSquare) {
@@ -46,7 +45,7 @@ function handleSquareClick(r, c) {
     selectedSquare = null;
 
     if (isMultiplayer) {
-      multiplayerMove(from, to); // delegate to multiplayer.js
+      multiplayerMove(from, to); // multiplayer.js
     } else {
       const move = game.move({ from, to, promotion: "q" });
       if (move) {
@@ -84,6 +83,8 @@ function startNewGame() {
   isMultiplayer = false;
   game.reset();
   renderBoard();
+  document.getElementById("userStatus").textContent = "";
+  document.getElementById("moveHistory").innerHTML = "";
 }
 
 function undoMove() {
@@ -98,14 +99,14 @@ function playWithAI() {
   startNewGame();
 }
 
-// <- NEW
+// Multiplayer start
 function playMultiplayer() {
   isAIEnabled = false;
   isMultiplayer = true;
+  startNewGame();
   openMultiplayer(); // from multiplayer.js
 }
 
-// <- MODIFIED
 function updateStatus() {
   let status = "";
   if (game.in_checkmate()) {
@@ -115,10 +116,14 @@ function updateStatus() {
   } else {
     status = `${game.turn() === "w" ? "White" : "Black"} to move.`;
   }
-  statusEl.textContent = status;
+
+  // If multiplayer.js is managing status, skip update
+  if (!isMultiplayer) {
+    statusEl.textContent = status;
+  }
 }
 
-// <- ALIAS for multiplayer.js
+// Called by multiplayer.js
 function updateBoard() {
   renderBoard();
 }
