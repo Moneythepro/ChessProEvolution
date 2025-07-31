@@ -7,7 +7,7 @@
   <title>Ultimate Chess</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="style.css" />
-  <!-- Firebase SDK -->
+  <!-- Firebase SDK (Compat version) -->
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore-compat.js"></script>
@@ -22,6 +22,13 @@
       <p id="userStatus">Not signed in</p>
     </div>
 
+    <div id="email-auth">
+      <input type="email" id="email" placeholder="Email" />
+      <input type="password" id="password" placeholder="Password" />
+      <button onclick="emailLogin()">Login</button>
+      <button onclick="emailRegister()">Register</button>
+    </div>
+
     <div id="board"></div>
 
     <div id="controls">
@@ -34,10 +41,78 @@
     <div id="status"></div>
   </div>
 
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDkHtAbzuLSJwCQvB89s7j_J_6JzpxN480",
+      authDomain: "chessproevolution.firebaseapp.com",
+      projectId: "chessproevolution",
+      storageBucket: "chessproevolution.firebasestorage.app",
+      messagingSenderId: "409029482190",
+      appId: "1:409029482190:web:8c5801c616c0e89395a29f",
+      measurementId: "G-KTFDBKGFZQ"
+    };
+
+    // Init Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const provider = new firebase.auth.GoogleAuthProvider();
+
+    const loginBtn = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const userStatus = document.getElementById("userStatus");
+
+    loginBtn.onclick = () => {
+      auth.signInWithPopup(provider)
+        .then(result => {
+          userStatus.textContent = `Signed in as ${result.user.displayName}`;
+          loginBtn.style.display = "none";
+          logoutBtn.style.display = "inline-block";
+        })
+        .catch(error => alert("Login failed: " + error.message));
+    };
+
+    logoutBtn.onclick = () => {
+      auth.signOut().then(() => {
+        userStatus.textContent = "Not signed in";
+        loginBtn.style.display = "inline-block";
+        logoutBtn.style.display = "none";
+      });
+    };
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        userStatus.textContent = `Signed in as ${user.displayName || user.email}`;
+        loginBtn.style.display = "none";
+        logoutBtn.style.display = "inline-block";
+      } else {
+        userStatus.textContent = "Not signed in";
+        loginBtn.style.display = "inline-block";
+        logoutBtn.style.display = "none";
+      }
+    });
+
+    function emailLogin() {
+      const email = document.getElementById("email").value;
+      const pass = document.getElementById("password").value;
+      auth.signInWithEmailAndPassword(email, pass)
+        .then(res => alert("Welcome " + res.user.email))
+        .catch(err => alert("Login error: " + err.message));
+    }
+
+    function emailRegister() {
+      const email = document.getElementById("email").value;
+      const pass = document.getElementById("password").value;
+      auth.createUserWithEmailAndPassword(email, pass)
+        .then(res => alert("Registered: " + res.user.email))
+        .catch(err => alert("Signup error: " + err.message));
+    }
+  </script>
+
+  <!-- Chess engine and app logic -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/1.0.0/chess.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/stockfish/stockfish.js"></script>
   <script src="app.js"></script>
-  <script src="auth.js"></script>
   <script src="multiplayer.js"></script>
 </body>
 </html>
