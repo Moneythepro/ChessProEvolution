@@ -10,15 +10,32 @@ let selectedSquare = null;
 let moveHistory = [];
 let redoStack = [];
 
-// Initialize Stockfish as Web Worker
+// Start the Web Worker
 const stockfish = new Worker("stockfish-worker.js");
 
-// Handle Stockfish responses
+// Load Stockfish wasm + js into worker
+fetch("stockfish.wasm")
+  .then(response => response.arrayBuffer())
+  .then(wasmBinary => {
+    fetch("stockfish.js")
+      .then(response => response.text())
+      .then(stockfishJsCode => {
+        const blob = new Blob([stockfishJsCode], { type: "application/javascript" });
+        stockfish.postMessage({
+          cmd: "load",
+          urlOrBlob: blob,
+          wasmMemory: new WebAssembly.Memory({ initial: 256 }),
+          wasmModule: new WebAssembly.Module(wasmBinary),
+        });
+      });
+  });
+
+// Handle messages from Stockfish
 stockfish.onmessage = function (e) {
   const message = typeof e.data === "object" ? e.data.data : e.data;
   console.log("Stockfish says:", message);
 
-  if (message.startsWith("bestmove")) {
+  if (message?.startsWith?.("bestmove")) {
     const move = message.split(" ")[1];
     applyAIMove(move);
   }
@@ -159,7 +176,6 @@ function importPGN() {
   }
 }
 
-// Send commands to Stockfish engine
 function requestAIMove(fen, depth = 12) {
   stockfish.postMessage("uci");
   stockfish.postMessage("ucinewgame");
@@ -172,7 +188,6 @@ function toggleTheme() {
   document.body.classList.toggle("dark");
 }
 
-// Map pieces to Unicode characters
 String.prototype.unicode = function () {
   const map = {
     p: "♟", n: "♞", b: "♝", r: "♜", q: "♛", k: "♚",
@@ -181,6 +196,5 @@ String.prototype.unicode = function () {
   return map[this] || "";
 };
 
-// Initial render
 renderBoard();
 updateStatus();
