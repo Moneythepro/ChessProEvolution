@@ -1,11 +1,14 @@
 const boardEl = document.getElementById("board");
 const statusEl = document.getElementById("status");
+const historyList = document.getElementById("historyList");
+
 const game = new Chess();
 let selectedSquare = null;
 let isAIEnabled = false;
 let isMultiplayer = false;
 
-const stockfish = new Worker("https://cdn.jsdelivr.net/npm/stockfish/stockfish.js");
+// Use local Stockfish worker for better compatibility
+const stockfish = new Worker("stockfish.js");
 
 const moveSound = new Audio("move.mp3");
 const captureSound = new Audio("capture.mp3");
@@ -76,6 +79,13 @@ function aiMove() {
 function playSound(move) {
   navigator.vibrate(50);
   (move.captured ? captureSound : moveSound).play();
+
+  // Add to move history
+  if (historyList) {
+    const li = document.createElement("li");
+    li.textContent = game.history().slice(-1)[0];
+    historyList.appendChild(li);
+  }
 }
 
 function startNewGame() {
@@ -83,8 +93,9 @@ function startNewGame() {
   isMultiplayer = false;
   game.reset();
   renderBoard();
+
   document.getElementById("userStatus").textContent = "";
-  document.getElementById("moveHistory").innerHTML = "";
+  if (historyList) historyList.innerHTML = "";
 }
 
 function undoMove() {
@@ -99,12 +110,11 @@ function playWithAI() {
   startNewGame();
 }
 
-// Multiplayer start
 function playMultiplayer() {
   isAIEnabled = false;
   isMultiplayer = true;
   startNewGame();
-  openMultiplayer(); // from multiplayer.js
+  openMultiplayer(); // multiplayer.js
 }
 
 function updateStatus() {
@@ -117,7 +127,6 @@ function updateStatus() {
     status = `${game.turn() === "w" ? "White" : "Black"} to move.`;
   }
 
-  // If multiplayer.js is managing status, skip update
   if (!isMultiplayer) {
     statusEl.textContent = status;
   }
