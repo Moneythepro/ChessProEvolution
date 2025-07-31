@@ -7,8 +7,8 @@ let selectedSquare = null;
 let isAIEnabled = false;
 let isMultiplayer = false;
 
-// ✅ Updated to use working Stockfish CDN
-const stockfish = new Worker("https://cdn.jsdelivr.net/npm/stockfish@16.1.0/dist/stockfish.wasm.js");
+// ✅ Use globally available stockfish worker from HTML
+const stockfish = window.stockfish;
 
 const moveSound = new Audio("move.mp3");
 const captureSound = new Audio("capture.mp3");
@@ -80,7 +80,6 @@ function playSound(move) {
   navigator.vibrate(50);
   (move.captured ? captureSound : moveSound).play();
 
-  // Add to move history
   if (historyList) {
     const li = document.createElement("li");
     li.textContent = game.history().slice(-1)[0];
