@@ -1,18 +1,12 @@
-// stockfish-worker.js
-self.importScripts("stockfish.js");
+// ✅ stockfish-worker.js (Classic Worker for GitHub Pages)
+importScripts("stockfish.js");
 
-let engine = null;
-
-if (typeof Stockfish === "function") {
-  engine = Stockfish();
-} else {
-  engine = self.Module;
-}
+const engine = typeof Stockfish === "function" ? Stockfish() : self;
 
 engine.onmessage = function (e) {
-  self.postMessage(e.data ? e.data : e);
+  postMessage(typeof e === "object" ? e.data : e);
 };
 
-self.onmessage = function (e) {
+onmessage = function (e) {
   engine.postMessage(e.data);
 };
