@@ -1,5 +1,5 @@
-// stockfish-worker.js
-importScripts("stockfish.js");
+// stockfish.worker.js
+importScripts('stockfish.js');
 
 const engine = STOCKFISH();
 
