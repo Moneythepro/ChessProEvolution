@@ -1,5 +1,5 @@
 body {
-  font-family: sans-serif;
+  font-family: "Segoe UI", sans-serif;
   background: #111;
   color: white;
   text-align: center;
@@ -9,15 +9,19 @@ body {
 
 #chess-app {
   padding: 1em;
+  max-width: 700px;
+  margin: 0 auto;
 }
 
 #board {
   width: 90vmin;
   height: 90vmin;
-  margin: 0 auto;
+  margin: 1em auto;
   display: grid;
   grid-template-columns: repeat(8, 1fr);
-  border: 2px solid white;
+  border: 3px solid #fff;
+  border-radius: 8px;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.1);
 }
 
 .square {
@@ -26,25 +30,39 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.5vmin;
+  font-size: 5vmin;
   cursor: pointer;
+  user-select: none;
+  transition: background 0.2s ease;
 }
 
-.light { background: #eee; color: #000; }
-.dark  { background: #444; color: #fff; }
+.light {
+  background: #f0d9b5;
+  color: #000;
+}
+
+.dark {
+  background: #b58863;
+  color: #fff;
+}
 
 #controls {
-  margin-top: 1em;
+  margin-top: 1.5em;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5em;
 }
 
 button {
-  padding: 0.5em 1em;
-  margin: 0.3em;
+  padding: 0.6em 1.2em;
   border: none;
-  border-radius: 5px;
+  border-radius: 6px;
   background: #3b82f6;
   color: white;
   cursor: pointer;
+  font-size: 1em;
+  transition: background 0.2s ease;
 }
 
 button:hover {
@@ -61,23 +79,28 @@ button:hover {
   max-height: 200px;
   overflow-y: auto;
   background: #222;
-  padding: 0.5em;
-  border-radius: 8px;
-  width: 80%;
+  padding: 0.8em;
+  border-radius: 10px;
+  width: 85%;
   margin-left: auto;
   margin-right: auto;
+  box-shadow: inset 0 0 10px #000;
 }
 
 #move-history h3 {
   margin-bottom: 0.5em;
+  font-size: 1.1em;
 }
 
 #move-history ol {
   text-align: left;
-  font-size: 0.9em;
+  font-size: 0.95em;
+  padding-left: 1em;
 }
 
 #opponent-info {
   margin: 1em 0;
   font-style: italic;
+  font-size: 0.95em;
+  color: #ccc;
 }
