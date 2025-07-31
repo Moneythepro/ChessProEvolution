@@ -7,21 +7,37 @@
   <title>Ultimate Chess</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="style.css" />
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
   <div id="chess-app">
     <h1>Ultimate Chess</h1>
+    
+    <div id="auth-section">
+      <button id="loginBtn">Sign in with Google</button>
+      <button id="logoutBtn" style="display: none;">Sign out</button>
+      <p id="userStatus">Not signed in</p>
+    </div>
+
     <div id="board"></div>
+
     <div id="controls">
       <button onclick="startNewGame()">New Game</button>
       <button onclick="undoMove()">Undo</button>
       <button onclick="playWithAI()">Play vs AI</button>
+      <button onclick="openMultiplayer()">Multiplayer</button>
     </div>
+
     <div id="status"></div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/1.0.0/chess.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/stockfish/stockfish.js"></script>
   <script src="app.js"></script>
+  <script src="auth.js"></script>
+  <script src="multiplayer.js"></script>
 </body>
 </html>
