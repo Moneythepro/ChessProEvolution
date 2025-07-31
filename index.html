@@ -9,15 +9,15 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" href="favicon.png" />
 
-  <!-- Firebase SDK -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore-compat.js"></script>
 
-  <!-- ✅ Chess.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js"></script>
+  <!-- ✅ Load Chess.js first -->
+  <script src="https://cdn.jsdelivr.net/npm/chess.js@1.0.0/chess.min.js"></script>
 
-  <!-- ✅ Stockfish Web Worker -->
+  <!-- ✅ Load Stockfish Worker -->
   <script>
     window.stockfish = new Worker("https://cdn.jsdelivr.net/gh/official-stockfish/stockfish/stockfish.js");
   </script>
@@ -61,6 +61,7 @@
     </div>
   </div>
 
+  <!-- ✅ Firebase Auth Logic -->
   <script>
     const firebaseConfig = {
       apiKey: "...",
@@ -117,6 +118,7 @@
     }
   </script>
 
+  <!-- ✅ Game Logic -->
   <script src="multiplayer.js"></script>
   <script src="app.js"></script>
 </body>
