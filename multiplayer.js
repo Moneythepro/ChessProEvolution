@@ -1,68 +1,71 @@
 // multiplayer.js
-const db = firebase.firestore();
-let roomId = null;
+
+let playerColor = null;
+let roomRef = null;
 let unsubscribe = null;
 
-// Start or join a game room
-function openMultiplayer() {
-  const input = prompt("Enter Room ID (or leave empty to create one):");
-  if (input) {
-    joinRoom(input);
+async function openMultiplayer() {
+  const roomId = prompt("Enter Room ID (leave blank to create new):");
+
+  if (!roomId) {
+    // Create new game
+    roomRef = await db.collection("games").add({
+      fen: game.fen(),
+      turn: "w",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    playerColor = "w";
+    alert("Room created! Share this ID: " + roomRef.id);
   } else {
-    createRoom();
-  }
-}
+    // Join existing game
+    roomRef = db.collection("games").doc(roomId);
+    const roomSnap = await roomRef.get();
 
-async function createRoom() {
-  const roomRef = await db.collection("games").add({
-    fen: game.fen(),
-    turn: game.turn(),
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-  });
-  roomId = roomRef.id;
-  alert(`Room created! Share this ID: ${roomId}`);
-  listenToRoom(roomId);
-}
-
-function joinRoom(id) {
-  db.collection("games").doc(id).get().then((doc) => {
-    if (doc.exists) {
-      roomId = id;
-      const data = doc.data();
-      game.load(data.fen);
-      updateBoardUI();
-      listenToRoom(roomId);
-      alert("Joined game!");
-    } else {
+    if (!roomSnap.exists) {
       alert("Room not found!");
+      return;
     }
-  });
+
+    playerColor = "b";
+    alert("Joined game as Black.");
+  }
+
+  listenForMoves();
 }
 
-function listenToRoom(id) {
-  unsubscribe = db.collection("games").doc(id).onSnapshot((doc) => {
-    if (!doc.exists) return;
+function listenForMoves() {
+  if (!roomRef) return;
+
+  unsubscribe = roomRef.onSnapshot((doc) => {
     const data = doc.data();
-    if (data.fen !== game.fen()) {
+    if (!data) return;
+
+    const currentFen = game.fen();
+    if (currentFen !== data.fen) {
       game.load(data.fen);
-      updateBoardUI();
+      updateBoard(); // custom function that redraws the board
+    }
+
+    // Handle turn indicator
+    if (data.turn === playerColor) {
+      statusText.textContent = "Your move";
+    } else {
+      statusText.textContent = "Opponent's move";
     }
   });
 }
 
-function sendMoveToRoom() {
-  if (!roomId) return;
-  db.collection("games").doc(roomId).update({
-    fen: game.fen(),
-    turn: game.turn(),
-  });
-}
+function multiplayerMove(from, to) {
+  if (!roomRef || game.turn() !== playerColor) return;
 
-// You can call this after every move
-function makeMove(from, to) {
-  const move = game.move({ from, to, promotion: 'q' });
+  const move = game.move({ from, to, promotion: "q" });
+
   if (move) {
-    updateBoardUI();
-    sendMoveToRoom();
+    updateBoard();
+    roomRef.set({
+      fen: game.fen(),
+      turn: game.turn(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
   }
 }
