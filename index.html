@@ -61,7 +61,7 @@
       apiKey: "AIzaSyDkHtAbzuLSJwCQvB89s7j_J_6JzpxN480",
       authDomain: "chessproevolution.firebaseapp.com",
       projectId: "chessproevolution",
-      storageBucket: "chessproevolution.appspot.com", // ✅ Fixed
+      storageBucket: "chessproevolution.appspot.com",
       messagingSenderId: "409029482190",
       appId: "1:409029482190:web:8c5801c616c0e89395a29f",
       measurementId: "G-KTFDBKGFZQ"
@@ -121,10 +121,16 @@
     }
   </script>
 
-  <!-- Chess Engine and App Logic -->
+  <!-- ✅ Chess.js (correct version) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/1.0.0/chess.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/stockfish/stockfish.js"></script>
-  <script src="app.js"></script>
+
+  <!-- ✅ Stockfish (worker loaded correctly) -->
+  <script>
+    window.stockfish = new Worker("https://cdn.jsdelivr.net/npm/stockfish@16/stockfish.wasm.js");
+  </script>
+
+  <!-- ✅ App logic (must come after chess.js and stockfish setup) -->
   <script src="multiplayer.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
