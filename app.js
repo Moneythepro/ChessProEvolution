@@ -7,8 +7,8 @@ let selectedSquare = null;
 let isAIEnabled = false;
 let isMultiplayer = false;
 
-// Use local Stockfish worker for better compatibility
-const stockfish = new Worker("stockfish.js");
+// ✅ Updated to use working Stockfish CDN
+const stockfish = new Worker("https://cdn.jsdelivr.net/npm/stockfish@16.1.0/dist/stockfish.wasm.js");
 
 const moveSound = new Audio("move.mp3");
 const captureSound = new Audio("capture.mp3");
