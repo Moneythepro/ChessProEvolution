@@ -8,38 +8,42 @@ const game = new Chess();
 let board = null;
 let mode = "pvp";
 let aiThinking = false;
-
-// Load and init Stockfish
+let stockfish = null;
 let stockfishReady = false;
-let stockfish;
 
+// Load and initialize Stockfish properly
 function initStockfish() {
   stockfish = new Worker("stockfish-worker.js");
 
-  fetch("stockfish.wasm")
-    .then(response => response.arrayBuffer())
-    .then(wasmBinary => {
-      stockfish.postMessage({
-        cmd: "load",
-        wasmMemory: new WebAssembly.Memory({ initial: 256 }),
-        wasmModule: new WebAssembly.Module(wasmBinary),
-        urlOrBlob: "stockfish.js"
+  fetch("stockfish.js")
+    .then(res => res.text())
+    .then(jsCode => {
+      return fetch("stockfish.wasm").then(res => res.arrayBuffer()).then(wasmBinary => {
+        const blob = new Blob([jsCode], { type: "application/javascript" });
+        stockfish.postMessage({
+          cmd: "load",
+          urlOrBlob: blob,
+          wasmModule: new WebAssembly.Module(wasmBinary),
+          wasmMemory: new WebAssembly.Memory({ initial: 256 }),
+        });
       });
     });
 
-  stockfish.onmessage = (event) => {
-    if (typeof event.data === "string") {
-      console.log("Stockfish:", event.data);
-      if (event.data === "uciok") {
-        stockfishReady = true;
-      }
-      if (event.data.startsWith("bestmove")) {
-        const move = event.data.split(" ")[1];
-        game.move(move, { sloppy: true });
-        renderBoard();
-        aiThinking = false;
-        updateStatus();
-      }
+  stockfish.onmessage = (e) => {
+    if (typeof e.data !== "string") return;
+    console.log("Stockfish:", e.data);
+
+    if (e.data === "uciok") {
+      stockfishReady = true;
+      console.log("✅ Stockfish ready!");
+    }
+
+    if (e.data.startsWith("bestmove")) {
+      const move = e.data.split(" ")[1];
+      game.move(move, { sloppy: true });
+      renderBoard();
+      aiThinking = false;
+      updateStatus();
     }
   };
 }
@@ -80,7 +84,6 @@ function renderBoard() {
   });
 }
 
-// Convert piece notation to Unicode symbols
 function getPieceUnicode(piece) {
   const symbols = {
     p: "♟", r: "♜", n: "♞", b: "♝", q: "♛", k: "♚",
@@ -89,7 +92,6 @@ function getPieceUnicode(piece) {
   return symbols[piece.color === "w" ? piece.type.toUpperCase() : piece.type] || "";
 }
 
-// Click handling
 let selectedSquare = null;
 function handleSquareClick(row, col) {
   if (aiThinking) return;
@@ -125,6 +127,7 @@ function makeAIMove() {
   aiThinking = true;
 
   stockfish.postMessage("uci");
+  stockfish.postMessage("isready");
   stockfish.postMessage("ucinewgame");
   stockfish.postMessage("position fen " + game.fen());
   stockfish.postMessage("go depth " + aiLevelSlider.value);
@@ -156,10 +159,6 @@ function updateStatus() {
 function undoMove() {
   game.undo();
   renderBoard();
-}
-
-function redoMove() {
-  // optional
 }
 
 function exportPGN() {
