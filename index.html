@@ -2,24 +2,49 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Ultimate Chess</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="style.css" />
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chess.js@1.0.0/chess.min.js"></script>
 </head>
 <body>
-  <h1>Ultimate Chess</h1>
-  <div id="board"></div>
-  <div id="status">Initializing...</div>
-  <div id="controls"></div>
-  <button onclick="openMultiplayer()">Multiplayer</button>
+  <div id="app">
+    <header>
+      <h1>♟ Ultimate Chess</h1>
+      <button onclick="toggleTheme()">🌓</button>
+    </header>
 
-  <script src="firebase-init.js"></script>
-  <script src="multiplayer.js"></script>
+    <div id="game">
+      <div id="board"></div>
+
+      <aside>
+        <div id="info">
+          <h3>Status: <span id="status">Ready</span></h3>
+          <select id="modeSelect" onchange="changeMode()">
+            <option value="pvp">Player vs Player</option>
+            <option value="ai">Player vs AI</option>
+          </select>
+          <label>AI Difficulty: <input type="range" id="aiLevel" min="1" max="20" value="5" /></label>
+        </div>
+
+        <div id="history">
+          <h4>Move History</h4>
+          <ol id="moveList"></ol>
+        </div>
+
+        <div id="controls">
+          <button onclick="undoMove()">↶ Undo</button>
+          <button onclick="redoMove()">↷ Redo</button>
+          <button onclick="newGame()">♻️ New Game</button>
+          <button onclick="exportPGN()">⬇️ Export PGN</button>
+          <button onclick="importPGN()">⬆️ Import PGN</button>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chess.js@1.0.0/chess.min.js"></script>
+  <script src="stockfish.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
