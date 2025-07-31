@@ -3,6 +3,8 @@ const statusEl = document.getElementById("status");
 const game = new Chess();
 let selectedSquare = null;
 let isAIEnabled = false;
+let isMultiplayer = false;
+
 const stockfish = new Worker("https://cdn.jsdelivr.net/npm/stockfish/stockfish.js");
 
 const moveSound = new Audio("move.mp3");
@@ -33,17 +35,25 @@ function renderBoard() {
   updateStatus();
 }
 
+// <- CHANGED FUNCTION
 function handleSquareClick(r, c) {
   const square = "abcdefgh"[c] + (r + 1);
   if (!selectedSquare) {
     selectedSquare = square;
   } else {
-    const move = game.move({ from: selectedSquare, to: square, promotion: "q" });
+    const from = selectedSquare;
+    const to = square;
     selectedSquare = null;
-    if (move) {
-      playSound(move);
-      renderBoard();
-      if (isAIEnabled && !game.game_over()) aiMove();
+
+    if (isMultiplayer) {
+      multiplayerMove(from, to); // delegate to multiplayer.js
+    } else {
+      const move = game.move({ from, to, promotion: "q" });
+      if (move) {
+        playSound(move);
+        renderBoard();
+        if (isAIEnabled && !game.game_over()) aiMove();
+      }
     }
   }
 }
@@ -70,6 +80,8 @@ function playSound(move) {
 }
 
 function startNewGame() {
+  isAIEnabled = false;
+  isMultiplayer = false;
   game.reset();
   renderBoard();
 }
@@ -82,9 +94,18 @@ function undoMove() {
 
 function playWithAI() {
   isAIEnabled = true;
+  isMultiplayer = false;
   startNewGame();
 }
 
+// <- NEW
+function playMultiplayer() {
+  isAIEnabled = false;
+  isMultiplayer = true;
+  openMultiplayer(); // from multiplayer.js
+}
+
+// <- MODIFIED
 function updateStatus() {
   let status = "";
   if (game.in_checkmate()) {
@@ -95,6 +116,11 @@ function updateStatus() {
     status = `${game.turn() === "w" ? "White" : "Black"} to move.`;
   }
   statusEl.textContent = status;
+}
+
+// <- ALIAS for multiplayer.js
+function updateBoard() {
+  renderBoard();
 }
 
 renderBoard();
