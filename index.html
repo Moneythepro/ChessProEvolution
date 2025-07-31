@@ -14,12 +14,12 @@
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore-compat.js"></script>
 
-  <!-- Chess.js (must load before app logic) -->
-  <script src="https://cdn.jsdelivr.net/npm/chess.js@1.0.0/chess.min.js"></script>
+  <!-- ✅ Chess.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js"></script>
 
-  <!-- Stockfish WebAssembly Worker -->
+  <!-- ✅ Stockfish Web Worker -->
   <script>
-    window.stockfish = new Worker("https://cdn.jsdelivr.net/npm/stockfish@16.1.0/src/stockfish-nnue-asm.js");
+    window.stockfish = new Worker("https://cdn.jsdelivr.net/gh/official-stockfish/stockfish/stockfish.js");
   </script>
 </head>
 <body>
@@ -61,7 +61,6 @@
     </div>
   </div>
 
-  <!-- Firebase Auth Handler -->
   <script>
     const firebaseConfig = {
       apiKey: "...",
@@ -108,6 +107,7 @@
         .then(r => alert("Welcome "+r.user.email))
         .catch(err=> alert("Login error: " + err.message));
     }
+
     function emailRegister() {
       const e = document.getElementById("email").value,
             p = document.getElementById("password").value;
@@ -117,7 +117,6 @@
     }
   </script>
 
-  <!-- Game Scripts -->
   <script src="multiplayer.js"></script>
   <script src="app.js"></script>
 </body>
