@@ -10,19 +10,25 @@ let selectedSquare = null;
 let history = [];
 let redoStack = [];
 
-let mode = "pvp"; // pvp or ai
-let aiWorker = new Worker("stockfish.worker.js");
+let mode = "pvp"; // 'pvp' or 'ai'
+let aiWorker = new Worker("stockfish-worker.js");
+let aiThinking = false;
+
+// Initialize Stockfish once
+aiWorker.postMessage("uci");
+aiWorker.postMessage("isready");
 
 aiWorker.onmessage = (event) => {
   const line = event.data;
   if (typeof line === "string" && line.startsWith("bestmove")) {
     const move = line.split(" ")[1];
     if (move) {
-      game.move({ from: move.substring(0, 2), to: move.substring(2, 4), promotion: "q" });
+      game.move({ from: move.slice(0, 2), to: move.slice(2, 4), promotion: "q" });
       history.push(move);
       redoStack = [];
       renderBoard();
       updateStatus();
+      aiThinking = false;
     }
   }
 };
@@ -50,6 +56,8 @@ function initBoard() {
 }
 
 function handleSquareClick(i, j) {
+  if (aiThinking) return;
+
   const square = coordsToSquare(i, j);
   const piece = game.get(square);
 
@@ -67,11 +75,13 @@ function handleSquareClick(i, j) {
       updateStatus();
 
       if (mode === "ai" && !game.game_over()) {
+        aiThinking = true;
         const level = parseInt(aiLevelInput.value || 5);
-        aiWorker.postMessage("uci");
         aiWorker.postMessage("setoption name Skill Level value " + level);
-        aiWorker.postMessage("position fen " + game.fen());
-        aiWorker.postMessage("go depth " + level);
+        setTimeout(() => {
+          aiWorker.postMessage("position fen " + game.fen());
+          aiWorker.postMessage("go depth " + level);
+        }, 200);
       }
     }
 
@@ -91,7 +101,6 @@ function renderBoard() {
       const square = boardSquares[i][j];
       const squareId = coordsToSquare(i, j);
       const piece = game.get(squareId);
-
       square.innerHTML = piece ? getPieceSymbol(piece) : "";
     }
   }
@@ -144,6 +153,8 @@ function newGame() {
   game.reset();
   history = [];
   redoStack = [];
+  selectedSquare = null;
+  aiThinking = false;
   renderBoard();
   updateStatus();
 }
