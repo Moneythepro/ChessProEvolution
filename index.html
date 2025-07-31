@@ -36,7 +36,7 @@
 
         <div id="controls">
           <button onclick="undoMove()">↶ Undo</button>
-          <button onclick="redoMove()">↷ Redo</button>
+          <!-- Redo button removed (not implemented in JS) -->
           <button onclick="newGame()">♻️ New Game</button>
           <button onclick="exportPGN()">⬇️ Export PGN</button>
           <button onclick="importPGN()">⬆️ Import PGN</button>
@@ -45,8 +45,9 @@
     </div>
   </div>
 
-  <!-- Chess engine -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-  <script src="app.js"></script>
+  <!-- Chess engine and Stockfish -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js" defer></script>
+  <script src="stockfish-worker.js" defer></script>
+  <script src="app.js" defer></script>
 </body>
 </html>
