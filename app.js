@@ -2,13 +2,13 @@ const boardEl = document.getElementById("board");
 const statusEl = document.getElementById("status");
 const historyList = document.getElementById("historyList");
 
-const game = new Chess();
+const game = new Chess(); // Requires chess.js to be loaded via <script>
 let selectedSquare = null;
 let isAIEnabled = false;
 let isMultiplayer = false;
 
-// ✅ Use globally available stockfish worker from HTML
-const stockfish = window.stockfish;
+// ✅ Ensure Stockfish is available
+const stockfish = window.stockfish || null;
 
 const moveSound = new Audio("move.mp3");
 const captureSound = new Audio("capture.mp3");
@@ -39,7 +39,7 @@ function renderBoard() {
 }
 
 function handleSquareClick(r, c) {
-  const square = "abcdefgh"[c] + (r + 1);
+  const square = "abcdefgh"[c] + (r + 1); // Correct square notation
   if (!selectedSquare) {
     selectedSquare = square;
   } else {
@@ -48,7 +48,7 @@ function handleSquareClick(r, c) {
     selectedSquare = null;
 
     if (isMultiplayer) {
-      multiplayerMove(from, to); // multiplayer.js
+      multiplayerMove(from, to); // ⬅ Make sure multiplayer.js is loaded
     } else {
       const move = game.move({ from, to, promotion: "q" });
       if (move) {
@@ -61,6 +61,11 @@ function handleSquareClick(r, c) {
 }
 
 function aiMove() {
+  if (!stockfish) {
+    console.error("Stockfish engine not found.");
+    return;
+  }
+
   stockfish.postMessage(`position fen ${game.fen()}`);
   stockfish.postMessage("go depth 12");
 
@@ -77,8 +82,13 @@ function aiMove() {
 }
 
 function playSound(move) {
-  navigator.vibrate(50);
-  (move.captured ? captureSound : moveSound).play();
+  navigator.vibrate?.(50);
+  const sound = move.captured ? captureSound : moveSound;
+
+  // Prevent autoplay errors
+  if (sound && typeof sound.play === "function") {
+    sound.play().catch(() => {});
+  }
 
   if (historyList) {
     const li = document.createElement("li");
@@ -93,7 +103,9 @@ function startNewGame() {
   game.reset();
   renderBoard();
 
-  document.getElementById("userStatus").textContent = "";
+  const status = document.getElementById("userStatus");
+  if (status) status.textContent = "";
+
   if (historyList) historyList.innerHTML = "";
 }
 
@@ -113,7 +125,7 @@ function playMultiplayer() {
   isAIEnabled = false;
   isMultiplayer = true;
   startNewGame();
-  openMultiplayer(); // multiplayer.js
+  openMultiplayer(); // ⬅ Defined in multiplayer.js
 }
 
 function updateStatus() {
@@ -131,7 +143,7 @@ function updateStatus() {
   }
 }
 
-// Called by multiplayer.js
+// Called from multiplayer.js
 function updateBoard() {
   renderBoard();
 }
