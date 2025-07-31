@@ -1,7 +1,6 @@
 const boardEl = document.getElementById("board");
 const historyList = document.getElementById("historyList");
 
-const game = new Chess(); // Requires chess.js to be loaded via <script>
 let selectedSquare = null;
 let isAIEnabled = false;
 let isMultiplayer = false;
