@@ -14,12 +14,12 @@
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore-compat.js"></script>
 
-  <!-- ✅ Chess.js (Correct URL) -->
+  <!-- ✅ Chess.js (correct and working CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/chess.js@1.0.0/chess.min.js"></script>
 
-  <!-- ✅ Stockfish Worker -->
+  <!-- ✅ Stockfish JS Worker (browser-compatible build) -->
   <script>
-    window.stockfish = new Worker("https://cdn.jsdelivr.net/gh/official-stockfish/stockfish/stockfish.js");
+    window.stockfish = new Worker("https://cdn.jsdelivr.net/gh/niklasf/stockfish.js/stockfish.js");
   </script>
 </head>
 <body>
@@ -61,7 +61,7 @@
     </div>
   </div>
 
-  <!-- ✅ Firebase Auth (no auth redeclaration) -->
+  <!-- ✅ Firebase Auth Setup -->
   <script>
     const firebaseConfig = {
       apiKey: "...",
@@ -73,7 +73,7 @@
       measurementId: "..."
     };
     firebase.initializeApp(firebaseConfig);
-    const firebaseAuth = firebase.auth();  // ⚠️ Renamed to avoid conflict
+    const firebaseAuth = firebase.auth();  // ✅ no duplicate `const auth`
     const provider = new firebase.auth.GoogleAuthProvider();
 
     const loginBtn = document.getElementById("loginBtn"),
@@ -83,21 +83,21 @@
     loginBtn.onclick = () => firebaseAuth.signInWithPopup(provider)
       .then(r => {
         userStatus.textContent = `Signed in as ${r.user.displayName}`;
-        loginBtn.style.display="none"; logoutBtn.style.display="inline-block";
+        loginBtn.style.display = "none"; logoutBtn.style.display = "inline-block";
       }).catch(e => alert("Sign‑in failed: " + e.message));
 
     logoutBtn.onclick = () => firebaseAuth.signOut().then(() => {
       userStatus.textContent = "Not signed in";
-      loginBtn.style.display="inline-block"; logoutBtn.style.display="none";
+      loginBtn.style.display = "inline-block"; logoutBtn.style.display = "none";
     });
 
     firebaseAuth.onAuthStateChanged(u => {
-      if(u) {
-        userStatus.textContent = `Signed in as ${u.displayName||u.email}`;
-        loginBtn.style.display="none"; logoutBtn.style.display="inline-block";
+      if (u) {
+        userStatus.textContent = `Signed in as ${u.displayName || u.email}`;
+        loginBtn.style.display = "none"; logoutBtn.style.display = "inline-block";
       } else {
         userStatus.textContent = "Not signed in";
-        loginBtn.style.display="inline-block"; logoutBtn.style.display="none";
+        loginBtn.style.display = "inline-block"; logoutBtn.style.display = "none";
       }
     });
 
@@ -105,20 +105,20 @@
       const e = document.getElementById("email").value,
             p = document.getElementById("password").value;
       firebaseAuth.signInWithEmailAndPassword(e, p)
-        .then(r => alert("Welcome "+r.user.email))
-        .catch(err=> alert("Login error: " + err.message));
+        .then(r => alert("Welcome " + r.user.email))
+        .catch(err => alert("Login error: " + err.message));
     }
 
     function emailRegister() {
       const e = document.getElementById("email").value,
             p = document.getElementById("password").value;
       firebaseAuth.createUserWithEmailAndPassword(e, p)
-        .then(r => alert("Registered: "+r.user.email))
-        .catch(err=> alert("Signup error: " + err.message));
+        .then(r => alert("Registered: " + r.user.email))
+        .catch(err => alert("Signup error: " + err.message));
     }
   </script>
 
-  <!-- ✅ Game Logic Scripts (loaded last) -->
+  <!-- ✅ Game Logic (load last) -->
   <script src="multiplayer.js"></script>
   <script src="app.js"></script>
 </body>
