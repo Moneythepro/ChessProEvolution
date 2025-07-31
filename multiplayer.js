@@ -1,19 +1,8 @@
-<script src="https://cdn.jsdelivr.net/npm/chess.js@1.0.0/chess.min.js"></script><script>
 let playerColor = null;
 let roomRef = null;
 let unsubscribe = null;
 let playerId = null;
 let moveHistory = [];
-
-const db = firebase.firestore();
-const game = new Chess();
-
-const statusEl = document.getElementById("status") || (() => {
-  const el = document.createElement("div");
-  el.id = "status";
-  document.body.appendChild(el);
-  return el;
-})();
 
 auth.onAuthStateChanged(user => {
   if (user) playerId = user.uid;
@@ -22,10 +11,7 @@ auth.onAuthStateChanged(user => {
 async function openMultiplayer() {
   const roomId = prompt("Enter Room ID (leave blank to create new):");
 
-  if (!playerId) {
-    alert("Please sign in to play multiplayer.");
-    return;
-  }
+  if (!playerId) return alert("Login failed");
 
   if (!roomId) {
     roomRef = await db.collection("games").add({
@@ -42,15 +28,10 @@ async function openMultiplayer() {
     roomRef = db.collection("games").doc(roomId);
     const roomSnap = await roomRef.get();
 
-    if (!roomSnap.exists) {
-      alert("Room not found!");
-      return;
-    }
-
+    if (!roomSnap.exists) return alert("Room not found!");
     const data = roomSnap.data();
     if (data.players.b && data.players.w && !Object.values(data.players).includes(playerId)) {
-      alert("Room already full!");
-      return;
+      return alert("Room already full!");
     }
 
     if (data.players.w && !data.players.b) {
@@ -60,10 +41,10 @@ async function openMultiplayer() {
       playerColor = "w";
       await roomRef.set({ players: { ...data.players, w: playerId } }, { merge: true });
     } else {
-      playerColor = Object.entries(data.players).find(([color, uid]) => uid === playerId)?.[0];
+      playerColor = Object.entries(data.players).find(([_, id]) => id === playerId)?.[0];
     }
 
-    alert(`Joined game as ${playerColor === 'w' ? 'White' : 'Black'}.`);
+    alert(`Joined as ${playerColor.toUpperCase()}`);
   }
 
   listenForMoves();
@@ -79,7 +60,7 @@ function listenForMoves() {
 
     if (data.fen && data.fen !== game.fen()) {
       game.load(data.fen);
-      updateBoard();
+      renderBoard();
     }
 
     if (data.moveHistory) moveHistory = data.moveHistory;
@@ -100,14 +81,12 @@ function multiplayerMove(from, to) {
   const move = game.move({ from, to, promotion: "q" });
   if (!move) return;
 
-  updateBoard();
+  renderBoard();
   moveHistory.push(`${from}-${to}`);
 
-  const isCheckmate = game.in_checkmate();
-  const isDraw = game.in_draw();
-  const winner = isCheckmate
+  const winner = game.in_checkmate()
     ? (game.turn() === "w" ? "Black" : "White")
-    : isDraw ? "Draw" : null;
+    : game.in_draw() ? "Draw" : null;
 
   const updates = {
     fen: game.fen(),
@@ -144,7 +123,7 @@ function leaveGame() {
   playerColor = null;
 
   game.reset();
-  updateBoard();
+  renderBoard();
   statusEl.textContent = "Left multiplayer game.";
 
   document.getElementById("leaveBtn")?.remove();
@@ -163,7 +142,7 @@ function requestRematch() {
     status: "ongoing"
   }, { merge: true });
 
-  updateBoard();
+  renderBoard();
 }
 
 function showMultiplayerControls() {
@@ -190,4 +169,3 @@ function showMultiplayerControls() {
     controls.appendChild(rematchBtn);
   }
 }
-</script>
