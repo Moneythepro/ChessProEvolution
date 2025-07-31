@@ -1,146 +1,34 @@
-const boardEl = document.getElementById("board");
-const historyList = document.getElementById("historyList");
+const board = document.getElementById("board");
+const game = new Chess();
 const statusEl = document.getElementById("status");
 
-let selectedSquare = null;
-let isAIEnabled = false;
-let isMultiplayer = false;
-
-const game = new Chess(); // ✅ Define game instance
-const stockfish = window.stockfish || null;
-
-const moveSound = new Audio("move.mp3");
-const captureSound = new Audio("capture.mp3");
-
 function renderBoard() {
-  boardEl.innerHTML = "";
+  board.innerHTML = "";
   const position = game.board();
-
-  for (let r = 7; r >= 0; r--) {
-    for (let c = 0; c < 8; c++) {
-      const squareColor = (r + c) % 2 === 0 ? "light" : "dark";
-      const squareEl = document.createElement("div");
-      squareEl.className = `square ${squareColor}`;
-      squareEl.dataset.row = r;
-      squareEl.dataset.col = c;
-
-      const piece = position[r][c];
-      if (piece) {
-        squareEl.textContent = piece.color === "w" ? piece.type.toUpperCase() : piece.type;
-      }
-
-      squareEl.onclick = () => handleSquareClick(r, c);
-      boardEl.appendChild(squareEl);
-    }
-  }
-
-  updateStatus();
+  position.forEach((row, i) => {
+    row.forEach((square, j) => {
+      const div = document.createElement("div");
+      div.className = "square " + ((i + j) % 2 === 0 ? "light" : "dark");
+      if (square) div.textContent = square.type.toUpperCase();
+      div.dataset.row = i;
+      div.dataset.col = j;
+      div.onclick = () => handleSquareClick(i, j);
+      board.appendChild(div);
+    });
+  });
+  statusEl.textContent = game.turn() === "w" ? "White's turn" : "Black's turn";
 }
 
-function handleSquareClick(r, c) {
-  const square = "abcdefgh"[c] + (r + 1);
-  if (!selectedSquare) {
-    selectedSquare = square;
+let selected = null;
+
+function handleSquareClick(i, j) {
+  const square = String.fromCharCode(97 + j) + (8 - i);
+  if (!selected) {
+    selected = square;
   } else {
-    const from = selectedSquare;
-    const to = square;
-    selectedSquare = null;
-
-    if (isMultiplayer) {
-      multiplayerMove(from, to);
-    } else {
-      const move = game.move({ from, to, promotion: "q" });
-      if (move) {
-        playSound(move);
-        renderBoard();
-        if (isAIEnabled && !game.game_over()) aiMove();
-      }
-    }
+    multiplayerMove(selected, square);
+    selected = null;
   }
-}
-
-function aiMove() {
-  if (!stockfish) {
-    console.error("Stockfish engine not found.");
-    return;
-  }
-
-  stockfish.postMessage(`position fen ${game.fen()}`);
-  stockfish.postMessage("go depth 12");
-
-  stockfish.onmessage = function (e) {
-    const match = e.data.match(/bestmove ([a-h][1-8])([a-h][1-8])/);
-    if (match) {
-      const move = game.move({ from: match[1], to: match[2], promotion: "q" });
-      if (move) {
-        playSound(move);
-        renderBoard();
-      }
-    }
-  };
-}
-
-function playSound(move) {
-  navigator.vibrate?.(50);
-  const sound = move.captured ? captureSound : moveSound;
-  sound?.play?.().catch(() => {});
-
-  if (historyList) {
-    const li = document.createElement("li");
-    li.textContent = game.history().slice(-1)[0];
-    historyList.appendChild(li);
-  }
-}
-
-function startNewGame() {
-  isAIEnabled = false;
-  isMultiplayer = false;
-  game.reset();
-  renderBoard();
-
-  const status = document.getElementById("userStatus");
-  if (status) status.textContent = "";
-
-  if (historyList) historyList.innerHTML = "";
-}
-
-function undoMove() {
-  game.undo();
-  if (isAIEnabled) game.undo();
-  renderBoard();
-}
-
-function playWithAI() {
-  isAIEnabled = true;
-  isMultiplayer = false;
-  startNewGame();
-}
-
-function playMultiplayer() {
-  isAIEnabled = false;
-  isMultiplayer = true;
-  startNewGame();
-  openMultiplayer(); // from multiplayer.js
-}
-
-function updateStatus() {
-  let status = "";
-  if (game.in_checkmate()) {
-    status = `Game over. ${game.turn() === "w" ? "Black" : "White"} wins!`;
-  } else if (game.in_draw()) {
-    status = "Draw!";
-  } else {
-    status = `${game.turn() === "w" ? "White" : "Black"} to move.`;
-  }
-
-  if (!isMultiplayer && statusEl) {
-    statusEl.textContent = status;
-  }
-}
-
-// Exposed for multiplayer.js
-function updateBoard() {
-  renderBoard();
 }
 
 renderBoard();
