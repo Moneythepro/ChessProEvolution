@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#000000" />
+  <title>Ultimate Chess</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="chess-app">
+    <h1>Ultimate Chess</h1>
+    <div id="board"></div>
+    <div id="controls">
+      <button onclick="startNewGame()">New Game</button>
+      <button onclick="undoMove()">Undo</button>
+      <button onclick="playWithAI()">Play vs AI</button>
+    </div>
+    <div id="status"></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/1.0.0/chess.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/stockfish/stockfish.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
