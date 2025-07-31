@@ -9,7 +9,17 @@ let mode = "pvp";
 let selectedSquare = null;
 let moveHistory = [];
 let redoStack = [];
-let stockfish = new Worker("stockfish.js");
+
+const stockfish = new Worker("stockfish-worker.js");
+
+// Handle Stockfish responses
+stockfish.onmessage = function (e) {
+  console.log("Stockfish says:", e.data);
+  if (e.data.startsWith("bestmove")) {
+    const move = e.data.split(" ")[1];
+    applyAIMove(move);
+  }
+};
 
 function renderBoard() {
   boardElement.innerHTML = "";
@@ -22,7 +32,10 @@ function renderBoard() {
       square.dataset.col = col;
       const piece = board[row][col];
       if (piece) {
-        square.textContent = piece.unicode;
+        square.textContent = piece.color + piece.type;
+        square.textContent = piece.type.toUpperCase() === piece.type
+          ? piece.type.unicode().toUpperCase()
+          : piece.type.toLowerCase().unicode().toLowerCase();
       }
       square.addEventListener("click", () => onSquareClick(row, col));
       boardElement.appendChild(square);
@@ -37,19 +50,36 @@ function onSquareClick(row, col) {
   if (selectedSquare && game.move({ from: selectedSquare, to: square, promotion: 'q' })) {
     moveHistory.push(game.history({ verbose: true }).slice(-1)[0]);
     redoStack = [];
-    updateStatus();
     renderBoard();
     updateMoveList();
+    updateStatus();
 
     if (mode === "ai" && game.turn() === "b") {
-      aiMove();
+      requestAIMove(game.fen(), aiLevelSlider.value);
     }
+
+    selectedSquare = null;
   } else {
     if (piece && piece.color === game.turn()) {
       selectedSquare = square;
     } else {
       selectedSquare = null;
     }
+  }
+}
+
+function applyAIMove(moveString) {
+  const move = {
+    from: moveString.slice(0, 2),
+    to: moveString.slice(2, 4),
+    promotion: "q",
+  };
+  const result = game.move(move);
+  if (result) {
+    moveHistory.push(result);
+    renderBoard();
+    updateMoveList();
+    updateStatus();
   }
 }
 
@@ -82,6 +112,7 @@ function undoMove() {
     updateStatus();
   }
 }
+
 function redoMove() {
   const move = redoStack.pop();
   if (move) {
@@ -124,26 +155,18 @@ function importPGN() {
   }
 }
 
-function aiMove() {
-  stockfish.postMessage("position fen " + game.fen());
-  stockfish.postMessage("go depth " + aiLevelSlider.value);
+function requestAIMove(fen, depth = 12) {
+  stockfish.postMessage("uci");
+  stockfish.postMessage("ucinewgame");
+  stockfish.postMessage("position fen " + fen);
+  stockfish.postMessage("go depth " + depth);
 }
-
-stockfish.onmessage = function (e) {
-  if (e.data.startsWith("bestmove")) {
-    const move = e.data.split(" ")[1];
-    game.move({ from: move.slice(0, 2), to: move.slice(2, 4), promotion: "q" });
-    moveHistory.push(game.history({ verbose: true }).slice(-1)[0]);
-    renderBoard();
-    updateMoveList();
-    updateStatus();
-  }
-};
 
 function toggleTheme() {
   document.body.classList.toggle("dark");
 }
 
+// Unicode mapping for pieces
 String.prototype.unicode = function () {
   const map = {
     p: "♟", n: "♞", b: "♝", r: "♜", q: "♛", k: "♚",
@@ -154,23 +177,3 @@ String.prototype.unicode = function () {
 
 renderBoard();
 updateStatus();
-
-// Load Web Worker
-const stockfish = new Worker("stockfish-worker.js");
-
-// Listen for Stockfish responses
-stockfish.onmessage = function (e) {
-  console.log("Stockfish says:", e.data);
-  if (e.data.startsWith("bestmove")) {
-    const move = e.data.split(" ")[1];
-    applyAIMove(move);
-  }
-};
-
-// Send position and request best move
-function requestAIMove(fen, depth = 15) {
-  stockfish.postMessage("uci");
-  stockfish.postMessage("ucinewgame");
-  stockfish.postMessage("position fen " + fen);
-  stockfish.postMessage("go depth " + depth);
-}
