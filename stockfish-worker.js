@@ -1,12 +1,12 @@
 // stockfish-worker.js
 importScripts("stockfish.js");
 
-let stockfish = STOCKFISH();
+const engine = STOCKFISH();
 
 onmessage = function (e) {
-  stockfish.postMessage(e.data);
+  engine.postMessage(e.data);
 };
 
-stockfish.onmessage = function (e) {
+engine.onmessage = function (e) {
   postMessage(e.data);
 };
