@@ -5,7 +5,6 @@ let playerId = null;
 let moveHistory = [];
 
 const db = firebase.firestore();
-const auth = firebase.auth(); // make sure this is set
 const game = new Chess(); // Chess must be defined before this
 
 const statusEl = document.getElementById("status") || (() => {
