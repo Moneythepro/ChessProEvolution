@@ -10,11 +10,11 @@ let selectedSquare = null;
 let history = [];
 let redoStack = [];
 
-let mode = "pvp"; // 'pvp' or 'ai'
+let mode = "pvp"; // or 'ai'
 let aiWorker = new Worker("stockfish-worker.js");
 let aiThinking = false;
 
-// Initialize Stockfish once
+// Stockfish setup
 aiWorker.postMessage("uci");
 aiWorker.postMessage("isready");
 
@@ -41,7 +41,7 @@ function initBoard() {
     const row = [];
     for (let j = 0; j < 8; j++) {
       const square = document.createElement("div");
-      square.className = (i + j) % 2 === 0 ? "light" : "dark";
+      square.className = `square ${(i + j) % 2 === 0 ? "light" : "dark"}`;
       square.dataset.row = i;
       square.dataset.col = j;
       square.addEventListener("click", () => handleSquareClick(i, j));
@@ -53,6 +53,10 @@ function initBoard() {
 
   renderBoard();
   updateStatus();
+}
+
+function coordsToSquare(i, j) {
+  return "abcdefgh"[j] + (8 - i);
 }
 
 function handleSquareClick(i, j) {
@@ -91,10 +95,6 @@ function handleSquareClick(i, j) {
   }
 }
 
-function coordsToSquare(i, j) {
-  return "abcdefgh"[j] + (8 - i);
-}
-
 function renderBoard() {
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
@@ -105,12 +105,7 @@ function renderBoard() {
     }
   }
 
-  moveList.innerHTML = "";
-  game.history().forEach((move, idx) => {
-    const li = document.createElement("li");
-    li.textContent = move;
-    moveList.appendChild(li);
-  });
+  renderMoveList();
 }
 
 function getPieceSymbol(piece) {
@@ -119,6 +114,15 @@ function getPieceSymbol(piece) {
     P: "♙", R: "♖", N: "♘", B: "♗", Q: "♕", K: "♔"
   };
   return symbols[piece.color === "w" ? piece.type.toUpperCase() : piece.type];
+}
+
+function renderMoveList() {
+  moveList.innerHTML = "";
+  game.history().forEach((move, idx) => {
+    const li = document.createElement("li");
+    li.textContent = move;
+    moveList.appendChild(li);
+  });
 }
 
 function updateStatus() {
@@ -197,4 +201,5 @@ function toggleTheme() {
   document.body.classList.toggle("dark");
 }
 
+// Initialize game
 initBoard();
