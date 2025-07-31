@@ -1,3 +1,7 @@
+<!-- ✅ Correct Chess.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chess.js@1.0.0/chess.min.js"></script>
+
+<script>
 let playerColor = null;
 let roomRef = null;
 let unsubscribe = null;
@@ -5,8 +9,7 @@ let playerId = null;
 let moveHistory = [];
 
 const db = firebase.firestore();
-const auth = firebase.auth(); // fallback if not imported as `auth`
-const game = new Chess(); // assume global
+const game = new Chess(); // ✅ Must be before any usage
 
 const statusEl = document.getElementById("status") || (() => {
   const el = document.createElement("div");
@@ -15,10 +18,12 @@ const statusEl = document.getElementById("status") || (() => {
   return el;
 })();
 
+// ✅ Wait for user login
 auth.onAuthStateChanged(user => {
   if (user) playerId = user.uid;
 });
 
+// ✅ Create or Join Multiplayer Room
 async function openMultiplayer() {
   const roomId = prompt("Enter Room ID (leave blank to create new):");
 
@@ -48,7 +53,7 @@ async function openMultiplayer() {
     }
 
     const data = roomSnap.data();
-    if (data.players?.b && data.players?.w && !Object.values(data.players).includes(playerId)) {
+    if (data.players.b && data.players.w && !Object.values(data.players).includes(playerId)) {
       alert("Room already full!");
       return;
     }
@@ -60,7 +65,7 @@ async function openMultiplayer() {
       playerColor = "w";
       await roomRef.set({ players: { ...data.players, w: playerId } }, { merge: true });
     } else {
-      playerColor = Object.entries(data.players).find(([_, uid]) => uid === playerId)?.[0];
+      playerColor = Object.entries(data.players).find(([color, uid]) => uid === playerId)?.[0];
     }
 
     alert(`Joined game as ${playerColor === 'w' ? 'White' : 'Black'}.`);
@@ -70,6 +75,7 @@ async function openMultiplayer() {
   showMultiplayerControls();
 }
 
+// ✅ Realtime Firestore Sync
 function listenForMoves() {
   if (!roomRef) return;
 
@@ -82,7 +88,7 @@ function listenForMoves() {
       renderBoard();
     }
 
-    moveHistory = data.moveHistory || [];
+    if (data.moveHistory) moveHistory = data.moveHistory;
 
     if (data.status === "ended") {
       statusEl.textContent = "Game over. Winner: " + data.winner;
@@ -94,6 +100,7 @@ function listenForMoves() {
   });
 }
 
+// ✅ Multiplayer Move
 function multiplayerMove(from, to) {
   if (!roomRef || game.turn() !== playerColor) return;
 
@@ -124,6 +131,7 @@ function multiplayerMove(from, to) {
   roomRef.set(updates, { merge: true });
 }
 
+// ✅ Show Opponent
 function showOpponent(players) {
   const opponentId = Object.entries(players).find(([_, uid]) => uid !== playerId)?.[1];
   const status = document.getElementById("userStatus") || (() => {
@@ -133,16 +141,16 @@ function showOpponent(players) {
     return el;
   })();
 
-  if (opponentId && !status.textContent.includes(opponentId)) {
+  if (opponentId && !status.textContent.includes("Opponent:")) {
     status.textContent += ` | Opponent: ${opponentId}`;
   }
 }
 
+// ✅ Leave Game
 function leaveGame() {
   if (unsubscribe) unsubscribe();
   roomRef = null;
   playerColor = null;
-  moveHistory = [];
 
   game.reset();
   renderBoard();
@@ -152,6 +160,7 @@ function leaveGame() {
   document.getElementById("rematchBtn")?.remove();
 }
 
+// ✅ Rematch
 function requestRematch() {
   if (!roomRef) return;
   game.reset();
@@ -167,6 +176,7 @@ function requestRematch() {
   renderBoard();
 }
 
+// ✅ Show Controls
 function showMultiplayerControls() {
   const controls = document.getElementById("controls") || (() => {
     const el = document.createElement("div");
@@ -191,3 +201,4 @@ function showMultiplayerControls() {
     controls.appendChild(rematchBtn);
   }
 }
+</script>
