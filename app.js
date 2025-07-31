@@ -1,11 +1,12 @@
 const boardEl = document.getElementById("board");
 const historyList = document.getElementById("historyList");
+const statusEl = document.getElementById("status");
 
 let selectedSquare = null;
 let isAIEnabled = false;
 let isMultiplayer = false;
 
-// ✅ Ensure Stockfish is available
+const game = new Chess(); // ✅ Define game instance
 const stockfish = window.stockfish || null;
 
 const moveSound = new Audio("move.mp3");
@@ -37,7 +38,7 @@ function renderBoard() {
 }
 
 function handleSquareClick(r, c) {
-  const square = "abcdefgh"[c] + (r + 1); // Correct square notation
+  const square = "abcdefgh"[c] + (r + 1);
   if (!selectedSquare) {
     selectedSquare = square;
   } else {
@@ -46,7 +47,7 @@ function handleSquareClick(r, c) {
     selectedSquare = null;
 
     if (isMultiplayer) {
-      multiplayerMove(from, to); // ⬅ Make sure multiplayer.js is loaded
+      multiplayerMove(from, to);
     } else {
       const move = game.move({ from, to, promotion: "q" });
       if (move) {
@@ -82,11 +83,7 @@ function aiMove() {
 function playSound(move) {
   navigator.vibrate?.(50);
   const sound = move.captured ? captureSound : moveSound;
-
-  // Prevent autoplay errors
-  if (sound && typeof sound.play === "function") {
-    sound.play().catch(() => {});
-  }
+  sound?.play?.().catch(() => {});
 
   if (historyList) {
     const li = document.createElement("li");
@@ -123,7 +120,7 @@ function playMultiplayer() {
   isAIEnabled = false;
   isMultiplayer = true;
   startNewGame();
-  openMultiplayer(); // ⬅ Defined in multiplayer.js
+  openMultiplayer(); // from multiplayer.js
 }
 
 function updateStatus() {
@@ -136,12 +133,12 @@ function updateStatus() {
     status = `${game.turn() === "w" ? "White" : "Black"} to move.`;
   }
 
-  if (!isMultiplayer) {
+  if (!isMultiplayer && statusEl) {
     statusEl.textContent = status;
   }
 }
 
-// Called from multiplayer.js
+// Exposed for multiplayer.js
 function updateBoard() {
   renderBoard();
 }
