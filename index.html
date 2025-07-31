@@ -47,6 +47,9 @@
 
   <!-- Chess engine and logic -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <script>
+  const stockfish = new Worker("https://lichess1.org/assets/_5W1J/stockfish.worker.js");
+  </script>
   <script src="stockfish-worker.js"></script>
   <script src="app.js"></script>
 </body>
