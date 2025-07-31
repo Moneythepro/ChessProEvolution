@@ -9,10 +9,18 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" href="favicon.png" />
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore-compat.js"></script>
+
+  <!-- Chess.js (must come BEFORE your app.js) -->
+  <script src="https://cdn.jsdelivr.net/npm/chess.js@1.0.0/chess.min.js"></script>
+
+  <!-- Stockfish WebAssembly Worker -->
+  <script>
+    window.stockfish = new Worker("https://cdn.jsdelivr.net/npm/stockfish@16.1.0/src/stockfish-nnue-asm.js");
+  </script>
 </head>
 <body>
   <div id="chess-app">
@@ -55,7 +63,7 @@
     </div>
   </div>
 
-  <!-- ✅ Firebase Auth Setup -->
+  <!-- Firebase Auth Handler -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDkHtAbzuLSJwCQvB89s7j_J_6JzpxN480",
@@ -121,15 +129,7 @@
     }
   </script>
 
-  <!-- ✅ Chess Engine (Stockfish 16 WASM Worker via CDN) -->
-  <script>
-    window.stockfish = new Worker("https://cdn.jsdelivr.net/npm/stockfish@16/stockfish.wasm.js");
-  </script>
-
-  <!-- ✅ Chess.js for game logic -->
-  <script src="https://cdn.jsdelivr.net/npm/chess.js@1.0.0/chess.min.js"></script>
-
-  <!-- ✅ Your Game Logic -->
+  <!-- Your Game Scripts (after all dependencies are loaded) -->
   <script src="multiplayer.js"></script>
   <script src="app.js"></script>
 </body>
