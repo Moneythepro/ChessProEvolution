@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,62 +6,46 @@
   <title>Ultimate Chess</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="style.css" />
-  <link rel="icon" href="favicon.png" />
-
-  <!-- ✅ Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore-compat.js"></script>
-
-  <!-- ✅ Chess.js (correct and working CDN) -->
-  <script src="https://cdn.jsdelivr.net/npm/chess.js@1.0.0/chess.min.js"></script>
-
-  <!-- ✅ Stockfish JS Worker (browser-compatible build) -->
-  <script>
+  <link rel="icon" href="favicon.png" />  <!-- Firebase SDK -->  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-auth-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore-compat.js"></script>  <!-- Correct Chess.js CDN -->  <script src="https://cdn.jsdelivr.net/npm/chess.js@1.0.0/chess.min.js"></script>  <!-- Stockfish JS Worker -->  <script>
     window.stockfish = new Worker("https://cdn.jsdelivr.net/gh/niklasf/stockfish.js/stockfish.js");
-  </script>
-</head>
+  </script></head>
 <body>
   <div id="chess-app">
-    <h1>Ultimate Chess</h1>
+    <h1>Ultimate Chess</h1><div id="auth-section">
+  <button id="loginBtn">Sign in with Google</button>
+  <button id="logoutBtn" style="display: none;">Sign out</button>
+  <p id="userStatus">Not signed in</p>
+</div>
 
-    <div id="auth-section">
-      <button id="loginBtn">Sign in with Google</button>
-      <button id="logoutBtn" style="display: none;">Sign out</button>
-      <p id="userStatus">Not signed in</p>
-    </div>
+<div id="email-auth">
+  <input type="email" id="email" placeholder="Email" />
+  <input type="password" id="password" placeholder="Password" />
+  <button onclick="emailLogin()">Login</button>
+  <button onclick="emailRegister()">Register</button>
+</div>
 
-    <div id="email-auth">
-      <input type="email" id="email" placeholder="Email" />
-      <input type="password" id="password" placeholder="Password" />
-      <button onclick="emailLogin()">Login</button>
-      <button onclick="emailRegister()">Register</button>
-    </div>
+<div id="opponent-info">
+  <p id="opponent-name">No opponent</p>
+</div>
 
-    <div id="opponent-info">
-      <p id="opponent-name">No opponent</p>
-    </div>
+<div id="board"></div>
 
-    <div id="board"></div>
+<div id="controls">
+  <button onclick="startNewGame()">New Game</button>
+  <button onclick="undoMove()">Undo</button>
+  <button onclick="playWithAI()">Play vs AI</button>
+  <button onclick="openMultiplayer()">Open/Create Room</button>
+  <button onclick="playMultiplayer()">Join Multiplayer</button>
+</div>
 
-    <div id="controls">
-      <button onclick="startNewGame()">New Game</button>
-      <button onclick="undoMove()">Undo</button>
-      <button onclick="playWithAI()">Play vs AI</button>
-      <button onclick="openMultiplayer()">Open/Create Room</button>
-      <button onclick="playMultiplayer()">Join Multiplayer</button>
-    </div>
+<div id="status"></div>
 
-    <div id="status"></div>
+<div id="move-history">
+  <h3>Move History</h3>
+  <ol id="historyList"></ol>
+</div>
 
-    <div id="move-history">
-      <h3>Move History</h3>
-      <ol id="historyList"></ol>
-    </div>
-  </div>
-
-  <!-- ✅ Firebase Auth Setup -->
-  <script>
+  </div>  <!-- Firebase Config and Auth -->  <script>
     const firebaseConfig = {
       apiKey: "...",
       authDomain: "...",
@@ -73,38 +56,42 @@
       measurementId: "..."
     };
     firebase.initializeApp(firebaseConfig);
-    const firebaseAuth = firebase.auth();  // ✅ no duplicate `const auth`
+    const auth = firebase.auth();
     const provider = new firebase.auth.GoogleAuthProvider();
 
     const loginBtn = document.getElementById("loginBtn"),
           logoutBtn = document.getElementById("logoutBtn"),
           userStatus = document.getElementById("userStatus");
 
-    loginBtn.onclick = () => firebaseAuth.signInWithPopup(provider)
+    loginBtn.onclick = () => auth.signInWithPopup(provider)
       .then(r => {
         userStatus.textContent = `Signed in as ${r.user.displayName}`;
-        loginBtn.style.display = "none"; logoutBtn.style.display = "inline-block";
-      }).catch(e => alert("Sign‑in failed: " + e.message));
+        loginBtn.style.display = "none";
+        logoutBtn.style.display = "inline-block";
+      }).catch(e => alert("Sign-in failed: " + e.message));
 
-    logoutBtn.onclick = () => firebaseAuth.signOut().then(() => {
+    logoutBtn.onclick = () => auth.signOut().then(() => {
       userStatus.textContent = "Not signed in";
-      loginBtn.style.display = "inline-block"; logoutBtn.style.display = "none";
+      loginBtn.style.display = "inline-block";
+      logoutBtn.style.display = "none";
     });
 
-    firebaseAuth.onAuthStateChanged(u => {
+    auth.onAuthStateChanged(u => {
       if (u) {
         userStatus.textContent = `Signed in as ${u.displayName || u.email}`;
-        loginBtn.style.display = "none"; logoutBtn.style.display = "inline-block";
+        loginBtn.style.display = "none";
+        logoutBtn.style.display = "inline-block";
       } else {
         userStatus.textContent = "Not signed in";
-        loginBtn.style.display = "inline-block"; logoutBtn.style.display = "none";
+        loginBtn.style.display = "inline-block";
+        logoutBtn.style.display = "none";
       }
     });
 
     function emailLogin() {
       const e = document.getElementById("email").value,
             p = document.getElementById("password").value;
-      firebaseAuth.signInWithEmailAndPassword(e, p)
+      auth.signInWithEmailAndPassword(e, p)
         .then(r => alert("Welcome " + r.user.email))
         .catch(err => alert("Login error: " + err.message));
     }
@@ -112,14 +99,9 @@
     function emailRegister() {
       const e = document.getElementById("email").value,
             p = document.getElementById("password").value;
-      firebaseAuth.createUserWithEmailAndPassword(e, p)
+      auth.createUserWithEmailAndPassword(e, p)
         .then(r => alert("Registered: " + r.user.email))
         .catch(err => alert("Signup error: " + err.message));
     }
-  </script>
-
-  <!-- ✅ Game Logic (load last) -->
-  <script src="multiplayer.js"></script>
-  <script src="app.js"></script>
-</body>
+  </script>  <!-- Game Logic Scripts -->  <script src="multiplayer.js"></script>  <script src="app.js"></script></body>
 </html>
