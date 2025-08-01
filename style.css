@@ -44,11 +44,55 @@ header {
   font-size: 1.2rem;
 }
 
-#game {
+#startMenu {
+  max-width: 400px;
+  margin: auto;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 1rem;
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 1rem;
+  text-align: center;
+}
+
+body.dark #startMenu {
+  background: rgba(30, 30, 40, 0.8);
+}
+
+#startMenu label {
+  text-align: left;
+}
+
+#startMenu select,
+#startMenu input[type="range"] {
+  width: 100%;
+  padding: 0.4rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--accent);
+  background: white;
+  color: var(--text);
+}
+
+body.dark #startMenu select,
+body.dark #startMenu input[type="range"] {
+  background: #2e2e40;
+  color: white;
+}
+
+#startGameBtn {
+  background: var(--accent);
+  color: white;
+  padding: 0.6rem;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+#startGameBtn:hover {
+  background: #3730a3;
 }
 
 #board {
@@ -132,163 +176,32 @@ header {
   }
 }
 
-#controls {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 0.25rem;
-  background: rgba(255, 255, 255, 0.9);
-  padding: 0.5rem;
-  border-radius: var(--radius);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-body.dark #controls {
-  background: rgba(30, 30, 40, 0.9);
-}
-
-#controls button {
-  flex: 1 1 45%;
-  padding: 0.5rem 0;
-  font-size: 0.9rem;
-  background: var(--accent);
-  color: white;
-  border: none;
-  border-radius: var(--radius);
-  transition: background var(--transition);
-}
-
-#controls button:hover {
-  background: #3730a3;
-}
-
 #info {
+  margin-top: 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding: 0.5rem;
   background: rgba(255,255,255,0.6);
+  padding: 0.75rem;
   border-radius: var(--radius);
   backdrop-filter: blur(4px);
 }
 
-#info select,
-#info input {
-  width: 100%;
-  padding: 0.4rem;
-  border-radius: var(--radius);
-  border: 1px solid var(--accent);
-  font-size: 0.9rem;
-  background: white;
-  color: var(--text);
+#info p {
+  margin: 0;
 }
 
-body.dark #info select,
-body.dark #info input {
-  background: #2e2e40;
-  color: white;
-}
-
-#footer {
-  display: flex;
-  justify-content: space-around;
-  background: var(--bg);
-  padding: 0.5rem 0;
-  border-top: 1px solid #ccc;
-}
-
-#footer button {
-  flex: 1;
-  background: none;
-  border: none;
-  color: var(--text);
-  font-size: 1rem;
-  padding: 0.5rem;
-}
-
-#historyModal {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: var(--bg);
-  border: 2px solid var(--accent);
-  border-radius: var(--radius);
-  max-height: 80vh;
-  width: 80vw;
-  padding: 1rem;
-  overflow-y: auto;
-  z-index: 999;
-  display: none;
-}
-
-#historyModal.active {
-  display: block;
-}
-
-.modal-close-btn {
-  background: var(--accent);
-  color: white;
-  padding: 0.4rem 0.8rem;
-  border: none;
-  border-radius: var(--radius);
-  margin-top: 1rem;
-  float: right;
-}
-
-/* Winner Modal */
-#winnerModal {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: var(--bg);
-  color: var(--text);
-  padding: 2rem;
-  border: 3px solid var(--accent);
-  border-radius: var(--radius);
-  z-index: 1000;
-  display: none;
-  text-align: center;
-  box-shadow: 0 0 20px rgba(0,0,0,0.4);
-}
-
-#winnerModal button {
-  margin-top: 1rem;
-  padding: 0.6rem 1.2rem;
-  font-size: 1rem;
-  border: none;
-  background: var(--accent);
-  color: white;
-  border-radius: var(--radius);
-  cursor: pointer;
-}
-
-#winnerModal button:hover {
-  background: #3730a3;
-}
-
-@media (max-width: 600px) {
-  #board {
-    width: 95vw;
-    height: 95vw;
-  }
-}
-
-#winnerModal {
-  animation: popin 0.3s ease;
-}
-
-@keyframes popin {
-  0% { transform: translate(-50%, -50%) scale(0.7); opacity: 0; }
-  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+body.dark #info {
+  background: rgba(30,30,40,0.6);
 }
 
 #timers {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  margin-top: 0.5rem;
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .timer {
@@ -308,33 +221,94 @@ body.dark .timer {
 .timer.white {
   color: #222;
 }
-
 .timer.black {
   color: #000;
 }
-
 body.dark .timer.white {
   color: #fff;
 }
-
 body.dark .timer.black {
   color: #ccc;
 }
 
-#timers {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+#moveList {
+  margin: 1rem auto;
   padding: 0.5rem;
+  background: rgba(255,255,255,0.4);
   border-radius: var(--radius);
-}
-
-#info label {
+  max-height: 200px;
+  overflow-y: auto;
   font-size: 0.9rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
 }
 
-#speechToggle {
-  margin-right: 0.5rem;
-  accent-color: var(--accent);
+body.dark #moveList {
+  background: rgba(30,30,40,0.4);
+}
+
+#menuModal {
+  display: none;
+  position: fixed;
+  top: 3.5rem;
+  right: 1rem;
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  z-index: 999;
+}
+
+#menuModal button,
+#menuModal label {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 1rem;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#menuModal button:hover,
+#menuModal label:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+#winnerModal {
+  animation: popin 0.3s ease;
+  background: var(--bg);
+  color: var(--text);
+  padding: 2rem;
+  border: 3px solid var(--accent);
+  border-radius: var(--radius);
+  z-index: 1000;
+  display: none;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(0,0,0,0.4);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#winnerModal button {
+  margin-top: 1rem;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  border: none;
+  background: var(--accent);
+  color: white;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+#winnerModal button:hover {
+  background: #3730a3;
+}
+
+@keyframes popin {
+  0% { transform: translate(-50%, -50%) scale(0.7); opacity: 0; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
 }
