@@ -183,10 +183,11 @@ function findKing(color) {
 function renderMoveList() {
   moveList.innerHTML = "";
   for (let i = 0; i < history.length; i += 2) {
-    const li = document.createElement("li");
+    const moveNumber = i / 2 + 1;
     const white = history[i] || "";
     const black = history[i + 1] || "";
-    li.textContent = `${i / 2 + 1}. ${white} ${black}`;
+    const li = document.createElement("li");
+    li.textContent = `${moveNumber}. ${white} ${black}`;
     moveList.appendChild(li);
   }
 }
