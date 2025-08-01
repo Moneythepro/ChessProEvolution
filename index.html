@@ -32,6 +32,21 @@
             <input type="range" id="aiLevel" min="1" max="20" value="5" />
           </label>
 
+          <label>
+            Timer:
+            <select id="timerSelect">
+              <option value="0">No Timer</option>
+              <option value="10">10 Minutes</option>
+              <option value="20">20 Minutes</option>
+              <option value="30">30 Minutes</option>
+            </select>
+          </label>
+
+          <label>
+            <input type="checkbox" id="speechToggle" />
+            Enable Move Speech
+          </label>
+
           <p>Status: <span id="status">Ready</span></p>
         </div>
 
@@ -57,16 +72,15 @@
   </div>
 
   <!-- Winner Modal -->
-<div id="winnerModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
-background:#fff; color:#000; padding:1.5rem 2rem; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.4); text-align:center; z-index:999;">
-  <h2 id="winnerText">Checkmate!</h2>
-  <button onclick="newGame()" style="margin-top:1rem; padding:0.6rem 1.2rem; font-size:1rem; background:#4f46e5; color:#fff; border:none; border-radius:8px;">Play Again</button>
-</div>
+  <div id="winnerModal">
+    <h2 id="winnerText">Checkmate!</h2>
+    <button onclick="newGame()">Play Again</button>
+  </div>
 
   <!-- ✅ Chess.js (reliable CDN version) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 
-  <!-- ✅ Initialize Stockfish as Web Worker (no <script src="stockfish.js">!) -->
+  <!-- ✅ Initialize Stockfish as Web Worker -->
   <script>
     window.stockfish = new Worker("stockfish.js");
   </script>
