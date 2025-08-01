@@ -343,3 +343,16 @@ body.dark #moveList {
   0% { transform: translate(-50%, -50%) scale(0.7); opacity: 0; }
   100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
 }
+
+img.piece {
+  display: block;
+  max-width: 100%;
+}
+
+.piece {
+  width: 90%;
+  height: 90%;
+  object-fit: contain;
+  pointer-events: none;
+  transition: transform 0.2s ease;
+}
