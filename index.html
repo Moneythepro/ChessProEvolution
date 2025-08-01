@@ -56,10 +56,15 @@
     </div>
   </div>
 
-  <!-- ✅ Chess.js working version from reliable CDN -->
+  <!-- ✅ Chess.js (reliable CDN version) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 
-  <!-- ✅ App logic -->
+  <!-- ✅ Initialize Stockfish as Web Worker (no <script src="stockfish.js">!) -->
+  <script>
+    window.stockfish = new Worker("stockfish.js");
+  </script>
+
+  <!-- ✅ Main app logic -->
   <script src="app.js"></script>
 </body>
 </html>
