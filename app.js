@@ -7,27 +7,28 @@ const aiLevelInput = document.getElementById("aiLevel");
 const game = new Chess();
 let boardSquares = [];
 let selectedSquare = null;
+let lastMove = null;
 let history = [];
 let redoStack = [];
-
 let mode = "pvp";
 let aiThinking = false;
+
+// ✅ Use stockfish.js as Web Worker — already assigned in HTML
 const aiWorker = window.stockfish;
 let initialized = false;
 
-// Worker setup
 aiWorker.onmessage = (event) => {
   const line = event.data;
   if (!initialized && line === "readyok") {
     initialized = true;
     aiWorker.postMessage("uci");
   }
-
   if (typeof line === "string" && line.startsWith("bestmove")) {
     const move = line.split(" ")[1];
     if (move) {
       const played = game.move({ from: move.slice(0, 2), to: move.slice(2, 4), promotion: "q" });
       if (played) {
+        lastMove = { from: played.from, to: played.to };
         history.push(`${played.from}${played.to}`);
         redoStack = [];
         renderBoard();
@@ -67,26 +68,17 @@ function coordsToSquare(i, j) {
   return "abcdefgh"[j] + (8 - i);
 }
 
+function squareToCoords(square) {
+  const file = square[0];
+  const rank = square[1];
+  return [8 - parseInt(rank), "abcdefgh".indexOf(file)];
+}
+
 function handleSquareClick(i, j) {
   if (aiThinking) return;
 
-  clearHighlights();
-
   const square = coordsToSquare(i, j);
   const piece = game.get(square);
-
-  if (!selectedSquare && piece && piece.color === game.turn()) {
-    selectedSquare = square;
-    boardSquares[i][j].classList.add("selected");
-
-    const moves = game.moves({ square, verbose: true });
-    for (const move of moves) {
-      const to = move.to;
-      const [toRow, toCol] = [8 - parseInt(to[1]), "abcdefgh".indexOf(to[0])];
-      boardSquares[toRow][toCol].classList.add("highlight");
-    }
-    return;
-  }
 
   if (selectedSquare) {
     const move = game.move({
@@ -96,26 +88,20 @@ function handleSquareClick(i, j) {
     });
 
     if (move) {
+      lastMove = { from: move.from, to: move.to };
       history.push(`${move.from}${move.to}`);
       redoStack = [];
       renderBoard();
       updateStatus();
-
       if (mode === "ai" && !game.game_over()) {
         requestAIMove();
       }
     }
 
     selectedSquare = null;
-    clearHighlights();
-  }
-}
-
-function clearHighlights() {
-  for (const row of boardSquares) {
-    for (const square of row) {
-      square.classList.remove("highlight", "selected");
-    }
+  } else if (piece && piece.color === game.turn()) {
+    selectedSquare = square;
+    renderBoard();
   }
 }
 
@@ -134,11 +120,43 @@ function renderBoard() {
       const squareId = coordsToSquare(i, j);
       const piece = game.get(squareId);
       square.innerHTML = piece ? getPieceSymbol(piece) : "";
-      square.classList.remove("highlight", "selected"); // reset highlight
+      square.classList.remove("selected", "last-move", "check");
+
+      // Last move highlight
+      if (lastMove) {
+        if (squareId === lastMove.from || squareId === lastMove.to) {
+          square.classList.add("last-move");
+        }
+      }
+
+      // Selected square highlight
+      if (selectedSquare && squareId === selectedSquare) {
+        square.classList.add("selected");
+      }
+
+      // Check highlight
+      if (game.in_check()) {
+        const kingSquare = findKing(game.turn());
+        const [row, col] = squareToCoords(kingSquare);
+        boardSquares[row][col].classList.add("check");
+      }
     }
   }
 
   renderMoveList();
+}
+
+function findKing(color) {
+  for (let i = 0; i < 8; i++) {
+    for (let j = 0; j < 8; j++) {
+      const square = coordsToSquare(i, j);
+      const piece = game.get(square);
+      if (piece?.type === "k" && piece.color === color) {
+        return square;
+      }
+    }
+  }
+  return null;
 }
 
 function getPieceSymbol(piece) {
@@ -173,6 +191,7 @@ function undoMove() {
   const move = game.undo();
   if (move) {
     redoStack.push(move);
+    lastMove = null;
     renderBoard();
     updateStatus();
   }
@@ -182,6 +201,7 @@ function redoMove() {
   if (redoStack.length > 0) {
     const move = redoStack.pop();
     game.move(move);
+    lastMove = { from: move.from, to: move.to };
     renderBoard();
     updateStatus();
   }
@@ -192,6 +212,7 @@ function newGame() {
   history = [];
   redoStack = [];
   selectedSquare = null;
+  lastMove = null;
   aiThinking = false;
   renderBoard();
   updateStatus();
@@ -219,7 +240,6 @@ function importPGN() {
   input.onchange = () => {
     const file = input.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = () => {
       game.load_pgn(reader.result);
@@ -235,7 +255,6 @@ function toggleTheme() {
   document.body.classList.toggle("dark");
 }
 
-// Global exposure
 window.undoMove = undoMove;
 window.redoMove = redoMove;
 window.newGame = newGame;
