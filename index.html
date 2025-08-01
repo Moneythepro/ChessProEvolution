@@ -56,7 +56,15 @@
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <!-- ✅ Chess.js from reliable CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chess.js@1.0.0/chess.min.js"></script>
+
+  <!-- ✅ Load Stockfish.js as Web Worker (DO NOT USE <script src=...>) -->
+  <script>
+    window.stockfish = new Worker("stockfish.js");
+  </script>
+
+  <!-- ✅ Main game logic -->
   <script src="app.js"></script>
 </body>
 </html>
