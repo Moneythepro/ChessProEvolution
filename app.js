@@ -232,11 +232,12 @@ function requestAIMove() {
 function undoMove() {
   const move = game.undo();
   if (move) {
-    redoStack.push(move);
+    // Backup SAN before undo, because undo deletes it
+    const san = history.pop();
+    redoStack.push({ ...move, san });
     lastMove = null;
     selectedSquare = null;
     legalMoves = [];
-    history.pop();
     renderBoard();
     updateStatus();
   }
@@ -247,7 +248,7 @@ function redoMove() {
     const move = redoStack.pop();
     game.move(move);
     lastMove = { from: move.from, to: move.to };
-    history.push(move.san);
+    history.push(move.san || `${move.from}-${move.to}`);
     renderBoard();
     updateStatus();
   }
