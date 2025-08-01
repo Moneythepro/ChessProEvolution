@@ -1,48 +1,55 @@
-:root { --bg: #f0f0f0; --text: #222; --accent: #4f46e5; --board-light: #f0d9b5; --board-dark: #b58863; --radius: 12px; --transition: 0.3s ease; }
+:root {
+  --bg: #f0f0f0;
+  --text: #222;
+  --accent: #4f46e5;
+  --board-light: #f0d9b5;
+  --board-dark: #b58863;
+  --radius: 12px;
+  --transition: 0.3s ease;
+}
 
-body.dark { --bg: #1e1e2f; --text: #f1f1f1; --board-light: #b58863; --board-dark: #7a5230; }
+body.dark {
+  --bg: #1e1e2f;
+  --text: #f1f1f1;
+  --board-light: #b58863;
+  --board-dark: #7a5230;
+}
 
-body { margin: 0; padding: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+body {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
 
-#app { flex: 1; display: flex; flex-direction: column; padding: 0.5rem; gap: 0.5rem; }
+#app {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem;
+  gap: 0.5rem;
+}
 
-header { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 1rem; font-weight: bold; font-size: 1.2rem; }
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
 
-#game { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
-
-#board { width: 100vw; aspect-ratio: 1; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); border: 2px solid var(--accent); border-radius: var(--radius); overflow: hidden; max-width: 100%; margin: 0 auto; touch-action: manipulation; }
-
-.square { display: flex; justify-content: center; align-items: center; font-size: 3.5vw; user-select: none; }
-
-@media (min-width: 600px) { .square { font-size: 2.5rem; } }
-
-.light { background-color: var(--board-light); } .dark { background-color: var(--board-dark); }
-
-#controls { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.25rem; background: rgba(255, 255, 255, 0.9); padding: 0.5rem; border-radius: var(--radius); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
-
-body.dark #controls { background: rgba(30, 30, 40, 0.9); }
-
-#controls button { flex: 1 1 45%; padding: 0.5rem 0; font-size: 0.9rem; background: var(--accent); color: white; border: none; border-radius: var(--radius); transition: background var(--transition); }
-
-#controls button:hover { background: #3730a3; }
-
-#info { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.5rem; background: rgba(255,255,255,0.6); border-radius: var(--radius); backdrop-filter: blur(4px); }
-
-#info select, #info input { width: 100%; padding: 0.4rem; border-radius: var(--radius); border: 1px solid var(--accent); font-size: 0.9rem; background: white; color: var(--text); }
-
-body.dark #info select, body.dark #info input { background: #2e2e40; color: white; }
-
-#history { display: none; /* Hidden by default, modal will control this */ }
-
-#historyModal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg); border: 2px solid var(--accent); border-radius: var(--radius); max-height: 80vh; width: 80vw; padding: 1rem; overflow-y: auto; z-index: 999; display: none; }
-
-#historyModal.active { display: block; }
-
-#footer { display: flex; justify-content: space-around; background: var(--bg); padding: 0.5rem 0; border-top: 1px solid #ccc; }
-
-#footer button { flex: 1; background: none; border: none; color: var(--text); font-size: 1rem; padding: 0.5rem; }
-
-.modal-close-btn { background: var(--accent); color: white; padding: 0.4rem 0.8rem; border: none; border-radius: var(--radius); margin-top: 1rem; float: right; }
+#game {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
 
 #board {
   display: grid;
@@ -52,11 +59,14 @@ body.dark #info select, body.dark #info input { background: #2e2e40; color: whit
   height: 100vmin;
   max-width: 100%;
   max-height: 100%;
-  border: 2px solid #444;
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
   aspect-ratio: 1;
   margin: auto;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
   user-select: none;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--board-light), var(--board-dark));
 }
 
 .square {
@@ -65,19 +75,14 @@ body.dark #info select, body.dark #info input { background: #2e2e40; color: whit
   justify-content: center;
   font-size: clamp(1.5rem, 6vmin, 4rem);
   transition: background-color 0.2s ease, outline 0.2s ease;
+  position: relative;
 }
 
-.square.light {
-  background-color: #f0d9b5;
+.light {
+  background-color: var(--board-light);
 }
-
-.square.dark {
-  background-color: #b58863;
-}
-
-.piece {
-  transition: transform 0.2s ease;
-  will-change: transform;
+.dark {
+  background-color: var(--board-dark);
 }
 
 .square:hover {
@@ -103,18 +108,164 @@ body.dark #info select, body.dark #info input { background: #2e2e40; color: whit
   background-color: rgba(30, 144, 255, 0.6);
   border-radius: 50%;
   display: block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
-body.dark .square.light {
-  background-color: #769656;
+.piece {
+  transition: transform 0.2s ease;
+  will-change: transform;
 }
 
-body.dark .square.dark {
-  background-color: #4b7399;
+.animated {
+  animation: glowFade 1.5s ease-in-out infinite alternate;
 }
 
-body.dark #board {
-  border-color: #888;
+@keyframes glowFade {
+  from {
+    box-shadow: 0 0 6px rgba(79, 70, 229, 0.2);
+  }
+  to {
+    box-shadow: 0 0 16px rgba(79, 70, 229, 0.6);
+  }
+}
+
+#controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.25rem;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+body.dark #controls {
+  background: rgba(30, 30, 40, 0.9);
+}
+
+#controls button {
+  flex: 1 1 45%;
+  padding: 0.5rem 0;
+  font-size: 0.9rem;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  transition: background var(--transition);
+}
+
+#controls button:hover {
+  background: #3730a3;
+}
+
+#info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(255,255,255,0.6);
+  border-radius: var(--radius);
+  backdrop-filter: blur(4px);
+}
+
+#info select,
+#info input {
+  width: 100%;
+  padding: 0.4rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--accent);
+  font-size: 0.9rem;
+  background: white;
+  color: var(--text);
+}
+
+body.dark #info select,
+body.dark #info input {
+  background: #2e2e40;
+  color: white;
+}
+
+#footer {
+  display: flex;
+  justify-content: space-around;
+  background: var(--bg);
+  padding: 0.5rem 0;
+  border-top: 1px solid #ccc;
+}
+
+#footer button {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 1rem;
+  padding: 0.5rem;
+}
+
+#historyModal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--bg);
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
+  max-height: 80vh;
+  width: 80vw;
+  padding: 1rem;
+  overflow-y: auto;
+  z-index: 999;
+  display: none;
+}
+
+#historyModal.active {
+  display: block;
+}
+
+.modal-close-btn {
+  background: var(--accent);
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: var(--radius);
+  margin-top: 1rem;
+  float: right;
+}
+
+/* Winner Modal */
+#winnerModal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--bg);
+  color: var(--text);
+  padding: 2rem;
+  border: 3px solid var(--accent);
+  border-radius: var(--radius);
+  z-index: 1000;
+  display: none;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(0,0,0,0.4);
+}
+
+#winnerModal button {
+  margin-top: 1rem;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  border: none;
+  background: var(--accent);
+  color: white;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+#winnerModal button:hover {
+  background: #3730a3;
 }
 
 @media (max-width: 600px) {
