@@ -13,7 +13,7 @@
     <!-- Header -->
     <header>
       <h1><i data-lucide="crown"></i> ChessProEvolution</h1>
-      <div style="display: flex; gap: 0.5rem;">
+      <div class="top-controls">
         <button id="menuBtn" title="Menu"><i data-lucide="more-horizontal"></i></button>
         <button onclick="toggleTheme()" title="Toggle Theme"><i data-lucide="moon-star"></i></button>
       </div>
@@ -54,11 +54,11 @@
       <button id="startGameBtn"><i data-lucide="play"></i> Start Game</button>
     </div>
 
-    <!-- Main Game -->
-    <div id="boardWrapper" style="display:none;">
+    <!-- Main Game Area -->
+    <div id="boardWrapper" style="display: none;">
       <div id="board"></div>
 
-      <!-- Info + Timer -->
+      <!-- Timer + Info -->
       <div id="info">
         <div id="timers">
           <div class="timer white"><i data-lucide="clock"></i> White: <span id="whiteTimer">10:00</span></div>
@@ -66,47 +66,54 @@
         </div>
         <p>Status: <span id="status">Ready</span></p>
       </div>
-
-      <!-- Move History -->
-      <ol id="moveList"></ol>
     </div>
   </div>
 
-  <!-- Compact Menu Modal -->
-  <div id="menuModal" style="display:none;">
+  <!-- Move History Modal -->
+  <div id="moveHistoryModal" style="display: none;">
+    <div class="modal-content">
+      <h2>Move History</h2>
+      <ol id="moveList"></ol>
+      <button onclick="document.getElementById('moveHistoryModal').style.display='none'">
+        <i data-lucide="x"></i> Close
+      </button>
+    </div>
+  </div>
+
+  <!-- 3-dot Compact Horizontal Menu Modal -->
+  <div id="menuModal" style="display: none;">
     <button id="exportBtn"><i data-lucide="download"></i> Export PGN</button>
     <button id="importBtn"><i data-lucide="upload"></i> Import PGN</button>
     <button id="toggleHistoryBtn"><i data-lucide="scroll"></i> Toggle History</button>
-    <label style="padding: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+    <label class="horizontal-toggle">
       <input type="checkbox" id="speechToggleMenu" onchange="speechToggle.checked = this.checked;" />
       <i data-lucide="mic"></i> Move Speech
     </label>
   </div>
 
   <!-- Winner Modal -->
-  <div id="winnerModal">
+  <div id="winnerModal" style="display: none;">
     <h2 id="winnerText">Checkmate!</h2>
     <button onclick="newGame()"><i data-lucide="rotate-ccw"></i> Play Again</button>
   </div>
 
-  <!-- ✅ Chess.js -->
+  <!-- Chess.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 
-  <!-- ✅ Stockfish Web Worker -->
+  <!-- Stockfish Web Worker -->
   <script>
     window.stockfish = new Worker("stockfish.js");
   </script>
 
-  <!-- ✅ Main Logic -->
+  <!-- Main Game Logic -->
   <script src="app.js"></script>
 
-  <!-- ✅ Lucide Icons Activation -->
+  <!-- Lucide Icons Init -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       lucide.createIcons();
     });
 
-    // Dark/light theme toggle
     function toggleTheme() {
       document.body.classList.toggle("dark");
     }
