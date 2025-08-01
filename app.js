@@ -1,4 +1,4 @@
-// ✅ Ultimate Chess App v3.0
+// ✅ Ultimate Chess App v3.1 – with fixed [object Object] bug & proper coordinates
 
 // 🎵 Sound and Vibration Setup
 const winSound = new Audio("win.mp3");
@@ -46,7 +46,6 @@ let blackTimeLeft = 600;
 let currentTimerColor = "w";
 let timerInterval;
 
-// AI worker setup
 aiWorker.onmessage = (event) => {
   const line = event.data;
   if (!initialized && line === "readyok") {
@@ -59,7 +58,7 @@ aiWorker.onmessage = (event) => {
       const played = game.move({ from: move.slice(0, 2), to: move.slice(2, 4), promotion: "q" });
       if (played) {
         lastMove = { from: played.from, to: played.to };
-        history.push(played.san); // ✅ Only push SAN string
+        history.push(played.san);
         redoStack = [];
         playMoveFeedback();
         speakMove(played);
@@ -74,29 +73,12 @@ aiWorker.onmessage = (event) => {
 aiWorker.postMessage("uci");
 aiWorker.postMessage("isready");
 
-// === INIT
 function initBoard() {
   board.innerHTML = "";
   boardSquares = [];
 
-  // Top letters
-  const lettersTop = document.createElement("div");
-  lettersTop.className = "letters top";
-  for (let j = 0; j < 8; j++) {
-    const span = document.createElement("span");
-    span.textContent = "abcdefgh"[j];
-    lettersTop.appendChild(span);
-  }
-  board.appendChild(lettersTop);
-
   for (let i = 0; i < 8; i++) {
     const row = [];
-
-    const numLeft = document.createElement("div");
-    numLeft.className = "number left";
-    numLeft.textContent = 8 - i;
-    board.appendChild(numLeft);
-
     for (let j = 0; j < 8; j++) {
       const square = document.createElement("div");
       square.className = `square ${(i + j) % 2 === 0 ? "light" : "dark"}`;
@@ -106,30 +88,14 @@ function initBoard() {
       board.appendChild(square);
       row.push(square);
     }
-
-    const numRight = document.createElement("div");
-    numRight.className = "number right";
-    numRight.textContent = 8 - i;
-    board.appendChild(numRight);
-
     boardSquares.push(row);
   }
-
-  const lettersBottom = document.createElement("div");
-  lettersBottom.className = "letters bottom";
-  for (let j = 0; j < 8; j++) {
-    const span = document.createElement("span");
-    span.textContent = "abcdefgh"[j];
-    lettersBottom.appendChild(span);
-  }
-  board.appendChild(lettersBottom);
 
   renderBoard();
   updateStatus();
   updateTimerDisplay();
 }
 
-// === SQUARES
 function coordsToSquare(i, j) {
   return "abcdefgh"[j] + (8 - i);
 }
@@ -145,7 +111,7 @@ function handleSquareClick(i, j) {
     const played = game.move(move);
     if (played) {
       lastMove = { from: played.from, to: played.to };
-      history.push(played.san); // ✅ Fix: only SAN
+      history.push(played.san); // ✅ SAN only
       redoStack = [];
       selectedSquare = null;
       legalMoves = [];
@@ -241,7 +207,6 @@ function updateStatus() {
   statusEl.textContent = `${game.turn() === "w" ? "White" : "Black"} to move`;
 }
 
-// === GAME CONTROL
 function playMoveFeedback() {
   moveSound.play();
   navigator.vibrate?.([50]);
@@ -324,7 +289,6 @@ function decideWinnerByPoints() {
   navigator.vibrate?.([100, 100, 100]);
 }
 
-// === UI Controls
 startBtn.onclick = () => {
   mode = modeSelect.value;
   speechEnabled = speechToggle?.checked || false;
@@ -347,7 +311,6 @@ function newGame() {
   updateStatus();
 }
 
-// Menu Modal
 menuBtn.onclick = () => {
   menuModal.style.display = "block";
 };
