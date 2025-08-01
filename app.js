@@ -5,6 +5,8 @@
 // - Timer (10/20/30min)
 // - Point-based timeout win
 // - Move speech toggle
+// - ✅ Fixed [object Object] move history bug
+// - ✅ Accurate per-player timer system
 
 // 🎵 Sound and Vibration Setup
 const winSound = new Audio("win.mp3");
@@ -37,9 +39,9 @@ let speechEnabled = false;
 const aiWorker = window.stockfish;
 let initialized = false;
 
-let timeControl = 600;
-let whiteTime = timeControl;
-let blackTime = timeControl;
+let whiteTimeLeft = 600;
+let blackTimeLeft = 600;
+let currentTimerColor = "w";
 let timerInterval;
 
 aiWorker.onmessage = (event) => {
@@ -54,12 +56,13 @@ aiWorker.onmessage = (event) => {
       const played = game.move({ from: move.slice(0, 2), to: move.slice(2, 4), promotion: "q" });
       if (played) {
         lastMove = { from: played.from, to: played.to };
-        history.push(played);
+        history.push(played.san);
         redoStack = [];
         playMoveFeedback();
         speakMove(played);
         renderBoard();
         updateStatus();
+        currentTimerColor = game.turn(); // 🔁 switch timer
       }
     }
     aiThinking = false;
@@ -89,7 +92,7 @@ function initBoard() {
 
   renderBoard();
   updateStatus();
-  updateTimers();
+  updateTimerDisplay();
 }
 
 function coordsToSquare(i, j) {
@@ -117,7 +120,7 @@ function handleSquareClick(i, j) {
     const played = game.move(move);
     if (played) {
       lastMove = { from: played.from, to: played.to };
-      history.push(played);
+      history.push(played.san);
       redoStack = [];
       selectedSquare = null;
       legalMoves = [];
@@ -125,6 +128,7 @@ function handleSquareClick(i, j) {
       speakMove(played);
       renderBoard();
       updateStatus();
+      currentTimerColor = game.turn(); // 🔁 swap after move
       if (mode === "ai" && !game.game_over()) requestAIMove();
     } else {
       selectedSquare = null;
@@ -165,10 +169,9 @@ function renderBoard() {
 function renderMoveList() {
   if (!moveList) return;
   moveList.innerHTML = "";
-  const moves = game.history();
-  for (let i = 0; i < moves.length; i += 2) {
+  for (let i = 0; i < history.length; i += 2) {
     const li = document.createElement("li");
-    li.textContent = `${i / 2 + 1}. ${moves[i] || ""} ${moves[i + 1] || ""}`;
+    li.textContent = `${i / 2 + 1}. ${history[i] || ""} ${history[i + 1] || ""}`;
     moveList.appendChild(li);
   }
 }
@@ -239,6 +242,7 @@ function undoMove() {
     lastMove = null;
     selectedSquare = null;
     legalMoves = [];
+    history.pop(); // remove from history
     renderBoard();
     updateStatus();
   }
@@ -249,6 +253,7 @@ function redoMove() {
     const move = redoStack.pop();
     game.move(move);
     lastMove = { from: move.from, to: move.to };
+    history.push(move.san);
     renderBoard();
     updateStatus();
   }
@@ -264,7 +269,6 @@ function newGame() {
   aiThinking = false;
   winnerModal.style.display = "none";
   speechEnabled = speechToggle?.checked || false;
-  updateTimers();
   resetTimer();
   renderBoard();
   updateStatus();
@@ -295,6 +299,7 @@ function importPGN() {
     const reader = new FileReader();
     reader.onload = () => {
       game.load_pgn(reader.result);
+      history = game.history();
       renderBoard();
       updateStatus();
     };
@@ -312,34 +317,41 @@ function resetTimer() {
   stopTimer();
   const mins = parseInt(timerSelect?.value || "0");
   if (!mins) return;
-  whiteTime = mins * 60;
-  blackTime = mins * 60;
+  whiteTimeLeft = blackTimeLeft = mins * 60;
+  currentTimerColor = game.turn();
+  updateTimerDisplay();
   timerInterval = setInterval(() => {
-    if (game.turn() === "w") whiteTime--;
-    else blackTime--;
-
-    updateTimers();
-
-    if (whiteTime <= 0 || blackTime <= 0) {
-      stopTimer();
-      decideWinnerByPoints();
+    if (currentTimerColor === "w") {
+      whiteTimeLeft--;
+      if (whiteTimeLeft <= 0) {
+        stopTimer();
+        decideWinnerByPoints();
+        return;
+      }
+    } else {
+      blackTimeLeft--;
+      if (blackTimeLeft <= 0) {
+        stopTimer();
+        decideWinnerByPoints();
+        return;
+      }
     }
+    updateTimerDisplay();
   }, 1000);
-}
-
-function updateTimers() {
-  whiteTimerEl.textContent = formatTime(whiteTime);
-  blackTimerEl.textContent = formatTime(blackTime);
 }
 
 function stopTimer() {
   clearInterval(timerInterval);
 }
 
-function formatTime(sec) {
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return `${m}:${s.toString().padStart(2, '0')}`;
+function updateTimerDisplay() {
+  const format = (t) => {
+    const m = Math.floor(t / 60).toString().padStart(2, "0");
+    const s = (t % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+  };
+  whiteTimerEl.textContent = format(whiteTimeLeft);
+  blackTimerEl.textContent = format(blackTimeLeft);
 }
 
 function decideWinnerByPoints() {
