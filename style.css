@@ -27,10 +27,6 @@ body {
   overflow: hidden;
 }
 
-.hide {
-  display: none !important;
-}
-
 #app {
   flex: 1;
   display: flex;
@@ -39,6 +35,7 @@ body {
   gap: 0.5rem;
 }
 
+/* Header */
 header {
   display: flex;
   align-items: center;
@@ -56,11 +53,11 @@ header i {
   stroke-width: 2.5;
 }
 
-/* ==== Start Menu ==== */
+/* Start Menu */
 #startMenu {
   max-width: 400px;
   margin: auto;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.85);
   padding: 1rem;
   border-radius: var(--radius);
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -71,17 +68,14 @@ header i {
 }
 
 body.dark #startMenu {
-  background: rgba(30, 30, 40, 0.8);
-}
-
-#startMenu label {
-  text-align: left;
+  background: rgba(30, 30, 40, 0.9);
 }
 
 #startMenu select,
-#startMenu input[type="range"] {
+#startMenu input[type="range"],
+#startMenu input[type="checkbox"] {
   width: 100%;
-  padding: 0.4rem;
+  padding: 0.5rem;
   border-radius: var(--radius);
   border: 1px solid var(--accent);
   background: white;
@@ -108,38 +102,38 @@ body.dark #startMenu input[type="range"] {
   background: #3730a3;
 }
 
-/* ==== Game Board Wrapper ==== */
+/* Game Area */
 #boardWrapper {
-  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
+  position: relative;
 }
 
-/* ==== Game Board ==== */
 #board {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
   width: 90vmin;
   height: 90vmin;
+  max-width: 100%;
+  max-height: 100%;
   border: 3px solid var(--accent);
   border-radius: var(--radius);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-  background: linear-gradient(135deg, var(--board-light), var(--board-dark));
-  user-select: none;
+  background: transparent;
   position: relative;
 }
 
-/* ==== Squares & Pieces ==== */
+/* Square Styling */
 .square {
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: clamp(1.5rem, 6vmin, 4rem);
   position: relative;
-  transition: background-color 0.2s ease, outline 0.2s ease;
+  user-select: none;
 }
 
 .light {
@@ -147,10 +141,6 @@ body.dark #startMenu input[type="range"] {
 }
 .dark {
   background-color: var(--board-dark);
-}
-
-.square:hover {
-  filter: brightness(1.1);
 }
 
 .square.selected {
@@ -171,7 +161,6 @@ body.dark #startMenu input[type="range"] {
   height: 20%;
   background-color: rgba(30, 144, 255, 0.6);
   border-radius: 50%;
-  display: block;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -183,32 +172,28 @@ body.dark #startMenu input[type="range"] {
   will-change: transform;
 }
 
-/* ==== Coordinates Overlay ==== */
+/* Coordinates */
 .board-label {
   position: absolute;
   font-size: 0.75rem;
   color: var(--text);
   pointer-events: none;
-  z-index: 10;
 }
-
 .rank-label {
-  left: 4px;
+  left: 2px;
   transform: translateY(-50%);
 }
-
 .file-label {
-  bottom: 4px;
+  bottom: 2px;
   transform: translateX(-50%);
 }
 
-/* ==== Info Section ==== */
+/* Timers + Info */
 #info {
-  align-items: center;
-  text-align: center;
-  margin-top: 1rem;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
   gap: 0.5rem;
   background: rgba(255,255,255,0.6);
   padding: 0.75rem;
@@ -220,11 +205,6 @@ body.dark #info {
   background: rgba(30,30,40,0.6);
 }
 
-#info p {
-  margin: 0;
-}
-
-/* ==== Timers ==== */
 #timers {
   display: flex;
   flex-direction: column;
@@ -248,24 +228,16 @@ body.dark .timer {
   background: rgba(0, 0, 0, 0.3);
 }
 
-.timer.white {
-  color: #222;
-}
-.timer.black {
-  color: #000;
-}
-body.dark .timer.white {
-  color: #fff;
-}
-body.dark .timer.black {
-  color: #ccc;
-}
+.timer.white { color: #222; }
+.timer.black { color: #000; }
+body.dark .timer.white { color: #fff; }
+body.dark .timer.black { color: #ccc; }
 
 .timer i {
   margin-right: 0.4rem;
 }
 
-/* ==== Move List ==== */
+/* Move List */
 #moveList {
   margin: 1rem auto;
   padding: 0.5rem;
@@ -281,7 +253,7 @@ body.dark #moveList {
   background: rgba(30,30,40,0.4);
 }
 
-/* ==== Menu Modal ==== */
+/* Compact Menu Modal */
 #menuModal {
   display: none;
   position: fixed;
@@ -313,22 +285,22 @@ body.dark #moveList {
   background: rgba(0, 0, 0, 0.05);
 }
 
-/* ==== Winner Modal ==== */
+/* Winner Modal */
 #winnerModal {
   display: none;
+  animation: popin 0.3s ease;
+  background: var(--bg);
+  color: var(--text);
+  padding: 2rem;
+  border: 3px solid var(--accent);
+  border-radius: var(--radius);
+  z-index: 1000;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(0,0,0,0.4);
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: var(--bg);
-  color: var(--text);
-  padding: 2rem;
-  border-radius: var(--radius);
-  border: 2px solid var(--accent);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  text-align: center;
-  z-index: 1000;
-  animation: popin 0.3s ease;
 }
 
 #winnerModal button {
@@ -349,18 +321,4 @@ body.dark #moveList {
 @keyframes popin {
   0% { transform: translate(-50%, -50%) scale(0.7); opacity: 0; }
   100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-}
-
-/* ==== Glow Animation ==== */
-.animated {
-  animation: glowFade 1.5s ease-in-out infinite alternate;
-}
-
-@keyframes glowFade {
-  from {
-    box-shadow: 0 0 6px rgba(79, 70, 229, 0.2);
-  }
-  to {
-    box-shadow: 0 0 16px rgba(79, 70, 229, 0.6);
-  }
 }
