@@ -62,7 +62,7 @@ aiWorker.onmessage = (event) => {
         speakMove(played);
         renderBoard();
         updateStatus();
-        currentTimerColor = game.turn(); // 🔁 switch timer
+        currentTimerColor = game.turn();
       }
     }
     aiThinking = false;
@@ -99,12 +99,6 @@ function coordsToSquare(i, j) {
   return "abcdefgh"[j] + (8 - i);
 }
 
-function squareToCoords(square) {
-  const file = square[0];
-  const rank = square[1];
-  return [8 - parseInt(rank), "abcdefgh".indexOf(file)];
-}
-
 function handleSquareClick(i, j) {
   if (aiThinking || game.game_over()) return;
 
@@ -128,7 +122,7 @@ function handleSquareClick(i, j) {
       speakMove(played);
       renderBoard();
       updateStatus();
-      currentTimerColor = game.turn(); // 🔁 swap after move
+      currentTimerColor = game.turn();
       if (mode === "ai" && !game.game_over()) requestAIMove();
     } else {
       selectedSquare = null;
@@ -242,7 +236,7 @@ function undoMove() {
     lastMove = null;
     selectedSquare = null;
     legalMoves = [];
-    history.pop(); // remove from history
+    history.pop();
     renderBoard();
     updateStatus();
   }
