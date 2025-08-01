@@ -10,6 +10,8 @@ const modeSelect = document.getElementById("modeSelect");
 const aiLevelInput = document.getElementById("aiLevel");
 const winnerModal = document.getElementById("winnerModal");
 const winnerText = document.getElementById("winnerText");
+const timerSelect = document.getElementById("timerSelect");
+const speechToggle = document.getElementById("speechToggle");
 
 const game = new Chess();
 let boardSquares = [];
@@ -20,9 +22,12 @@ let history = [];
 let redoStack = [];
 let mode = "pvp";
 let aiThinking = false;
+let speechEnabled = false;
 
 const aiWorker = window.stockfish;
 let initialized = false;
+
+let timer, timeLeft = 0;
 
 aiWorker.onmessage = (event) => {
   const line = event.data;
@@ -36,9 +41,10 @@ aiWorker.onmessage = (event) => {
       const played = game.move({ from: move.slice(0, 2), to: move.slice(2, 4), promotion: "q" });
       if (played) {
         lastMove = { from: played.from, to: played.to };
-        history.push(`${played.from}${played.to}`);
+        history.push(played);
         redoStack = [];
         playMoveFeedback();
+        speakMove(played);
         renderBoard();
         updateStatus();
       }
@@ -97,11 +103,12 @@ function handleSquareClick(i, j) {
 
     if (move) {
       lastMove = { from: move.from, to: move.to };
-      history.push(`${move.from}${move.to}`);
+      history.push(move);
       redoStack = [];
       selectedSquare = null;
       legalMoves = [];
       playMoveFeedback();
+      speakMove(move);
       renderBoard();
       updateStatus();
 
@@ -161,6 +168,18 @@ function renderBoard() {
   renderMoveList();
 }
 
+function renderMoveList() {
+  if (!moveList) return;
+  moveList.innerHTML = "";
+  const history = game.history();
+  for (let i = 0; i < history.length; i += 2) {
+    const moveNumber = (i / 2) + 1;
+    const li = document.createElement("li");
+    li.textContent = `${moveNumber}. ${history[i] || ""} ${history[i + 1] || ""}`;
+    moveList.appendChild(li);
+  }
+}
+
 function findKing(color) {
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
@@ -182,18 +201,9 @@ function getPieceSymbol(piece) {
   return symbols[piece.color === "w" ? piece.type.toUpperCase() : piece.type];
 }
 
-function renderMoveList() {
-  if (!moveList) return;
-  moveList.innerHTML = "";
-  game.history().forEach((move) => {
-    const li = document.createElement("li");
-    li.textContent = move;
-    moveList.appendChild(li);
-  });
-}
-
 function updateStatus() {
   if (game.in_checkmate()) {
+    stopTimer();
     const winner = game.turn() === "w" ? "Black" : "White";
     winnerText.textContent = `${winner} wins by checkmate!`;
     winnerModal.style.display = "block";
@@ -201,6 +211,7 @@ function updateStatus() {
     navigator.vibrate?.([200, 100, 200]);
     return;
   } else if (game.in_draw()) {
+    stopTimer();
     winnerText.textContent = `It's a draw!`;
     winnerModal.style.display = "block";
     drawSound.play();
@@ -214,6 +225,12 @@ function updateStatus() {
 function playMoveFeedback() {
   moveSound.play();
   navigator.vibrate?.([50]);
+}
+
+function speakMove(move) {
+  if (!speechEnabled) return;
+  const utter = new SpeechSynthesisUtterance(`${move.from} to ${move.to}`);
+  speechSynthesis.speak(utter);
 }
 
 function undoMove() {
@@ -247,8 +264,10 @@ function newGame() {
   legalMoves = [];
   aiThinking = false;
   winnerModal.style.display = "none";
+  speechEnabled = speechToggle?.checked || false;
   renderBoard();
   updateStatus();
+  startTimer();
 }
 
 function changeMode() {
@@ -286,6 +305,51 @@ function importPGN() {
 
 function toggleTheme() {
   document.body.classList.toggle("dark");
+}
+
+// Timer
+function startTimer() {
+  stopTimer();
+  const mins = parseInt(timerSelect?.value || "0");
+  if (!mins) return;
+  timeLeft = mins * 60;
+  timer = setInterval(() => {
+    timeLeft--;
+    if (timeLeft <= 0) {
+      stopTimer();
+      decideWinnerByPoints();
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timer);
+}
+
+function decideWinnerByPoints() {
+  const score = { w: 0, b: 0 };
+  const values = { p: 1, n: 3, b: 3, r: 5, q: 9 };
+
+  for (let i = 0; i < 8; i++) {
+    for (let j = 0; j < 8; j++) {
+      const piece = game.get(coordsToSquare(i, j));
+      if (piece && piece.type !== "k") {
+        score[piece.color] += values[piece.type] || 0;
+      }
+    }
+  }
+
+  if (score.w > score.b) {
+    winnerText.textContent = "White wins on points!";
+  } else if (score.b > score.w) {
+    winnerText.textContent = "Black wins on points!";
+  } else {
+    winnerText.textContent = "Draw by equal points!";
+  }
+
+  winnerModal.style.display = "block";
+  drawSound.play();
+  navigator.vibrate?.([100, 100, 100]);
 }
 
 window.undoMove = undoMove;
