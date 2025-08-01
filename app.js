@@ -1,31 +1,4 @@
-// ✅ ChessProEvolution – Advanced Chess App v4.0
-
-// 🎵 Sound and Vibration Setup
-const winSound = new Audio("win.mp3");
-const drawSound = new Audio("draw.mp3");
-const moveSound = new Audio("move.mp3");
-
-// DOM Elements
-const board = document.getElementById("board");
-const boardWrapper = document.getElementById("boardWrapper");
-const statusEl = document.getElementById("status");
-const moveList = document.getElementById("moveList");
-const modeSelect = document.getElementById("modeSelect");
-const aiLevelInput = document.getElementById("aiLevel");
-const winnerModal = document.getElementById("winnerModal");
-const winnerText = document.getElementById("winnerText");
-const timerSelect = document.getElementById("timerSelect");
-const speechToggle = document.getElementById("speechToggle");
-const whiteTimerEl = document.getElementById("whiteTimer");
-const blackTimerEl = document.getElementById("blackTimer");
-const startMenu = document.getElementById("startMenu");
-const startBtn = document.getElementById("startGameBtn");
-const menuBtn = document.getElementById("menuBtn");
-const menuModal = document.getElementById("menuModal");
-const toggleHistoryBtn = document.getElementById("toggleHistoryBtn");
-const exportBtn = document.getElementById("exportBtn");
-const importBtn = document.getElementById("importBtn");
-const themeToggle = document.getElementById("themeToggle");
+// ChessProEvolution – app.js v1.0 Final
 
 const game = new Chess();
 let boardSquares = [];
@@ -33,21 +6,43 @@ let selectedSquare = null;
 let legalMoves = [];
 let lastMove = null;
 let history = [];
-let redoStack = [];
 let mode = "pvp";
 let aiThinking = false;
-let speechEnabled = false;
 let showHistory = true;
-
-const aiWorker = window.stockfish;
+let speechEnabled = false;
 let initialized = false;
+
+// DOM
+const board = document.getElementById("board");
+const moveList = document.getElementById("moveList");
+const modeSelect = document.getElementById("modeSelect");
+const aiLevelInput = document.getElementById("aiLevel");
+const timerSelect = document.getElementById("timerSelect");
+const speechToggle = document.getElementById("speechToggle");
+const whiteTimerEl = document.getElementById("whiteTimer");
+const blackTimerEl = document.getElementById("blackTimer");
+const winnerModal = document.getElementById("winnerModal");
+const winnerText = document.getElementById("winnerText");
+const statusEl = document.getElementById("status");
+
+const exportBtn = document.getElementById("exportBtn");
+const importBtn = document.getElementById("importBtn");
+const toggleHistoryBtn = document.getElementById("toggleHistoryBtn");
+const menuBtn = document.getElementById("menuBtn");
+const menuModal = document.getElementById("menuModal");
+const startMenu = document.getElementById("startMenu");
+const startBtn = document.getElementById("startGameBtn");
+
+const winSound = new Audio("win.mp3");
+const drawSound = new Audio("draw.mp3");
+const moveSound = new Audio("move.mp3");
 
 let whiteTimeLeft = 600;
 let blackTimeLeft = 600;
 let currentTimerColor = "w";
-let timerInterval;
+let timerInterval = null;
 
-// Stockfish worker messages
+const aiWorker = window.stockfish;
 aiWorker.onmessage = (event) => {
   const line = event.data;
   if (!initialized && line === "readyok") {
@@ -61,7 +56,6 @@ aiWorker.onmessage = (event) => {
       if (played) {
         lastMove = { from: played.from, to: played.to };
         history.push(played.san);
-        redoStack = [];
         playMoveFeedback();
         speakMove(played);
         renderBoard();
@@ -75,11 +69,9 @@ aiWorker.onmessage = (event) => {
 aiWorker.postMessage("uci");
 aiWorker.postMessage("isready");
 
-// Initialize the board
 function initBoard() {
   board.innerHTML = "";
   boardSquares = [];
-
   for (let i = 0; i < 8; i++) {
     const row = [];
     for (let j = 0; j < 8; j++) {
@@ -90,25 +82,36 @@ function initBoard() {
       square.addEventListener("click", () => handleSquareClick(i, j));
       board.appendChild(square);
       row.push(square);
+
+      // Add file/rank labels
+      if (i === 7) {
+        const label = document.createElement("div");
+        label.className = "board-label file-label";
+        label.style.left = "50%";
+        label.textContent = "abcdefgh"[j];
+        square.appendChild(label);
+      }
+      if (j === 0) {
+        const label = document.createElement("div");
+        label.className = "board-label rank-label";
+        label.style.top = "50%";
+        label.textContent = 8 - i;
+        square.appendChild(label);
+      }
     }
     boardSquares.push(row);
   }
-
   renderBoard();
   updateStatus();
   updateTimerDisplay();
-  renderCoordinates();
 }
 
-// Convert to square string like e4
 function coordsToSquare(i, j) {
   return "abcdefgh"[j] + (8 - i);
 }
 
-// Handle square click
 function handleSquareClick(i, j) {
-  if (aiThinking || game.game_over()) return;
-
+  if (aiThinking) return;
   const square = coordsToSquare(i, j);
   const piece = game.get(square);
 
@@ -118,7 +121,6 @@ function handleSquareClick(i, j) {
     if (played) {
       lastMove = { from: played.from, to: played.to };
       history.push(played.san);
-      redoStack = [];
       selectedSquare = null;
       legalMoves = [];
       playMoveFeedback();
@@ -139,7 +141,6 @@ function handleSquareClick(i, j) {
   }
 }
 
-// Render board with highlights
 function renderBoard() {
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
@@ -156,26 +157,14 @@ function renderBoard() {
       if (legalMoves.includes(squareId)) square.classList.add("legal");
 
       if (game.in_check()) {
-        const kingSquare = findKing(game.turn());
-        if (squareId === kingSquare) square.classList.add("check");
+        const king = findKing(game.turn());
+        if (squareId === king) square.classList.add("check");
       }
     }
   }
   renderMoveList();
 }
 
-// Render move list in .san
-function renderMoveList() {
-  if (!moveList || !showHistory) return;
-  moveList.innerHTML = "";
-  for (let i = 0; i < history.length; i += 2) {
-    const li = document.createElement("li");
-    li.textContent = `${i / 2 + 1}. ${history[i] || ""} ${history[i + 1] || ""}`;
-    moveList.appendChild(li);
-  }
-}
-
-// Get unicode for pieces
 function getPieceSymbol(piece) {
   const symbols = {
     p: "♟", r: "♜", n: "♞", b: "♝", q: "♛", k: "♚",
@@ -184,7 +173,6 @@ function getPieceSymbol(piece) {
   return symbols[piece.color === "w" ? piece.type.toUpperCase() : piece.type];
 }
 
-// Find the king's position
 function findKing(color) {
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
@@ -196,7 +184,20 @@ function findKing(color) {
   return null;
 }
 
-// Game status and end
+function renderMoveList() {
+  if (!showHistory) {
+    moveList.style.display = "none";
+    return;
+  }
+  moveList.style.display = "block";
+  moveList.innerHTML = "";
+  for (let i = 0; i < history.length; i += 2) {
+    const li = document.createElement("li");
+    li.textContent = `${i / 2 + 1}. ${history[i] || ""} ${history[i + 1] || ""}`;
+    moveList.appendChild(li);
+  }
+}
+
 function updateStatus() {
   if (game.in_checkmate()) {
     stopTimer();
@@ -218,20 +219,17 @@ function updateStatus() {
   statusEl.textContent = `${game.turn() === "w" ? "White" : "Black"} to move`;
 }
 
-// Sound + Vibration
 function playMoveFeedback() {
   moveSound.play();
   navigator.vibrate?.([50]);
 }
 
-// Speak move using SpeechSynthesis
 function speakMove(move) {
   if (!speechEnabled) return;
   const utter = new SpeechSynthesisUtterance(`${move.from} to ${move.to}`);
   speechSynthesis.speak(utter);
 }
 
-// AI request
 function requestAIMove() {
   aiThinking = true;
   const level = parseInt(aiLevelInput.value || 5);
@@ -240,7 +238,6 @@ function requestAIMove() {
   aiWorker.postMessage(`go depth ${Math.min(20, level + 4)}`);
 }
 
-// Timer setup
 function resetTimer() {
   stopTimer();
   const mins = parseInt(timerSelect?.value || "10");
@@ -266,9 +263,11 @@ function resetTimer() {
     updateTimerDisplay();
   }, 1000);
 }
+
 function stopTimer() {
   clearInterval(timerInterval);
 }
+
 function updateTimerDisplay() {
   const format = (t) => {
     const m = Math.floor(t / 60).toString().padStart(2, "0");
@@ -279,7 +278,6 @@ function updateTimerDisplay() {
   blackTimerEl.textContent = format(blackTimeLeft);
 }
 
-// Winner by points
 function decideWinnerByPoints() {
   const score = { w: 0, b: 0 };
   const values = { p: 1, n: 3, b: 3, r: 5, q: 9 };
@@ -303,19 +301,18 @@ function decideWinnerByPoints() {
   navigator.vibrate?.([100, 100, 100]);
 }
 
-// Start Game
+// 🎮 Game start logic
 startBtn.onclick = () => {
   mode = modeSelect.value;
   speechEnabled = speechToggle?.checked || false;
   startMenu.style.display = "none";
-  boardWrapper.style.display = "flex";
+  document.getElementById("boardWrapper").style.display = "flex";
   newGame();
 };
 
 function newGame() {
   game.reset();
   history = [];
-  redoStack = [];
   selectedSquare = null;
   lastMove = null;
   legalMoves = [];
@@ -326,7 +323,7 @@ function newGame() {
   updateStatus();
 }
 
-// 3-dot menu behavior
+// 🎯 Menu UI
 menuBtn.onclick = () => {
   menuModal.style.display = "block";
 };
@@ -337,14 +334,9 @@ document.addEventListener("click", (e) => {
 });
 toggleHistoryBtn.onclick = () => {
   showHistory = !showHistory;
-  moveList.style.display = showHistory ? "block" : "none";
   renderMoveList();
 };
-
-// Export/Import PGN
-exportBtn.onclick = exportPGN;
-importBtn.onclick = importPGN;
-function exportPGN() {
+exportBtn.onclick = () => {
   const blob = new Blob([game.pgn()], { type: "text/plain" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -352,8 +344,8 @@ function exportPGN() {
   a.download = "game.pgn";
   a.click();
   URL.revokeObjectURL(url);
-}
-function importPGN() {
+};
+importBtn.onclick = () => {
   const input = document.createElement("input");
   input.type = "file";
   input.accept = ".pgn";
@@ -363,38 +355,13 @@ function importPGN() {
     const reader = new FileReader();
     reader.onload = () => {
       game.load_pgn(reader.result);
-      history = game.history({ verbose: false });
+      history = game.history();
       renderBoard();
       updateStatus();
     };
     reader.readAsText(file);
   };
   input.click();
-}
-
-// Theme toggle
-themeToggle.onclick = () => {
-  document.body.classList.toggle("dark");
 };
-
-// Draw board coordinates (CSS handles placement)
-function renderCoordinates() {
-  const files = document.querySelectorAll(".file-label");
-  const ranks = document.querySelectorAll(".rank-label");
-  files.forEach(f => f.remove());
-  ranks.forEach(r => r.remove());
-
-  for (let i = 0; i < 8; i++) {
-    const file = document.createElement("div");
-    file.textContent = "abcdefgh"[i];
-    file.className = "file-label";
-    boardWrapper.appendChild(file);
-
-    const rank = document.createElement("div");
-    rank.textContent = 8 - i;
-    rank.className = "rank-label";
-    boardWrapper.appendChild(rank);
-  }
-}
 
 initBoard();
