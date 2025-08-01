@@ -54,7 +54,7 @@
       <button id="startGameBtn"><i data-lucide="play"></i> Start Game</button>
     </div>
 
-    <!-- Main Game Area -->
+    <!-- Game Area -->
     <div id="boardWrapper" style="display: none;">
       <div id="board"></div>
 
@@ -74,13 +74,11 @@
     <div class="modal-content">
       <h2>Move History</h2>
       <ol id="moveList"></ol>
-      <button onclick="document.getElementById('moveHistoryModal').style.display='none'">
-        <i data-lucide="x"></i> Close
-      </button>
+      <button id="closeHistoryModal"><i data-lucide="x"></i> Close</button>
     </div>
   </div>
 
-  <!-- 3-dot Compact Horizontal Menu Modal -->
+  <!-- 3-dot Compact Menu -->
   <div id="menuModal" style="display: none;">
     <button id="exportBtn"><i data-lucide="download"></i> Export PGN</button>
     <button id="importBtn"><i data-lucide="upload"></i> Import PGN</button>
@@ -92,23 +90,19 @@
   </div>
 
   <!-- Winner Modal -->
-  <div id="winnerModal" style="display: none;">
+  <div id="winnerModal" class="modal" style="display: none;">
     <h2 id="winnerText">Checkmate!</h2>
     <button onclick="newGame()"><i data-lucide="rotate-ccw"></i> Play Again</button>
   </div>
 
-  <!-- Chess.js -->
+  <!-- Required Libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-
-  <!-- Stockfish Web Worker -->
   <script>
     window.stockfish = new Worker("stockfish.js");
   </script>
-
-  <!-- Main Game Logic -->
   <script src="app.js"></script>
 
-  <!-- Lucide Icons Init -->
+  <!-- Lucide Icon Init -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       lucide.createIcons();
