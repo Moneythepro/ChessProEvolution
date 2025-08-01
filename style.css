@@ -320,3 +320,21 @@ body.dark .timer.white {
 body.dark .timer.black {
   color: #ccc;
 }
+
+#timers {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 0.5rem;
+  border-radius: var(--radius);
+}
+
+#info label {
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+#speechToggle {
+  margin-right: 0.5rem;
+  accent-color: var(--accent);
+}
