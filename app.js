@@ -11,27 +11,39 @@ let history = [];
 let redoStack = [];
 
 let mode = "pvp"; // or 'ai'
-let aiWorker = new Worker("stockfish.js");
 let aiThinking = false;
 
-// Stockfish setup
-aiWorker.postMessage("uci");
-aiWorker.postMessage("isready");
+// ✅ Use stockfish.js as Web Worker — already assigned in HTML
+const aiWorker = window.stockfish;
 
+let initialized = false;
+
+// ✅ Initialize UCI only once
 aiWorker.onmessage = (event) => {
   const line = event.data;
+  if (!initialized && line === "readyok") {
+    initialized = true;
+    aiWorker.postMessage("uci");
+  }
+
   if (typeof line === "string" && line.startsWith("bestmove")) {
     const move = line.split(" ")[1];
     if (move) {
-      game.move({ from: move.slice(0, 2), to: move.slice(2, 4), promotion: "q" });
-      history.push(move);
-      redoStack = [];
-      renderBoard();
-      updateStatus();
-      aiThinking = false;
+      const played = game.move({ from: move.slice(0, 2), to: move.slice(2, 4), promotion: "q" });
+      if (played) {
+        history.push(`${played.from}${played.to}`);
+        redoStack = [];
+        renderBoard();
+        updateStatus();
+      }
     }
+    aiThinking = false;
   }
 };
+
+// Send readiness commands
+aiWorker.postMessage("uci");
+aiWorker.postMessage("isready");
 
 function initBoard() {
   board.innerHTML = "";
@@ -79,13 +91,7 @@ function handleSquareClick(i, j) {
       updateStatus();
 
       if (mode === "ai" && !game.game_over()) {
-        aiThinking = true;
-        const level = parseInt(aiLevelInput.value || 5);
-        aiWorker.postMessage("setoption name Skill Level value " + level);
-        setTimeout(() => {
-          aiWorker.postMessage("position fen " + game.fen());
-          aiWorker.postMessage("go depth " + level);
-        }, 200);
+        requestAIMove();
       }
     }
 
@@ -93,6 +99,14 @@ function handleSquareClick(i, j) {
   } else if (piece && piece.color === game.turn()) {
     selectedSquare = square;
   }
+}
+
+function requestAIMove() {
+  aiThinking = true;
+  const level = parseInt(aiLevelInput.value || 5);
+  aiWorker.postMessage(`setoption name Skill Level value ${level}`);
+  aiWorker.postMessage(`position fen ${game.fen()}`);
+  aiWorker.postMessage(`go depth ${Math.min(20, level + 4)}`);
 }
 
 function renderBoard() {
@@ -202,7 +216,7 @@ function toggleTheme() {
   document.body.classList.toggle("dark");
 }
 
-// Expose globally
+// Expose globally for HTML buttons
 window.undoMove = undoMove;
 window.redoMove = redoMove;
 window.newGame = newGame;
@@ -211,5 +225,5 @@ window.exportPGN = exportPGN;
 window.importPGN = importPGN;
 window.toggleTheme = toggleTheme;
 
-// Init board
+// Initialize
 initBoard();
