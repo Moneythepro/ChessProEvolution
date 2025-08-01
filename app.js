@@ -1,8 +1,15 @@
+// Sound and Vibration Setup
+const winSound = new Audio("win.mp3");
+const drawSound = new Audio("draw.mp3");
+const moveSound = new Audio("move.mp3");
+
 const board = document.getElementById("board");
 const statusEl = document.getElementById("status");
 const moveList = document.getElementById("moveList");
 const modeSelect = document.getElementById("modeSelect");
 const aiLevelInput = document.getElementById("aiLevel");
+const winnerModal = document.getElementById("winnerModal");
+const winnerText = document.getElementById("winnerText");
 
 const game = new Chess();
 let boardSquares = [];
@@ -14,7 +21,6 @@ let redoStack = [];
 let mode = "pvp";
 let aiThinking = false;
 
-// ✅ Use stockfish.js as Web Worker — already assigned in HTML
 const aiWorker = window.stockfish;
 let initialized = false;
 
@@ -32,6 +38,7 @@ aiWorker.onmessage = (event) => {
         lastMove = { from: played.from, to: played.to };
         history.push(`${played.from}${played.to}`);
         redoStack = [];
+        playMoveFeedback();
         renderBoard();
         updateStatus();
       }
@@ -51,7 +58,7 @@ function initBoard() {
     const row = [];
     for (let j = 0; j < 8; j++) {
       const square = document.createElement("div");
-      square.className = `square ${(i + j) % 2 === 0 ? "light" : "dark"}`;
+      square.className = `square animated ${(i + j) % 2 === 0 ? "light" : "dark"}`;
       square.dataset.row = i;
       square.dataset.col = j;
       square.addEventListener("click", () => handleSquareClick(i, j));
@@ -76,7 +83,7 @@ function squareToCoords(square) {
 }
 
 function handleSquareClick(i, j) {
-  if (aiThinking) return;
+  if (aiThinking || game.game_over()) return;
 
   const square = coordsToSquare(i, j);
   const piece = game.get(square);
@@ -94,6 +101,7 @@ function handleSquareClick(i, j) {
       redoStack = [];
       selectedSquare = null;
       legalMoves = [];
+      playMoveFeedback();
       renderBoard();
       updateStatus();
 
@@ -186,12 +194,26 @@ function renderMoveList() {
 
 function updateStatus() {
   if (game.in_checkmate()) {
-    statusEl.textContent = "Checkmate!";
+    const winner = game.turn() === "w" ? "Black" : "White";
+    winnerText.textContent = `${winner} wins by checkmate!`;
+    winnerModal.style.display = "block";
+    winSound.play();
+    navigator.vibrate?.([200, 100, 200]);
+    return;
   } else if (game.in_draw()) {
-    statusEl.textContent = "Draw!";
-  } else {
-    statusEl.textContent = `${game.turn() === "w" ? "White" : "Black"} to move`;
+    winnerText.textContent = `It's a draw!`;
+    winnerModal.style.display = "block";
+    drawSound.play();
+    navigator.vibrate?.([300]);
+    return;
   }
+
+  statusEl.textContent = `${game.turn() === "w" ? "White" : "Black"} to move`;
+}
+
+function playMoveFeedback() {
+  moveSound.play();
+  navigator.vibrate?.([50]);
 }
 
 function undoMove() {
@@ -224,6 +246,7 @@ function newGame() {
   lastMove = null;
   legalMoves = [];
   aiThinking = false;
+  winnerModal.style.display = "none";
   renderBoard();
   updateStatus();
 }
