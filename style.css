@@ -339,3 +339,40 @@ body.dark #moveList {
   0% { transform: translate(-50%, -50%) scale(0.7); opacity: 0; }
   100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
 }
+
+/* Positioning wrapper for the board */
+#boardWrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Board with pure 8x8 grid */
+#board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  width: 90vmin;
+  height: 90vmin;
+  border: 3px solid var(--accent);
+  position: relative;
+}
+
+/* Coordinate overlays */
+.board-label {
+  position: absolute;
+  font-size: 0.75rem;
+  color: var(--text);
+  pointer-events: none;
+}
+
+.rank-label {
+  left: 2px;
+  transform: translateY(-50%);
+}
+
+.file-label {
+  bottom: 2px;
+  transform: translateX(-50%);
+}
