@@ -10,15 +10,12 @@ let selectedSquare = null;
 let history = [];
 let redoStack = [];
 
-let mode = "pvp"; // or 'ai'
+let mode = "pvp";
 let aiThinking = false;
-
-// ✅ Use stockfish.js as Web Worker — already assigned in HTML
 const aiWorker = window.stockfish;
-
 let initialized = false;
 
-// ✅ Initialize UCI only once
+// Worker setup
 aiWorker.onmessage = (event) => {
   const line = event.data;
   if (!initialized && line === "readyok") {
@@ -41,7 +38,6 @@ aiWorker.onmessage = (event) => {
   }
 };
 
-// Send readiness commands
 aiWorker.postMessage("uci");
 aiWorker.postMessage("isready");
 
@@ -74,8 +70,23 @@ function coordsToSquare(i, j) {
 function handleSquareClick(i, j) {
   if (aiThinking) return;
 
+  clearHighlights();
+
   const square = coordsToSquare(i, j);
   const piece = game.get(square);
+
+  if (!selectedSquare && piece && piece.color === game.turn()) {
+    selectedSquare = square;
+    boardSquares[i][j].classList.add("selected");
+
+    const moves = game.moves({ square, verbose: true });
+    for (const move of moves) {
+      const to = move.to;
+      const [toRow, toCol] = [8 - parseInt(to[1]), "abcdefgh".indexOf(to[0])];
+      boardSquares[toRow][toCol].classList.add("highlight");
+    }
+    return;
+  }
 
   if (selectedSquare) {
     const move = game.move({
@@ -96,8 +107,15 @@ function handleSquareClick(i, j) {
     }
 
     selectedSquare = null;
-  } else if (piece && piece.color === game.turn()) {
-    selectedSquare = square;
+    clearHighlights();
+  }
+}
+
+function clearHighlights() {
+  for (const row of boardSquares) {
+    for (const square of row) {
+      square.classList.remove("highlight", "selected");
+    }
   }
 }
 
@@ -116,6 +134,7 @@ function renderBoard() {
       const squareId = coordsToSquare(i, j);
       const piece = game.get(squareId);
       square.innerHTML = piece ? getPieceSymbol(piece) : "";
+      square.classList.remove("highlight", "selected"); // reset highlight
     }
   }
 
@@ -216,7 +235,7 @@ function toggleTheme() {
   document.body.classList.toggle("dark");
 }
 
-// Expose globally for HTML buttons
+// Global exposure
 window.undoMove = undoMove;
 window.redoMove = redoMove;
 window.newGame = newGame;
@@ -225,5 +244,4 @@ window.exportPGN = exportPGN;
 window.importPGN = importPGN;
 window.toggleTheme = toggleTheme;
 
-// Initialize
 initBoard();
