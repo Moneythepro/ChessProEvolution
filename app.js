@@ -1,19 +1,13 @@
-// ✅ Updated Ultimate Chess App with:
-// - Illegal move override
-// - Move numbering
-// - Checkmate freedom
-// - Timer (10/20/30min)
-// - Point-based timeout win
-// - Move speech toggle
-// - ✅ Fixed [object Object] move history bug
-// - ✅ Accurate per-player timer system
+// ✅ Ultimate Chess App v3.0
 
 // 🎵 Sound and Vibration Setup
 const winSound = new Audio("win.mp3");
 const drawSound = new Audio("draw.mp3");
 const moveSound = new Audio("move.mp3");
 
+// DOM Elements
 const board = document.getElementById("board");
+const boardWrapper = document.getElementById("boardWrapper");
 const statusEl = document.getElementById("status");
 const moveList = document.getElementById("moveList");
 const modeSelect = document.getElementById("modeSelect");
@@ -24,6 +18,13 @@ const timerSelect = document.getElementById("timerSelect");
 const speechToggle = document.getElementById("speechToggle");
 const whiteTimerEl = document.getElementById("whiteTimer");
 const blackTimerEl = document.getElementById("blackTimer");
+const startMenu = document.getElementById("startMenu");
+const startBtn = document.getElementById("startGameBtn");
+const menuBtn = document.getElementById("menuBtn");
+const menuModal = document.getElementById("menuModal");
+const toggleHistoryBtn = document.getElementById("toggleHistoryBtn");
+const exportBtn = document.getElementById("exportBtn");
+const importBtn = document.getElementById("importBtn");
 
 const game = new Chess();
 let boardSquares = [];
@@ -35,6 +36,7 @@ let redoStack = [];
 let mode = "pvp";
 let aiThinking = false;
 let speechEnabled = false;
+let showHistory = true;
 
 const aiWorker = window.stockfish;
 let initialized = false;
@@ -44,6 +46,7 @@ let blackTimeLeft = 600;
 let currentTimerColor = "w";
 let timerInterval;
 
+// AI worker setup
 aiWorker.onmessage = (event) => {
   const line = event.data;
   if (!initialized && line === "readyok") {
@@ -68,33 +71,65 @@ aiWorker.onmessage = (event) => {
     aiThinking = false;
   }
 };
-
 aiWorker.postMessage("uci");
 aiWorker.postMessage("isready");
 
+// === INIT
 function initBoard() {
   board.innerHTML = "";
   boardSquares = [];
 
+  // Top letters
+  const lettersTop = document.createElement("div");
+  lettersTop.className = "letters top";
+  for (let j = 0; j < 8; j++) {
+    const span = document.createElement("span");
+    span.textContent = "abcdefgh"[j];
+    lettersTop.appendChild(span);
+  }
+  board.appendChild(lettersTop);
+
   for (let i = 0; i < 8; i++) {
     const row = [];
+
+    const numLeft = document.createElement("div");
+    numLeft.className = "number left";
+    numLeft.textContent = 8 - i;
+    board.appendChild(numLeft);
+
     for (let j = 0; j < 8; j++) {
       const square = document.createElement("div");
-      square.className = `square animated ${(i + j) % 2 === 0 ? "light" : "dark"}`;
+      square.className = `square ${(i + j) % 2 === 0 ? "light" : "dark"}`;
       square.dataset.row = i;
       square.dataset.col = j;
       square.addEventListener("click", () => handleSquareClick(i, j));
       board.appendChild(square);
       row.push(square);
     }
+
+    const numRight = document.createElement("div");
+    numRight.className = "number right";
+    numRight.textContent = 8 - i;
+    board.appendChild(numRight);
+
     boardSquares.push(row);
   }
+
+  const lettersBottom = document.createElement("div");
+  lettersBottom.className = "letters bottom";
+  for (let j = 0; j < 8; j++) {
+    const span = document.createElement("span");
+    span.textContent = "abcdefgh"[j];
+    lettersBottom.appendChild(span);
+  }
+  board.appendChild(lettersBottom);
 
   renderBoard();
   updateStatus();
   updateTimerDisplay();
 }
 
+// === SQUARES
 function coordsToSquare(i, j) {
   return "abcdefgh"[j] + (8 - i);
 }
@@ -106,11 +141,7 @@ function handleSquareClick(i, j) {
   const piece = game.get(square);
 
   if (selectedSquare) {
-    const move = {
-      from: selectedSquare,
-      to: square,
-      promotion: "q"
-    };
+    const move = { from: selectedSquare, to: square, promotion: "q" };
     const played = game.move(move);
     if (played) {
       lastMove = { from: played.from, to: played.to };
@@ -161,13 +192,21 @@ function renderBoard() {
 }
 
 function renderMoveList() {
-  if (!moveList) return;
+  if (!moveList || !showHistory) return;
   moveList.innerHTML = "";
   for (let i = 0; i < history.length; i += 2) {
     const li = document.createElement("li");
     li.textContent = `${i / 2 + 1}. ${history[i] || ""} ${history[i + 1] || ""}`;
     moveList.appendChild(li);
   }
+}
+
+function getPieceSymbol(piece) {
+  const symbols = {
+    p: "♟", r: "♜", n: "♞", b: "♝", q: "♛", k: "♚",
+    P: "♙", R: "♖", N: "♘", B: "♗", Q: "♕", K: "♔"
+  };
+  return symbols[piece.color === "w" ? piece.type.toUpperCase() : piece.type];
 }
 
 function findKing(color) {
@@ -179,14 +218,6 @@ function findKing(color) {
     }
   }
   return null;
-}
-
-function getPieceSymbol(piece) {
-  const symbols = {
-    p: "♟", r: "♜", n: "♞", b: "♝", q: "♛", k: "♚",
-    P: "♙", R: "♖", N: "♘", B: "♗", Q: "♕", K: "♔"
-  };
-  return symbols[piece.color === "w" ? piece.type.toUpperCase() : piece.type];
 }
 
 function updateStatus() {
@@ -210,6 +241,7 @@ function updateStatus() {
   statusEl.textContent = `${game.turn() === "w" ? "White" : "Black"} to move`;
 }
 
+// === GAME CONTROL
 function playMoveFeedback() {
   moveSound.play();
   navigator.vibrate?.([50]);
@@ -229,89 +261,9 @@ function requestAIMove() {
   aiWorker.postMessage(`go depth ${Math.min(20, level + 4)}`);
 }
 
-function undoMove() {
-  const move = game.undo();
-  if (move) {
-    // Backup SAN before undo, because undo deletes it
-    const san = history.pop();
-    redoStack.push({ ...move, san });
-    lastMove = null;
-    selectedSquare = null;
-    legalMoves = [];
-    renderBoard();
-    updateStatus();
-  }
-}
-
-function redoMove() {
-  if (redoStack.length > 0) {
-    const move = redoStack.pop();
-    game.move(move);
-    lastMove = { from: move.from, to: move.to };
-    history.push(move.san || `${move.from}-${move.to}`);
-    renderBoard();
-    updateStatus();
-  }
-}
-
-function newGame() {
-  game.reset();
-  history = [];
-  redoStack = [];
-  selectedSquare = null;
-  lastMove = null;
-  legalMoves = [];
-  aiThinking = false;
-  winnerModal.style.display = "none";
-  speechEnabled = speechToggle?.checked || false;
-  resetTimer();
-  renderBoard();
-  updateStatus();
-}
-
-function changeMode() {
-  mode = modeSelect.value;
-  newGame();
-}
-
-function exportPGN() {
-  const blob = new Blob([game.pgn()], { type: "text/plain" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "game.pgn";
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function importPGN() {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = ".pgn";
-  input.onchange = () => {
-    const file = input.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      game.load_pgn(reader.result);
-      history = game.history();
-      renderBoard();
-      updateStatus();
-    };
-    reader.readAsText(file);
-  };
-  input.click();
-}
-
-function toggleTheme() {
-  document.body.classList.toggle("dark");
-}
-
-// Timer Logic
 function resetTimer() {
   stopTimer();
-  const mins = parseInt(timerSelect?.value || "0");
-  if (!mins) return;
+  const mins = parseInt(timerSelect?.value || "10");
   whiteTimeLeft = blackTimeLeft = mins * 60;
   currentTimerColor = game.turn();
   updateTimerDisplay();
@@ -352,7 +304,6 @@ function updateTimerDisplay() {
 function decideWinnerByPoints() {
   const score = { w: 0, b: 0 };
   const values = { p: 1, n: 3, b: 3, r: 5, q: 9 };
-
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
       const piece = game.get(coordsToSquare(i, j));
@@ -361,7 +312,6 @@ function decideWinnerByPoints() {
       }
     }
   }
-
   if (score.w > score.b) {
     winnerText.textContent = "White wins on points!";
   } else if (score.b > score.w) {
@@ -369,18 +319,80 @@ function decideWinnerByPoints() {
   } else {
     winnerText.textContent = "Draw by equal points!";
   }
-
   winnerModal.style.display = "block";
   drawSound.play();
   navigator.vibrate?.([100, 100, 100]);
 }
 
-window.undoMove = undoMove;
-window.redoMove = redoMove;
-window.newGame = newGame;
-window.changeMode = changeMode;
-window.exportPGN = exportPGN;
-window.importPGN = importPGN;
-window.toggleTheme = toggleTheme;
+// === UI Controls
+startBtn.onclick = () => {
+  mode = modeSelect.value;
+  speechEnabled = speechToggle?.checked || false;
+  startMenu.style.display = "none";
+  boardWrapper.style.display = "flex";
+  newGame();
+};
+
+function newGame() {
+  game.reset();
+  history = [];
+  redoStack = [];
+  selectedSquare = null;
+  lastMove = null;
+  legalMoves = [];
+  aiThinking = false;
+  winnerModal.style.display = "none";
+  resetTimer();
+  renderBoard();
+  updateStatus();
+}
+
+// Menu Modal
+menuBtn.onclick = () => {
+  menuModal.style.display = "block";
+};
+document.addEventListener("click", (e) => {
+  if (!menuModal.contains(e.target) && e.target !== menuBtn) {
+    menuModal.style.display = "none";
+  }
+});
+
+toggleHistoryBtn.onclick = () => {
+  showHistory = !showHistory;
+  moveList.style.display = showHistory ? "block" : "none";
+  renderMoveList();
+};
+
+exportBtn.onclick = exportPGN;
+importBtn.onclick = importPGN;
+
+function exportPGN() {
+  const blob = new Blob([game.pgn()], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "game.pgn";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importPGN() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".pgn";
+  input.onchange = () => {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      game.load_pgn(reader.result);
+      history = game.history();
+      renderBoard();
+      updateStatus();
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
 
 initBoard();
