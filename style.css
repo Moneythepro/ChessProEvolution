@@ -283,3 +283,40 @@ body.dark #info input {
   0% { transform: translate(-50%, -50%) scale(0.7); opacity: 0; }
   100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
 }
+
+#timers {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.timer {
+  font-size: 1.1rem;
+  font-weight: bold;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  display: flex;
+  justify-content: space-between;
+}
+
+body.dark .timer {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.timer.white {
+  color: #222;
+}
+
+.timer.black {
+  color: #000;
+}
+
+body.dark .timer.white {
+  color: #fff;
+}
+
+body.dark .timer.black {
+  color: #ccc;
+}
