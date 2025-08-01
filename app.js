@@ -150,7 +150,7 @@ function renderBoard() {
       const piece = game.get(squareId);
 
       square.innerHTML = piece
-        ? `<img src="pieces/${piece.color}${piece.type}.svg" class="piece" />`
+  ? `<img src="./pieces/${piece.color}${piece.type}.svg" class="piece" />`
         : "";
       square.classList.remove("selected", "last-move", "check", "legal");
 
