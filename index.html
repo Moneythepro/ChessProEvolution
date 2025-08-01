@@ -6,81 +6,93 @@
   <title>Ultimate Chess</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="style.css" />
+  <!-- ✅ Lucide Icon Library -->
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
   <div id="app">
+    <!-- Header -->
     <header>
-      <h1>♟ Ultimate Chess</h1>
-      <button onclick="toggleTheme()">🌓</button>
+      <h1><i data-lucide="chess"></i> Ultimate Chess</h1>
+      <div style="display: flex; gap: 0.5rem;">
+        <button id="menuBtn" title="Menu"><i data-lucide="more-horizontal"></i></button>
+        <button onclick="toggleTheme()" title="Toggle Theme"><i data-lucide="moon-star"></i></button>
+      </div>
     </header>
 
-    <div id="game">
+    <!-- Start Menu -->
+    <div id="startMenu">
+      <h2>Select Game Mode</h2>
+      <label>
+        Mode:
+        <select id="modeSelect">
+          <option value="pvp">Player vs Player</option>
+          <option value="ai">Player vs AI</option>
+          <option value="online" disabled>Online PvP – Coming Soon</option>
+        </select>
+      </label>
+
+      <label>
+        Difficulty:
+        <input type="range" id="aiLevel" min="1" max="20" value="5" />
+      </label>
+
+      <label>
+        Timer:
+        <select id="timerSelect">
+          <option value="0">No Timer</option>
+          <option value="10" selected>10 Minutes</option>
+          <option value="20">20 Minutes</option>
+          <option value="30">30 Minutes</option>
+        </select>
+      </label>
+
+      <label>
+        <input type="checkbox" id="speechToggle" />
+        Enable Move Speech
+      </label>
+
+      <button id="startGameBtn"><i data-lucide="play"></i> Start Game</button>
+    </div>
+
+    <!-- Main Game Section -->
+    <div id="boardWrapper" style="display:none;">
       <div id="board"></div>
 
-      <aside>
-        <div id="info">
-          <label>
-            Mode:
-            <select id="modeSelect" onchange="changeMode()">
-              <option value="pvp">Player vs Player</option>
-              <option value="ai">Player vs AI</option>
-            </select>
-          </label>
-
-          <div id="timers">
-            <div class="timer white">⏱️ White: <span id="whiteTimer">10:00</span></div>
-            <div class="timer black">⏱️ Black: <span id="blackTimer">10:00</span></div>
-          </div>
-
-          <label id="aiControls">
-            Difficulty:
-            <input type="range" id="aiLevel" min="1" max="20" value="5" />
-          </label>
-
-          <label>
-            Timer:
-            <select id="timerSelect">
-              <option value="0">No Timer</option>
-              <option value="10">10 Minutes</option>
-              <option value="20">20 Minutes</option>
-              <option value="30">30 Minutes</option>
-            </select>
-          </label>
-
-          <label>
-            <input type="checkbox" id="speechToggle" />
-            Enable Move Speech
-          </label>
-
-          <p>Status: <span id="status">Ready</span></p>
+      <!-- Info + Timer -->
+      <div id="info">
+        <div id="timers">
+          <div class="timer white"><i data-lucide="clock"></i> White: <span id="whiteTimer">10:00</span></div>
+          <div class="timer black"><i data-lucide="clock"></i> Black: <span id="blackTimer">10:00</span></div>
         </div>
+        <p>Status: <span id="status">Ready</span></p>
+      </div>
 
-        <div id="controls">
-          <button onclick="undoMove()">↶ Undo</button>
-          <button onclick="redoMove()">↷ Redo</button>
-          <button onclick="newGame()">♻️ New Game</button>
-          <button onclick="exportPGN()">⬇️ Export PGN</button>
-          <button onclick="importPGN()">⬆️ Import PGN</button>
-          <button onclick="showHistoryModal()">📜 History</button>
-        </div>
-      </aside>
-    </div>
-  </div>
-
-  <!-- Modal for move history -->
-  <div id="historyModal" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="hideHistoryModal()">&times;</span>
-      <h2>Move History</h2>
+      <!-- Move History -->
       <ol id="moveList"></ol>
     </div>
   </div>
 
+  <!-- Compact 3-dot Menu Modal -->
+  <div id="menuModal" style="display:none; position:fixed; top:3.5rem; right:1rem; background:var(--bg); border:1px solid var(--accent); border-radius:12px; box-shadow:0 4px 16px rgba(0,0,0,0.2); z-index:999;">
+    <button id="exportBtn"><i data-lucide="download"></i> Export PGN</button>
+    <button id="importBtn"><i data-lucide="upload"></i> Import PGN</button>
+    <button id="toggleHistoryBtn"><i data-lucide="scroll"></i> Toggle History</button>
+    <label style="padding: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+      <input type="checkbox" id="speechToggleMenu" onchange="speechToggle.checked = this.checked;" />
+      <i data-lucide="mic"></i> Move Speech
+    </label>
+  </div>
+
   <!-- Winner Modal -->
   <div id="winnerModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
-  background:#fff; color:#000; padding:1.5rem 2rem; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.4); text-align:center; z-index:999;">
+    background:var(--bg); color:var(--text); padding:2rem; border-radius:12px; border:2px solid var(--accent);
+    box-shadow:0 4px 20px rgba(0,0,0,0.3); text-align:center; z-index:999;">
     <h2 id="winnerText">Checkmate!</h2>
-    <button onclick="newGame()" style="margin-top:1rem; padding:0.6rem 1.2rem; font-size:1rem; background:#4f46e5; color:#fff; border:none; border-radius:8px;">Play Again</button>
+    <button onclick="newGame()" style="margin-top:1rem; padding:0.6rem 1.2rem; font-size:1rem;
+      background:var(--accent); color:white; border:none; border-radius:8px;">
+      <i data-lucide="rotate-ccw"></i> Play Again
+    </button>
   </div>
 
   <!-- ✅ Chess.js -->
@@ -93,5 +105,10 @@
 
   <!-- ✅ Main Logic -->
   <script src="app.js"></script>
+
+  <!-- ✅ Activate Lucide icons -->
+  <script>
+    lucide.createIcons();
+  </script>
 </body>
 </html>
