@@ -51,3 +51,13 @@ body.dark #info select, body.dark #info input { background: #2e2e40; color: whit
 .square.selected {
   outline: 2px solid orange;
 }
+
+.selected {
+  outline: 3px solid #2e86ff;
+}
+.last-move {
+  background-color: rgba(255, 255, 0, 0.5) !important;
+}
+.check {
+  background-color: rgba(255, 0, 0, 0.4) !important;
+}
