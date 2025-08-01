@@ -6,7 +6,6 @@
   <title>ChessProEvolution</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="style.css" />
-  <!-- ✅ Lucide Icon Library -->
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
@@ -55,17 +54,9 @@
       <button id="startGameBtn"><i data-lucide="play"></i> Start Game</button>
     </div>
 
-    <!-- Main Game Section -->
+    <!-- Main Game -->
     <div id="boardWrapper" style="display:none;">
-      <div id="board">
-        <!-- Coordinate Labels -->
-        <!-- Ranks (1–8) -->
-        ${[...Array(8)].map((_, i) =>
-          `<div class="board-label rank-label" style="top: ${12.5 * i}%;">${8 - i}</div>`).join('')}
-        <!-- Files (a–h) -->
-        ${[...Array(8)].map((_, i) =>
-          `<div class="board-label file-label" style="left: ${12.5 * i}%;">${String.fromCharCode(97 + i)}</div>`).join('')}
-      </div>
+      <div id="board"></div>
 
       <!-- Info + Timer -->
       <div id="info">
@@ -81,13 +72,13 @@
     </div>
   </div>
 
-  <!-- Compact 3-dot Menu Modal -->
-  <div id="menuModal">
+  <!-- Compact Menu Modal -->
+  <div id="menuModal" style="display:none;">
     <button id="exportBtn"><i data-lucide="download"></i> Export PGN</button>
     <button id="importBtn"><i data-lucide="upload"></i> Import PGN</button>
     <button id="toggleHistoryBtn"><i data-lucide="scroll"></i> Toggle History</button>
-    <label>
-      <input type="checkbox" id="speechToggleMenu" />
+    <label style="padding: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+      <input type="checkbox" id="speechToggleMenu" onchange="speechToggle.checked = this.checked;" />
       <i data-lucide="mic"></i> Move Speech
     </label>
   </div>
@@ -95,15 +86,13 @@
   <!-- Winner Modal -->
   <div id="winnerModal">
     <h2 id="winnerText">Checkmate!</h2>
-    <button onclick="newGame()">
-      <i data-lucide="rotate-ccw"></i> Play Again
-    </button>
+    <button onclick="newGame()"><i data-lucide="rotate-ccw"></i> Play Again</button>
   </div>
 
   <!-- ✅ Chess.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 
-  <!-- ✅ Stockfish as Web Worker -->
+  <!-- ✅ Stockfish Web Worker -->
   <script>
     window.stockfish = new Worker("stockfish.js");
   </script>
@@ -111,20 +100,16 @@
   <!-- ✅ Main Logic -->
   <script src="app.js"></script>
 
-  <!-- ✅ Activate Lucide icons after DOM -->
+  <!-- ✅ Lucide Icons Activation -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       lucide.createIcons();
-      // Sync speech checkbox in menu
-      const speechToggleMenu = document.getElementById("speechToggleMenu");
-      const speechToggle = document.getElementById("speechToggle");
-      speechToggleMenu.addEventListener("change", () => {
-        speechToggle.checked = speechToggleMenu.checked;
-      });
-      speechToggle.addEventListener("change", () => {
-        speechToggleMenu.checked = speechToggle.checked;
-      });
     });
+
+    // Dark/light theme toggle
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+    }
   </script>
 </body>
 </html>
