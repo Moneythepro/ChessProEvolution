@@ -1,4 +1,12 @@
-// Sound and Vibration Setup
+// ✅ Updated Ultimate Chess App with:
+// - Illegal move override
+// - Move numbering
+// - Checkmate freedom
+// - Timer (10/20/30min)
+// - Point-based timeout win
+// - Move speech toggle
+
+// 🎵 Sound and Vibration Setup
 const winSound = new Audio("win.mp3");
 const drawSound = new Audio("draw.mp3");
 const moveSound = new Audio("move.mp3");
@@ -12,6 +20,8 @@ const winnerModal = document.getElementById("winnerModal");
 const winnerText = document.getElementById("winnerText");
 const timerSelect = document.getElementById("timerSelect");
 const speechToggle = document.getElementById("speechToggle");
+const whiteTimerEl = document.getElementById("whiteTimer");
+const blackTimerEl = document.getElementById("blackTimer");
 
 const game = new Chess();
 let boardSquares = [];
@@ -27,7 +37,10 @@ let speechEnabled = false;
 const aiWorker = window.stockfish;
 let initialized = false;
 
-let timer, timeLeft = 0;
+let timeControl = 600;
+let whiteTime = timeControl;
+let blackTime = timeControl;
+let timerInterval;
 
 aiWorker.onmessage = (event) => {
   const line = event.data;
@@ -76,6 +89,7 @@ function initBoard() {
 
   renderBoard();
   updateStatus();
+  updateTimers();
 }
 
 function coordsToSquare(i, j) {
@@ -95,26 +109,23 @@ function handleSquareClick(i, j) {
   const piece = game.get(square);
 
   if (selectedSquare) {
-    const move = game.move({
+    const move = {
       from: selectedSquare,
       to: square,
       promotion: "q"
-    });
-
-    if (move) {
-      lastMove = { from: move.from, to: move.to };
-      history.push(move);
+    };
+    const played = game.move(move);
+    if (played) {
+      lastMove = { from: played.from, to: played.to };
+      history.push(played);
       redoStack = [];
       selectedSquare = null;
       legalMoves = [];
       playMoveFeedback();
-      speakMove(move);
+      speakMove(played);
       renderBoard();
       updateStatus();
-
-      if (mode === "ai" && !game.game_over()) {
-        requestAIMove();
-      }
+      if (mode === "ai" && !game.game_over()) requestAIMove();
     } else {
       selectedSquare = null;
       legalMoves = [];
@@ -127,55 +138,37 @@ function handleSquareClick(i, j) {
   }
 }
 
-function requestAIMove() {
-  aiThinking = true;
-  const level = parseInt(aiLevelInput.value || 5);
-  aiWorker.postMessage(`setoption name Skill Level value ${level}`);
-  aiWorker.postMessage(`position fen ${game.fen()}`);
-  aiWorker.postMessage(`go depth ${Math.min(20, level + 4)}`);
-}
-
 function renderBoard() {
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
       const square = boardSquares[i][j];
       const squareId = coordsToSquare(i, j);
       const piece = game.get(squareId);
-
       square.innerHTML = piece ? `<span class="piece">${getPieceSymbol(piece)}</span>` : "";
       square.classList.remove("selected", "last-move", "check", "legal");
 
       if (lastMove && (squareId === lastMove.from || squareId === lastMove.to)) {
         square.classList.add("last-move");
       }
-
-      if (selectedSquare === squareId) {
-        square.classList.add("selected");
-      }
-
-      if (legalMoves.includes(squareId)) {
-        square.classList.add("legal");
-      }
+      if (selectedSquare === squareId) square.classList.add("selected");
+      if (legalMoves.includes(squareId)) square.classList.add("legal");
 
       if (game.in_check()) {
         const kingSquare = findKing(game.turn());
-        const [row, col] = squareToCoords(kingSquare);
-        boardSquares[row][col].classList.add("check");
+        if (squareId === kingSquare) square.classList.add("check");
       }
     }
   }
-
   renderMoveList();
 }
 
 function renderMoveList() {
   if (!moveList) return;
   moveList.innerHTML = "";
-  const history = game.history();
-  for (let i = 0; i < history.length; i += 2) {
-    const moveNumber = (i / 2) + 1;
+  const moves = game.history();
+  for (let i = 0; i < moves.length; i += 2) {
     const li = document.createElement("li");
-    li.textContent = `${moveNumber}. ${history[i] || ""} ${history[i + 1] || ""}`;
+    li.textContent = `${i / 2 + 1}. ${moves[i] || ""} ${moves[i + 1] || ""}`;
     moveList.appendChild(li);
   }
 }
@@ -185,9 +178,7 @@ function findKing(color) {
     for (let j = 0; j < 8; j++) {
       const square = coordsToSquare(i, j);
       const piece = game.get(square);
-      if (piece?.type === "k" && piece.color === color) {
-        return square;
-      }
+      if (piece?.type === "k" && piece.color === color) return square;
     }
   }
   return null;
@@ -210,7 +201,8 @@ function updateStatus() {
     winSound.play();
     navigator.vibrate?.([200, 100, 200]);
     return;
-  } else if (game.in_draw()) {
+  }
+  if (game.in_draw()) {
     stopTimer();
     winnerText.textContent = `It's a draw!`;
     winnerModal.style.display = "block";
@@ -218,7 +210,6 @@ function updateStatus() {
     navigator.vibrate?.([300]);
     return;
   }
-
   statusEl.textContent = `${game.turn() === "w" ? "White" : "Black"} to move`;
 }
 
@@ -231,6 +222,14 @@ function speakMove(move) {
   if (!speechEnabled) return;
   const utter = new SpeechSynthesisUtterance(`${move.from} to ${move.to}`);
   speechSynthesis.speak(utter);
+}
+
+function requestAIMove() {
+  aiThinking = true;
+  const level = parseInt(aiLevelInput.value || 5);
+  aiWorker.postMessage(`setoption name Skill Level value ${level}`);
+  aiWorker.postMessage(`position fen ${game.fen()}`);
+  aiWorker.postMessage(`go depth ${Math.min(20, level + 4)}`);
 }
 
 function undoMove() {
@@ -265,9 +264,10 @@ function newGame() {
   aiThinking = false;
   winnerModal.style.display = "none";
   speechEnabled = speechToggle?.checked || false;
+  updateTimers();
+  resetTimer();
   renderBoard();
   updateStatus();
-  startTimer();
 }
 
 function changeMode() {
@@ -307,23 +307,39 @@ function toggleTheme() {
   document.body.classList.toggle("dark");
 }
 
-// Timer
-function startTimer() {
+// Timer Logic
+function resetTimer() {
   stopTimer();
   const mins = parseInt(timerSelect?.value || "0");
   if (!mins) return;
-  timeLeft = mins * 60;
-  timer = setInterval(() => {
-    timeLeft--;
-    if (timeLeft <= 0) {
+  whiteTime = mins * 60;
+  blackTime = mins * 60;
+  timerInterval = setInterval(() => {
+    if (game.turn() === "w") whiteTime--;
+    else blackTime--;
+
+    updateTimers();
+
+    if (whiteTime <= 0 || blackTime <= 0) {
       stopTimer();
       decideWinnerByPoints();
     }
   }, 1000);
 }
 
+function updateTimers() {
+  whiteTimerEl.textContent = formatTime(whiteTime);
+  blackTimerEl.textContent = formatTime(blackTime);
+}
+
 function stopTimer() {
-  clearInterval(timer);
+  clearInterval(timerInterval);
+}
+
+function formatTime(sec) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
 function decideWinnerByPoints() {
