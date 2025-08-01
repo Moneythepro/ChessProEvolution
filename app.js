@@ -7,6 +7,7 @@ const aiLevelInput = document.getElementById("aiLevel");
 const game = new Chess();
 let boardSquares = [];
 let selectedSquare = null;
+let legalMoves = [];
 let lastMove = null;
 let history = [];
 let redoStack = [];
@@ -91,16 +92,22 @@ function handleSquareClick(i, j) {
       lastMove = { from: move.from, to: move.to };
       history.push(`${move.from}${move.to}`);
       redoStack = [];
+      selectedSquare = null;
+      legalMoves = [];
       renderBoard();
       updateStatus();
+
       if (mode === "ai" && !game.game_over()) {
         requestAIMove();
       }
+    } else {
+      selectedSquare = null;
+      legalMoves = [];
+      renderBoard();
     }
-
-    selectedSquare = null;
   } else if (piece && piece.color === game.turn()) {
     selectedSquare = square;
+    legalMoves = game.moves({ square, verbose: true }).map(m => m.to);
     renderBoard();
   }
 }
@@ -119,22 +126,22 @@ function renderBoard() {
       const square = boardSquares[i][j];
       const squareId = coordsToSquare(i, j);
       const piece = game.get(squareId);
-      square.innerHTML = piece ? getPieceSymbol(piece) : "";
-      square.classList.remove("selected", "last-move", "check");
 
-      // Last move highlight
-      if (lastMove) {
-        if (squareId === lastMove.from || squareId === lastMove.to) {
-          square.classList.add("last-move");
-        }
+      square.innerHTML = piece ? `<span class="piece">${getPieceSymbol(piece)}</span>` : "";
+      square.classList.remove("selected", "last-move", "check", "legal");
+
+      if (lastMove && (squareId === lastMove.from || squareId === lastMove.to)) {
+        square.classList.add("last-move");
       }
 
-      // Selected square highlight
-      if (selectedSquare && squareId === selectedSquare) {
+      if (selectedSquare === squareId) {
         square.classList.add("selected");
       }
 
-      // Check highlight
+      if (legalMoves.includes(squareId)) {
+        square.classList.add("legal");
+      }
+
       if (game.in_check()) {
         const kingSquare = findKing(game.turn());
         const [row, col] = squareToCoords(kingSquare);
@@ -192,6 +199,8 @@ function undoMove() {
   if (move) {
     redoStack.push(move);
     lastMove = null;
+    selectedSquare = null;
+    legalMoves = [];
     renderBoard();
     updateStatus();
   }
@@ -213,6 +222,7 @@ function newGame() {
   redoStack = [];
   selectedSquare = null;
   lastMove = null;
+  legalMoves = [];
   aiThinking = false;
   renderBoard();
   updateStatus();
