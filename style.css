@@ -1,3 +1,4 @@
+/* Paste this full CSS */
 :root {
   --bg: #f0f0f0;
   --text: #222;
@@ -35,7 +36,6 @@ body {
   gap: 0.5rem;
 }
 
-/* Header */
 header {
   display: flex;
   align-items: center;
@@ -53,7 +53,11 @@ header i {
   stroke-width: 2.5;
 }
 
-/* Start Menu */
+.top-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
 #startMenu {
   max-width: 400px;
   margin: auto;
@@ -102,7 +106,6 @@ body.dark #startMenu input[type="range"] {
   background: #3730a3;
 }
 
-/* Game Area */
 #boardWrapper {
   display: flex;
   flex-direction: column;
@@ -126,7 +129,6 @@ body.dark #startMenu input[type="range"] {
   position: relative;
 }
 
-/* Square Styling */
 .square {
   display: flex;
   align-items: center;
@@ -172,7 +174,6 @@ body.dark #startMenu input[type="range"] {
   will-change: transform;
 }
 
-/* Coordinates */
 .board-label {
   position: absolute;
   font-size: 0.75rem;
@@ -188,7 +189,6 @@ body.dark #startMenu input[type="range"] {
   transform: translateX(-50%);
 }
 
-/* Timers + Info */
 #info {
   display: flex;
   flex-direction: column;
@@ -237,7 +237,6 @@ body.dark .timer.black { color: #ccc; }
   margin-right: 0.4rem;
 }
 
-/* Move List */
 #moveList {
   margin: 1rem auto;
   padding: 0.5rem;
@@ -253,7 +252,25 @@ body.dark #moveList {
   background: rgba(30,30,40,0.4);
 }
 
-/* Compact Menu Modal */
+#moveHistoryModal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--bg);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  box-shadow: 0 0 20px rgba(0,0,0,0.3);
+  z-index: 999;
+  display: none;
+  animation: popin 0.3s ease;
+}
+
+#moveHistoryModal .modal-content {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
 #menuModal {
   display: none;
   position: fixed;
@@ -264,20 +281,25 @@ body.dark #moveList {
   border-radius: var(--radius);
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
   z-index: 999;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
 }
 
 #menuModal button,
 #menuModal label {
-  display: block;
-  width: 100%;
-  text-align: left;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0.8rem;
   background: none;
   border: none;
   color: var(--text);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  border-radius: var(--radius);
   cursor: pointer;
   transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
 #menuModal button:hover,
@@ -285,7 +307,6 @@ body.dark #moveList {
   background: rgba(0, 0, 0, 0.05);
 }
 
-/* Winner Modal */
 #winnerModal {
   display: none;
   animation: popin 0.3s ease;
