@@ -44,20 +44,82 @@ body.dark #info select, body.dark #info input { background: #2e2e40; color: whit
 
 .modal-close-btn { background: var(--accent); color: white; padding: 0.4rem 0.8rem; border: none; border-radius: var(--radius); margin-top: 1rem; float: right; }
 
-.square.highlight {
-  background-color: rgba(255, 255, 0, 0.4); /* yellow */
+#board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  width: 100vmin;
+  height: 100vmin;
+  max-width: 100%;
+  max-height: 100%;
+  border: 2px solid #444;
+  aspect-ratio: 1;
+  margin: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  user-select: none;
+}
+
+.square {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1.5rem, 6vmin, 4rem);
+  transition: background-color 0.2s ease, outline 0.2s ease;
+}
+
+.square.light {
+  background-color: #f0d9b5;
+}
+
+.square.dark {
+  background-color: #b58863;
+}
+
+.piece {
+  transition: transform 0.2s ease;
+  will-change: transform;
+}
+
+.square:hover {
+  filter: brightness(1.1);
 }
 
 .square.selected {
-  outline: 2px solid orange;
-}
-
-.selected {
   outline: 3px solid #2e86ff;
 }
-.last-move {
+
+.square.last-move {
   background-color: rgba(255, 255, 0, 0.5) !important;
 }
-.check {
+
+.square.check {
   background-color: rgba(255, 0, 0, 0.4) !important;
+}
+
+.square.legal::after {
+  content: "";
+  width: 20%;
+  height: 20%;
+  background-color: rgba(30, 144, 255, 0.6);
+  border-radius: 50%;
+  display: block;
+}
+
+body.dark .square.light {
+  background-color: #769656;
+}
+
+body.dark .square.dark {
+  background-color: #4b7399;
+}
+
+body.dark #board {
+  border-color: #888;
+}
+
+@media (max-width: 600px) {
+  #board {
+    width: 95vw;
+    height: 95vw;
+  }
 }
