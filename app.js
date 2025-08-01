@@ -1,4 +1,4 @@
-// ChessProEvolution – app.js v1.0 Final
+// ChessProEvolution – app.js v2.0 Polished Final
 
 const game = new Chess();
 let boardSquares = [];
@@ -12,7 +12,6 @@ let showHistory = true;
 let speechEnabled = false;
 let initialized = false;
 
-// DOM
 const board = document.getElementById("board");
 const moveList = document.getElementById("moveList");
 const modeSelect = document.getElementById("modeSelect");
@@ -24,10 +23,11 @@ const blackTimerEl = document.getElementById("blackTimer");
 const winnerModal = document.getElementById("winnerModal");
 const winnerText = document.getElementById("winnerText");
 const statusEl = document.getElementById("status");
-
 const exportBtn = document.getElementById("exportBtn");
 const importBtn = document.getElementById("importBtn");
 const toggleHistoryBtn = document.getElementById("toggleHistoryBtn");
+const moveHistoryModal = document.getElementById("moveHistoryModal");
+const closeHistoryModal = document.getElementById("closeHistoryModal");
 const menuBtn = document.getElementById("menuBtn");
 const menuModal = document.getElementById("menuModal");
 const startMenu = document.getElementById("startMenu");
@@ -42,14 +42,17 @@ let blackTimeLeft = 600;
 let currentTimerColor = "w";
 let timerInterval = null;
 
-const aiWorker = window.stockfish;
-aiWorker.onmessage = (event) => {
-  const line = event.data;
-  if (!initialized && line === "readyok") {
+const aiWorker = new Worker("stockfish-worker.js");
+aiWorker.onmessage = (e) => {
+  const line = e.data;
+  if (typeof line !== "string") return;
+
+  if (!initialized && line.includes("uciok")) {
     initialized = true;
-    aiWorker.postMessage("uci");
+    aiWorker.postMessage("isready");
   }
-  if (typeof line === "string" && line.startsWith("bestmove")) {
+
+  if (line.startsWith("bestmove")) {
     const move = line.split(" ")[1];
     if (move) {
       const played = game.move({ from: move.slice(0, 2), to: move.slice(2, 4), promotion: "q" });
@@ -67,11 +70,11 @@ aiWorker.onmessage = (event) => {
   }
 };
 aiWorker.postMessage("uci");
-aiWorker.postMessage("isready");
 
 function initBoard() {
   board.innerHTML = "";
   boardSquares = [];
+
   for (let i = 0; i < 8; i++) {
     const row = [];
     for (let j = 0; j < 8; j++) {
@@ -83,24 +86,22 @@ function initBoard() {
       board.appendChild(square);
       row.push(square);
 
-      // Add file/rank labels
       if (i === 7) {
-        const label = document.createElement("div");
-        label.className = "board-label file-label";
-        label.style.left = "50%";
-        label.textContent = "abcdefgh"[j];
-        square.appendChild(label);
+        const fileLabel = document.createElement("div");
+        fileLabel.className = "file-label";
+        fileLabel.textContent = "abcdefgh"[j];
+        square.appendChild(fileLabel);
       }
       if (j === 0) {
-        const label = document.createElement("div");
-        label.className = "board-label rank-label";
-        label.style.top = "50%";
-        label.textContent = 8 - i;
-        square.appendChild(label);
+        const rankLabel = document.createElement("div");
+        rankLabel.className = "rank-label";
+        rankLabel.textContent = 8 - i;
+        square.appendChild(rankLabel);
       }
     }
     boardSquares.push(row);
   }
+
   renderBoard();
   updateStatus();
   updateTimerDisplay();
@@ -147,7 +148,10 @@ function renderBoard() {
       const square = boardSquares[i][j];
       const squareId = coordsToSquare(i, j);
       const piece = game.get(squareId);
-      square.innerHTML = piece ? `<span class="piece">${getPieceSymbol(piece)}</span>` : "";
+
+      square.innerHTML = piece
+        ? `<img src="pieces/${piece.color}${piece.type}.svg" class="piece" />`
+        : "";
       square.classList.remove("selected", "last-move", "check", "legal");
 
       if (lastMove && (squareId === lastMove.from || squareId === lastMove.to)) {
@@ -165,14 +169,6 @@ function renderBoard() {
   renderMoveList();
 }
 
-function getPieceSymbol(piece) {
-  const symbols = {
-    p: "♟", r: "♜", n: "♞", b: "♝", q: "♛", k: "♚",
-    P: "♙", R: "♖", N: "♘", B: "♗", Q: "♕", K: "♔"
-  };
-  return symbols[piece.color === "w" ? piece.type.toUpperCase() : piece.type];
-}
-
 function findKing(color) {
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
@@ -185,15 +181,12 @@ function findKing(color) {
 }
 
 function renderMoveList() {
-  if (!showHistory) {
-    moveList.style.display = "none";
-    return;
-  }
-  moveList.style.display = "block";
   moveList.innerHTML = "";
   for (let i = 0; i < history.length; i += 2) {
     const li = document.createElement("li");
-    li.textContent = `${i / 2 + 1}. ${history[i] || ""} ${history[i + 1] || ""}`;
+    const white = history[i] || "";
+    const black = history[i + 1] || "";
+    li.textContent = `${i / 2 + 1}. ${white} ${black}`;
     moveList.appendChild(li);
   }
 }
@@ -202,16 +195,16 @@ function updateStatus() {
   if (game.in_checkmate()) {
     stopTimer();
     const winner = game.turn() === "w" ? "Black" : "White";
-    winnerText.textContent = `${winner} wins by checkmate!`;
-    winnerModal.style.display = "block";
+    winnerText.innerHTML = `<span>${winner} wins by checkmate!</span>`;
+    winnerModal.classList.add("show");
     winSound.play();
     navigator.vibrate?.([200, 100, 200]);
     return;
   }
   if (game.in_draw()) {
     stopTimer();
-    winnerText.textContent = `It's a draw!`;
-    winnerModal.style.display = "block";
+    winnerText.innerHTML = `<span>It's a draw!</span>`;
+    winnerModal.classList.add("show");
     drawSound.play();
     navigator.vibrate?.([300]);
     return;
@@ -226,7 +219,7 @@ function playMoveFeedback() {
 
 function speakMove(move) {
   if (!speechEnabled) return;
-  const utter = new SpeechSynthesisUtterance(`${move.from} to ${move.to}`);
+  const utter = new SpeechSynthesisUtterance(`${move.san}`);
   speechSynthesis.speak(utter);
 }
 
@@ -279,8 +272,8 @@ function updateTimerDisplay() {
 }
 
 function decideWinnerByPoints() {
-  const score = { w: 0, b: 0 };
   const values = { p: 1, n: 3, b: 3, r: 5, q: 9 };
+  const score = { w: 0, b: 0 };
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
       const piece = game.get(coordsToSquare(i, j));
@@ -289,53 +282,33 @@ function decideWinnerByPoints() {
       }
     }
   }
-  if (score.w > score.b) {
-    winnerText.textContent = "White wins on points!";
-  } else if (score.b > score.w) {
-    winnerText.textContent = "Black wins on points!";
-  } else {
-    winnerText.textContent = "Draw by equal points!";
-  }
-  winnerModal.style.display = "block";
+  let result = "Draw by equal points!";
+  if (score.w > score.b) result = "White wins on points!";
+  else if (score.b > score.w) result = "Black wins on points!";
+  winnerText.innerHTML = `<span>${result}</span>`;
+  winnerModal.classList.add("show");
   drawSound.play();
   navigator.vibrate?.([100, 100, 100]);
 }
 
-// 🎮 Game start logic
-startBtn.onclick = () => {
-  mode = modeSelect.value;
-  speechEnabled = speechToggle?.checked || false;
-  startMenu.style.display = "none";
-  document.getElementById("boardWrapper").style.display = "flex";
-  newGame();
-};
-
-function newGame() {
-  game.reset();
-  history = [];
-  selectedSquare = null;
-  lastMove = null;
-  legalMoves = [];
-  aiThinking = false;
-  winnerModal.style.display = "none";
-  resetTimer();
-  renderBoard();
-  updateStatus();
-}
-
-// 🎯 Menu UI
+// Menu actions
 menuBtn.onclick = () => {
-  menuModal.style.display = "block";
+  menuModal.classList.add("show");
 };
 document.addEventListener("click", (e) => {
   if (!menuModal.contains(e.target) && e.target !== menuBtn) {
-    menuModal.style.display = "none";
+    menuModal.classList.remove("show");
   }
 });
+
 toggleHistoryBtn.onclick = () => {
-  showHistory = !showHistory;
-  renderMoveList();
+  moveHistoryModal.classList.add("show");
 };
+closeHistoryModal.onclick = () => {
+  moveHistoryModal.classList.remove("show");
+};
+
+// Export & Import
 exportBtn.onclick = () => {
   const blob = new Blob([game.pgn()], { type: "text/plain" });
   const url = URL.createObjectURL(blob);
@@ -345,6 +318,7 @@ exportBtn.onclick = () => {
   a.click();
   URL.revokeObjectURL(url);
 };
+
 importBtn.onclick = () => {
   const input = document.createElement("input");
   input.type = "file";
@@ -363,5 +337,27 @@ importBtn.onclick = () => {
   };
   input.click();
 };
+
+// Start game
+startBtn.onclick = () => {
+  mode = modeSelect.value;
+  speechEnabled = speechToggle?.checked;
+  startMenu.style.display = "none";
+  document.getElementById("boardWrapper").style.display = "flex";
+  newGame();
+};
+
+function newGame() {
+  game.reset();
+  history = [];
+  selectedSquare = null;
+  lastMove = null;
+  legalMoves = [];
+  aiThinking = false;
+  winnerModal.classList.remove("show");
+  resetTimer();
+  renderBoard();
+  updateStatus();
+}
 
 initBoard();
