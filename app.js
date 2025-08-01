@@ -59,7 +59,7 @@ aiWorker.onmessage = (event) => {
       const played = game.move({ from: move.slice(0, 2), to: move.slice(2, 4), promotion: "q" });
       if (played) {
         lastMove = { from: played.from, to: played.to };
-        history.push(played.san);
+        history.push(played.san); // ✅ Only push SAN string
         redoStack = [];
         playMoveFeedback();
         speakMove(played);
@@ -145,7 +145,7 @@ function handleSquareClick(i, j) {
     const played = game.move(move);
     if (played) {
       lastMove = { from: played.from, to: played.to };
-      history.push(played.san);
+      history.push(played.san); // ✅ Fix: only SAN
       redoStack = [];
       selectedSquare = null;
       legalMoves = [];
