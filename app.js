@@ -1,4 +1,4 @@
-// ChessProEvolution – app.js v2.0 Polished Final
+// ChessProEvolution – app.js v2.0 Final Stable
 
 const game = new Chess();
 let boardSquares = [];
@@ -26,8 +26,8 @@ const statusEl = document.getElementById("status");
 const exportBtn = document.getElementById("exportBtn");
 const importBtn = document.getElementById("importBtn");
 const toggleHistoryBtn = document.getElementById("toggleHistoryBtn");
-const moveHistoryModal = document.getElementById("moveHistoryModal");
 const closeHistoryModal = document.getElementById("closeHistoryModal");
+const moveHistoryModal = document.getElementById("moveHistoryModal");
 const menuBtn = document.getElementById("menuBtn");
 const menuModal = document.getElementById("menuModal");
 const startMenu = document.getElementById("startMenu");
@@ -112,7 +112,7 @@ function coordsToSquare(i, j) {
 }
 
 function handleSquareClick(i, j) {
-  if (aiThinking) return;
+  if (aiThinking || game.game_over()) return;
   const square = coordsToSquare(i, j);
   const piece = game.get(square);
 
@@ -240,18 +240,10 @@ function resetTimer() {
   timerInterval = setInterval(() => {
     if (currentTimerColor === "w") {
       whiteTimeLeft--;
-      if (whiteTimeLeft <= 0) {
-        stopTimer();
-        decideWinnerByPoints();
-        return;
-      }
+      if (whiteTimeLeft <= 0) return decideWinnerByPoints();
     } else {
       blackTimeLeft--;
-      if (blackTimeLeft <= 0) {
-        stopTimer();
-        decideWinnerByPoints();
-        return;
-      }
+      if (blackTimeLeft <= 0) return decideWinnerByPoints();
     }
     updateTimerDisplay();
   }, 1000);
@@ -272,6 +264,7 @@ function updateTimerDisplay() {
 }
 
 function decideWinnerByPoints() {
+  stopTimer();
   const values = { p: 1, n: 3, b: 3, r: 5, q: 9 };
   const score = { w: 0, b: 0 };
   for (let i = 0; i < 8; i++) {
@@ -292,9 +285,7 @@ function decideWinnerByPoints() {
 }
 
 // Menu actions
-menuBtn.onclick = () => {
-  menuModal.classList.add("show");
-};
+menuBtn.onclick = () => menuModal.classList.add("show");
 document.addEventListener("click", (e) => {
   if (!menuModal.contains(e.target) && e.target !== menuBtn) {
     menuModal.classList.remove("show");
@@ -302,11 +293,12 @@ document.addEventListener("click", (e) => {
 });
 
 toggleHistoryBtn.onclick = () => {
-  moveHistoryModal.classList.add("show");
+  if (moveHistoryModal) moveHistoryModal.classList.add("show");
 };
-closeHistoryModal.onclick = () => {
-  moveHistoryModal.classList.remove("show");
-};
+if (closeHistoryModal)
+  closeHistoryModal.onclick = () => {
+    moveHistoryModal.classList.remove("show");
+  };
 
 // Export & Import
 exportBtn.onclick = () => {
