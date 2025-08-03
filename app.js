@@ -1,35 +1,10 @@
 // ChessProEvolution – app.js v4.1 (PvP-only, narration, filtered voices, lang→voice sync, "No Voice" option)
 
-const game = new Chess();
-let boardSquares = [];
-let selectedSquare = null;
-let legalMoves = [];
-let lastMove = null;
 let selectedVoice = null;
 let selectedLang = "en-US";
 
-const board = document.getElementById("board");
-const timerSelect = document.getElementById("timerSelect");
 const langSelect = document.getElementById("langSelect");
-const voiceSelect = document.getElementById("voiceSelect"); // can be hidden if not needed visually
-const whiteTimerEl = document.getElementById("whiteTimer");
-const blackTimerEl = document.getElementById("blackTimer");
-const winnerModal = document.getElementById("winnerModal");
-const winnerText = document.getElementById("winnerText");
-const statusEl = document.getElementById("status");
-const menuBtn = document.getElementById("menuBtn");
-const menuModal = document.getElementById("menuModal");
-const startMenu = document.getElementById("startMenu");
-const startBtn = document.getElementById("startGameBtn");
-const themeToggleMenu = document.getElementById("themeToggleMenu");
-
-let whiteTimeLeft = 600;
-let blackTimeLeft = 600;
-let currentTimerColor = "w";
-let timerInterval = null;
-let lastWhiteSeconds = 600;
-let lastBlackSeconds = 600;
-let selectedDuration = 600;
+const voiceSelect = document.getElementById("voiceSelect");
 
 const allowedLangs = [
   { code: "none", label: "No Voice" },
@@ -39,10 +14,10 @@ const allowedLangs = [
   { code: "fr", label: "French" },
   { code: "de", label: "German" },
   { code: "es", label: "Spanish" },
-  { code: "ja", label: "Japanese" },
+  { code: "ja", label: "Japanese" }
 ];
 
-// === Setup language dropdown ===
+// === Populate Language Dropdown ===
 function initLangSelect() {
   langSelect.innerHTML = allowedLangs.map(lang =>
     `<option value="${lang.code}">${lang.label}</option>`
@@ -50,7 +25,7 @@ function initLangSelect() {
   langSelect.value = selectedLang;
 }
 
-// === Load available voices and sync to selectedLang ===
+// === Load Voices and Select Based on Language ===
 async function loadVoices() {
   const allVoices = await new Promise((resolve) => {
     const tryLoad = () => {
@@ -61,35 +36,39 @@ async function loadVoices() {
     speechSynthesis.onvoiceschanged = tryLoad;
   });
 
-  const filtered = allVoices.filter(v => allowedLangs.some(lang => lang.code !== "none" && v.lang.startsWith(lang.code)));
+  const filtered = allVoices.filter(v =>
+    allowedLangs.some(lang => lang.code !== "none" && v.lang.startsWith(lang.code))
+  );
+
+  voiceSelect.innerHTML = filtered.map(v =>
+    `<option value="${v.name}" data-lang="${v.lang}">${v.name} (${v.lang})</option>`
+  ).join("");
 
   if (selectedLang !== "none") {
     const bestMatch = filtered.find(v => v.lang === selectedLang)
       || filtered.find(v => v.lang.startsWith(selectedLang.split("-")[0]));
-    if (bestMatch) {
-      selectedVoice = bestMatch;
-      voiceSelect.value = bestMatch.name;
-    } else {
-      selectedVoice = null;
-    }
+    selectedVoice = bestMatch || null;
+    if (selectedVoice) voiceSelect.value = selectedVoice.name;
   } else {
     selectedVoice = null;
+    voiceSelect.value = "";
   }
-
-  // Optional: Populate voice select (debug)
-  voiceSelect.innerHTML = filtered.map(v =>
-    `<option value="${v.name}" data-lang="${v.lang}">${v.name} (${v.lang})</option>`
-  ).join("");
-  if (selectedVoice) voiceSelect.value = selectedVoice.name;
 }
 
-// === Language dropdown change ===
+// === Sync Language Change → Voice Change ===
 langSelect.addEventListener("change", async () => {
   selectedLang = langSelect.value;
   await loadVoices();
 });
 
-// === Preload voices on first interaction ===
+// === Manual Voice Selection (optional) ===
+voiceSelect.addEventListener("change", () => {
+  const voiceName = voiceSelect.value;
+  const allVoices = speechSynthesis.getVoices();
+  selectedVoice = allVoices.find(v => v.name === voiceName) || null;
+});
+
+// === Preload Voices on First Click ===
 document.body.addEventListener("click", () => {
   const dummy = new Audio();
   dummy.play().catch(() => {});
@@ -97,7 +76,7 @@ document.body.addEventListener("click", () => {
   loadVoices();
 }, { once: true });
 
-// === Narration logic ===
+// === Narration Function ===
 function speakNarration(move) {
   if (!move || selectedLang === "none" || !selectedVoice) return;
 
@@ -135,10 +114,6 @@ function speakNarration(move) {
   utter.rate = 1;
   speechSynthesis.speak(utter);
 }
-
-// === Call once on load ===
-initLangSelect();
-loadVoices();
 
 function playMoveFeedback() {
   playSound("move.mp3", 0.8);
