@@ -1,4 +1,4 @@
-// ChessProEvolution – app.js v2.4 (clean PvP only, no history, no export/import)
+// ChessProEvolution – app.js v2.5 (clean PvP only, fixed [object Object])
 
 const game = new Chess();
 let boardSquares = [];
@@ -82,7 +82,7 @@ function handleSquareClick(i, j) {
       selectedSquare = null;
       legalMoves = [];
       playMoveFeedback();
-      speakMove(played);
+      speakMove(played.san);
       renderBoard();
       updateStatus();
       currentTimerColor = game.turn();
@@ -161,9 +161,9 @@ function playMoveFeedback() {
   navigator.vibrate?.([50]);
 }
 
-function speakMove(move) {
+function speakMove(san) {
   if (!speechEnabled) return;
-  const utter = new SpeechSynthesisUtterance(`${move.san}`);
+  const utter = new SpeechSynthesisUtterance(san);
   speechSynthesis.speak(utter);
 }
 
