@@ -5,6 +5,11 @@
   box-sizing: border-box;
 }
 
+html, body {
+  overflow: hidden;
+  touch-action: none;
+}
+
 :root {
   --bg: #f0f0f0;
   --text: #111;
@@ -34,6 +39,8 @@ body {
   display: flex;
   justify-content: center;
   padding: 1rem;
+  overflow: hidden;
+  touch-action: none;
 }
 
 /* App Layout */
