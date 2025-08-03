@@ -1,471 +1,120 @@
 /* Reset + Base */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
 
-html, body {
-  overflow: hidden;
-  touch-action: none;
-}
+{ margin: 0; padding: 0; box-sizing: border-box; }
 
-:root {
-  --bg: #f0f0f0;
-  --text: #111;
-  --accent: #3b82f6;
-  --board-light: #eeeed2;
-  --board-dark: #769656;
-  --selected: #a3c4f3;
-  --last-move: #f6f669;
-  --check: #ff6b6b;
-}
+html, body { overflow: hidden; touch-action: none; }
 
-body.dark {
-  --bg: #1e1e2f;
-  --text: #fff;
-  --board-light: #baca44;
-  --board-dark: #445533;
-  --selected: #7fa7f3;
-  --last-move: #c2c258;
-  --check: #ff4f4f;
-}
+:root { --bg: #f0f0f0; --text: #111; --accent: #3b82f6; --board-light: #eeeed2; --board-dark: #769656; --selected: #a3c4f3; --last-move: #f6f669; --check: #ff6b6b; }
 
-body {
-  font-family: sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  padding: 1rem;
-}
+body.dark { --bg: #1e1e2f; --text: #fff; --board-light: #baca44; --board-dark: #445533; --selected: #7fa7f3; --last-move: #c2c258; --check: #ff4f4f; }
 
-/* App Layout */
-#app {
-  max-width: 600px;
-  width: 100%;
-}
+body { font-family: sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; justify-content: center; padding: 1rem; }
 
-/* Header */
-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
+/* App Layout */ #app { max-width: 600px; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 
-header h1 {
-  font-size: 1.4rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
+/* Header */ header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; width: 100%; }
 
-.top-controls {
-  display: flex;
-  gap: 0.5rem;
-}
+header h1 { font-size: 1.4rem; display: flex; align-items: center; gap: 0.5rem; }
 
-.top-controls button {
-  background: none;
-  border: none;
-  color: inherit;
-  font-size: 1.2rem;
-  cursor: pointer;
-}
+.top-controls { display: flex; gap: 0.5rem; }
 
-/* Start Menu */
-#startMenu {
-  background: var(--board-light);
-  padding: 1rem;
-  border-radius: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-}
+.top-controls button { background: none; border: none; color: inherit; font-size: 1.2rem; cursor: pointer; }
 
-#startMenu h2 {
-  text-align: center;
-}
+/* Start Menu */ #startMenu { background: var(--board-light); padding: 1rem; border-radius: 1rem; display: flex; flex-direction: column; gap: 0.8rem; }
 
-#startMenu label {
-  display: flex;
-  flex-direction: column;
-  font-size: 0.9rem;
-  gap: 0.3rem;
-}
+#startMenu h2 { text-align: center; }
 
-#startMenu input[type="range"],
-#startMenu select {
-  width: 100%;
-}
+#startMenu label { display: flex; flex-direction: column; font-size: 0.9rem; gap: 0.3rem; }
 
-#startGameBtn {
-  padding: 0.5rem 1rem;
-  border: none;
-  background: var(--accent);
-  color: white;
-  font-weight: bold;
-  border-radius: 0.5rem;
-  font-size: 1rem;
-  cursor: pointer;
-}
+#startMenu input[type="range"], #startMenu select { width: 100%; }
 
-/* Board Wrapper */
-#boardWrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-}
+#startGameBtn { padding: 0.5rem 1rem; border: none; background: var(--accent); color: white; font-weight: bold; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; }
 
-/* Board */
-#board {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  aspect-ratio: 1;
-  width: 100%;
-  max-width: 100%;
-  border: 3px solid var(--board-dark);
-  border-radius: 1rem;
-  overflow: hidden;
-}
+/* Board Wrapper */ #boardWrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.75rem; position: relative; }
 
-.square {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+/* Board */ #board { display: grid; grid-template-columns: repeat(8, 1fr); aspect-ratio: 1; width: 100%; max-width: 100%; border: 3px solid var(--board-dark); border-radius: 1rem; overflow: hidden; }
 
-.square.light {
-  background: var(--board-light);
-}
+.square { position: relative; width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; }
 
-.square.dark {
-  background: var(--board-dark);
-}
+.square.light { background: var(--board-light); }
 
-.square img.piece {
-  width: 85%;
-  height: 85%;
-  object-fit: contain;
-  pointer-events: none;
-}
+.square.dark { background: var(--board-dark); }
 
-/* Highlights */
-.square.selected {
-  outline: 3px solid var(--selected);
-}
+.square img.piece { width: 85%; height: 85%; object-fit: contain; pointer-events: none; animation: pieceEntry 0.2s ease; transition: transform 0.1s; }
 
-.square.last-move {
-  background: var(--last-move);
-}
+.square.selected { outline: 3px solid var(--selected); }
 
-.square.check {
-  background: var(--check);
-}
+.square.last-move { background: var(--last-move); }
 
-.square.legal::after {
-  content: '';
-  position: absolute;
-  width: 30%;
-  height: 30%;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 50%;
-}
+.square.check { background: var(--check); }
 
-/* Coordinates */
-.rank-label,
-.file-label {
-  position: absolute;
-  font-size: 0.6rem;
-  color: var(--text);
-  pointer-events: none;
-}
+.square.legal::after { content: ''; position: absolute; width: 30%; height: 30%; background: rgba(0, 0, 0, 0.2); border-radius: 50%; }
 
-.rank-label {
-  top: 2px;
-  left: 2px;
-}
+.rank-label, .file-label { position: absolute; font-size: 0.6rem; color: var(--text); pointer-events: none; }
 
-.file-label {
-  bottom: 2px;
-  right: 2px;
-}
+.rank-label { top: 2px; left: 2px; }
 
-/* Info Section */
-#info {
-  text-align: center;
-  font-size: 0.9rem;
-  width: 100%;
-}
+.file-label { bottom: 2px; right: 2px; }
 
-#timers {
-  display: flex;
-  justify-content: space-between;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-  gap: 1rem;
-}
+#info { text-align: center; font-size: 0.9rem; width: 100%; }
 
-.timer.white {
-  color: #222;
-}
+#timers { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 0.5rem; gap: 1rem; }
 
-.timer.black {
-  color: #444;
-}
+.timer.white { color: #222; }
 
-body.dark .timer.white,
-body.dark .timer.black {
-  color: #eee;
-}
+.timer.black { color: #444; }
 
-/* Winner Modal Animation */
-#winnerModal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 1));
-  color: white;
-  z-index: 1000;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  overflow: hidden;
-  animation: fadeIn 0.6s ease-out forwards;
-}
+body.dark .timer.white, body.dark .timer.black { color: #eee; }
 
-#winnerModal.show {
-  display: flex;
-}
+#winnerModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 1)); color: white; z-index: 1000; flex-direction: column; justify-content: center; align-items: center; text-align: center; overflow: hidden; animation: fadeIn 0.6s ease-out forwards; }
 
-#winnerText {
-  font-size: 2.8rem;
-  font-weight: bold;
-  position: relative;
-  animation: pulseGlow 1.5s infinite;
-  text-shadow:
-    0 0 10px #fff,
-    0 0 20px var(--accent),
-    0 0 40px var(--accent);
-  z-index: 2;
-}
+#winnerModal.show { display: flex; }
 
-#winnerModal button {
-  margin-top: 2rem;
-  padding: 0.8rem 2rem;
-  font-size: 1.2rem;
-  background: linear-gradient(135deg, var(--accent), #00bfff);
-  border: none;
-  color: white;
-  font-weight: bold;
-  border-radius: 1rem;
-  cursor: pointer;
-  box-shadow: 0 0 25px rgba(0, 191, 255, 0.6);
-  animation: bounceIn 0.8s ease-out;
-  transition: transform 0.3s ease;
-  z-index: 2;
-}
+#winnerText { font-size: 2.8rem; font-weight: bold; position: relative; animation: pulseGlow 1.5s infinite; text-shadow: 0 0 10px #fff, 0 0 20px var(--accent), 0 0 40px var(--accent); z-index: 2; }
 
-#winnerModal button:hover {
-  transform: scale(1.1);
-  background: linear-gradient(to right, #00bfff, var(--accent));
-}
+#winnerModal button { margin-top: 2rem; padding: 0.8rem 2rem; font-size: 1.2rem; background: linear-gradient(135deg, var(--accent), #00bfff); border: none; color: white; font-weight: bold; border-radius: 1rem; cursor: pointer; box-shadow: 0 0 25px rgba(0, 191, 255, 0.6); animation: bounceIn 0.8s ease-out; transition: transform 0.3s ease; z-index: 2; }
 
-/* Particles */
-#winnerModal::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(#fff 1px, transparent 1px),
-                    radial-gradient(#00bfff 1px, transparent 1px);
-  background-size: 20px 20px;
-  animation: particles 4s linear infinite;
-  opacity: 0.07;
-  pointer-events: none;
-  z-index: 1;
-}
+#winnerModal button:hover { transform: scale(1.1); background: linear-gradient(to right, #00bfff, var(--accent)); }
 
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
+#winnerModal::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(#fff 1px, transparent 1px), radial-gradient(#00bfff 1px, transparent 1px); background-size: 20px 20px; animation: particles 4s linear infinite; opacity: 0.07; pointer-events: none; z-index: 1; }
 
-@keyframes pulseGlow {
-  0% {
-    text-shadow: 0 0 10px rgba(255,255,255,0.5), 0 0 20px var(--accent);
-  }
-  50% {
-    text-shadow: 0 0 30px rgba(255,255,255,0.9), 0 0 50px var(--accent);
-  }
-  100% {
-    text-shadow: 0 0 10px rgba(255,255,255,0.5), 0 0 20px var(--accent);
-  }
-}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-@keyframes bounceIn {
-  0% { transform: scale(0.5); opacity: 0; }
-  60% { transform: scale(1.2); opacity: 1; }
-  100% { transform: scale(1); }
-}
+@keyframes pulseGlow { 0% { text-shadow: 0 0 10px rgba(255,255,255,0.5), 0 0 20px var(--accent); } 50% { text-shadow: 0 0 30px rgba(255,255,255,0.9), 0 0 50px var(--accent); } 100% { text-shadow: 0 0 10px rgba(255,255,255,0.5), 0 0 20px var(--accent); } }
 
-@keyframes particles {
-  0% {
-    background-position: 0 0, 10px 10px;
-  }
-  100% {
-    background-position: 40px 40px, 50px 50px;
-  }
-}
-/* Winner Aura Glow */
-#winnerModal.glow-white::after,
-#winnerModal.glow-black::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.15), transparent);
-  animation: auraGlow 2s infinite ease-in-out;
-  pointer-events: none;
-  z-index: 1;
-}
+@keyframes bounceIn { 0% { transform: scale(0.5); opacity: 0; } 60% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); } }
 
-#winnerModal.glow-white::after {
-  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.2), transparent);
-}
+@keyframes particles { 0% { background-position: 0 0, 10px 10px; } 100% { background-position: 40px 40px, 50px 50px; } }
 
-#winnerModal.glow-black::after {
-  background: radial-gradient(circle at center, rgba(0, 191, 255, 0.2), transparent);
-}
+#winnerModal.glow-white::after, #winnerModal.glow-black::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at center, rgba(255, 255, 255, 0.15), transparent); animation: auraGlow 2s infinite ease-in-out; pointer-events: none; z-index: 1; }
 
-/* Screen Shake Animation */
-#winnerModal.shake {
-  animation: shakeScreen 0.5s ease-in-out infinite;
-}
+#winnerModal.glow-white::after { background: radial-gradient(circle at center, rgba(255, 255, 255, 0.2), transparent); }
 
-@keyframes auraGlow {
-  0% { transform: scale(1); opacity: 0.5; }
-  50% { transform: scale(1.05); opacity: 1; }
-  100% { transform: scale(1); opacity: 0.5; }
-}
+#winnerModal.glow-black::after { background: radial-gradient(circle at center, rgba(0, 191, 255, 0.2), transparent); }
 
-@keyframes shakeScreen {
-  0% { transform: translate(0px, 0px); }
-  20% { transform: translate(-4px, 2px); }
-  40% { transform: translate(4px, -2px); }
-  60% { transform: translate(-2px, 4px); }
-  80% { transform: translate(2px, -4px); }
-  100% { transform: translate(0px, 0px); }
-}
+#winnerModal.shake { animation: shakeScreen 0.5s ease-in-out infinite; }
 
-/* 3-dot Menu Modal */
-.menu-modal {
-  position: absolute;
-  top: 3.2rem;
-  right: 1rem;
-  background: var(--bg);
-  border: 1px solid #ccc;
-  padding: 0.5rem;
-  display: none;
-  flex-direction: column;
-  gap: 0.4rem;
-  border-radius: 0.5rem;
-  z-index: 999;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
+@keyframes auraGlow { 0% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); opacity: 0.5; } }
 
-#menuModal.show {
-  display: flex;
-}
+@keyframes shakeScreen { 0% { transform: translate(0px, 0px); } 20% { transform: translate(-4px, 2px); } 40% { transform: translate(4px, -2px); } 60% { transform: translate(-2px, 4px); } 80% { transform: translate(2px, -4px); } 100% { transform: translate(0px, 0px); } }
 
-.menu-modal label {
-  background: none;
-  border: none;
-  color: inherit;
-  font-size: 0.9rem;
-  text-align: left;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
+.menu-modal { position: absolute; top: 3.2rem; right: 1rem; background: var(--bg); border: 1px solid #ccc; padding: 0.5rem; display: none; flex-direction: row; gap: 0.4rem; border-radius: 0.5rem; z-index: 999; box-shadow: none; }
 
-/* DBZ Aura Background for Board */
-#boardWrapper::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 110%;
-  height: 110%;
-  background: radial-gradient(circle, rgba(0, 191, 255, 0.15) 0%, transparent 70%);
-  border-radius: 50%;
-  animation: boardAura 3s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 0;
-}
+#menuModal.show { display: flex; }
 
-@keyframes boardAura {
-  0%, 100% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 0.4;
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.05);
-    opacity: 0.7;
-  }
-}
+.menu-modal label { background: none; border: none; color: inherit; font-size: 0.9rem; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
 
-/* Animated Piece Movement */
-.square img.piece {
-  animation: pieceEntry 0.2s ease;
-  transition: transform 0.1s;
-}
+.menu-modal input[type="checkbox"] { transform: scale(1.2); accent-color: var(--accent); }
 
-@keyframes pieceEntry {
-  0% {
-    transform: scale(1.6) rotate(5deg);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1) rotate(0deg);
-    opacity: 1;
-  }
-}
+#boardWrapper::before { content: ""; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 110%; height: 110%; background: radial-gradient(circle, rgba(0, 191, 255, 0.15) 0%, transparent 70%); border-radius: 50%; animation: boardAura 3s ease-in-out infinite; pointer-events: none; z-index: 0; }
 
-/* Vibrate Feedback on Move */
-.square.vibrate {
-  animation: vibrateMove 0.25s ease-in-out;
-}
+@keyframes boardAura { 0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.4; } 50% { transform: translate(-50%, -50%) scale(1.05); opacity: 0.7; } }
 
-@keyframes vibrateMove {
-  0%, 100% { transform: translate(0, 0); }
-  25% { transform: translate(2px, -2px); }
-  50% { transform: translate(-2px, 2px); }
-  75% { transform: translate(2px, 2px); }
-}
+.square.vibrate { animation: vibrateMove 0.25s ease-in-out; }
 
-/* Glowing Button Style */
-button, #startGameBtn {
-  animation: glowButton 2s ease-in-out infinite;
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
-}
+@keyframes vibrateMove { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(2px, -2px); } 50% { transform: translate(-2px, 2px); } 75% { transform: translate(2px, 2px); } }
 
-@keyframes glowButton {
-  0%, 100% {
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 30px rgba(0, 191, 255, 0.7);
-  }
-}
+button, #startGameBtn { animation: glowButton 2s ease-in-out infinite; box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
+
+@keyframes glowButton { 0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); } 50% { box-shadow: 0 0 30px rgba(0, 191, 255, 0.7); } }
+
