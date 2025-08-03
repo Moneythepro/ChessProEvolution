@@ -1,6 +1,6 @@
 let game = new Chess();
 let lastMove = null;
-let selectedSquare = null; // ✅ FIXED
+let selectedSquare = null;
 let timerInterval = null;
 let selectedVoice = null;
 let selectedLang = "en-US";
@@ -20,8 +20,9 @@ const startBtn = document.getElementById("startGameBtn");
 const startMenu = document.getElementById("startMenu");
 const timerSelect = document.getElementById("timerSelect");
 const statusEl = document.getElementById("status");
-const whiteTimerEl = document.getElementById("whiteTimer"); // ✅ FIXED
+const whiteTimerEl = document.getElementById("whiteTimer");
 const blackTimerEl = document.getElementById("blackTimer");
+const boardEl = document.getElementById("board");
 
 const allowedLangs = [
   { code: "none", label: "🚫 No Voice" },
@@ -34,7 +35,6 @@ const allowedLangs = [
   { code: "ja",     label: "🇯🇵 Japanese" }
 ];
 
-// === Populate Language Dropdown ===
 function initLangSelect() {
   langSelect.innerHTML = allowedLangs.map(lang =>
     `<option value="${lang.code}">${lang.label}</option>`
@@ -42,7 +42,6 @@ function initLangSelect() {
   langSelect.value = selectedLang;
 }
 
-// === Load Voices ===
 async function loadVoices() {
   const allVoices = await new Promise(resolve => {
     const tryLoad = () => {
@@ -141,19 +140,8 @@ function updateTimerUI() {
   whiteBox.classList.toggle("active", currentTimerColor === "w");
   blackBox.classList.toggle("active", currentTimerColor === "b");
 
-  const whiteSecs = whiteTimeLeft;
-  const blackSecs = blackTimeLeft;
-
-  whiteBox.classList.toggle("low-time", whiteSecs <= 10);
-  blackBox.classList.toggle("low-time", blackSecs <= 10);
-
-  if (currentTimerColor === "w") {
-    if (whiteSecs <= 10 && lastWhiteSeconds > 10) playSound("beep.mp3", 1.0);
-    lastWhiteSeconds = whiteSecs;
-  } else {
-    if (blackSecs <= 10 && lastBlackSeconds > 10) playSound("beep.mp3", 1.0);
-    lastBlackSeconds = blackSecs;
-  }
+  whiteBox.classList.toggle("low-time", whiteTimeLeft <= 10);
+  blackBox.classList.toggle("low-time", blackTimeLeft <= 10);
 
   whiteTimerEl.textContent = formatTime(whiteTimeLeft);
   blackTimerEl.textContent = formatTime(blackTimeLeft);
@@ -165,7 +153,6 @@ function formatTime(secs) {
   return `${m}:${s}`;
 }
 
-// === Menu Toggle ===
 menuBtn.onclick = (e) => {
   e.stopPropagation();
   menuModal.classList.toggle("show");
@@ -183,7 +170,6 @@ if (themeToggleMenu) {
   });
 }
 
-// === Start Game ===
 startBtn.onclick = () => {
   game = new Chess();
   lastMove = null;
@@ -223,18 +209,7 @@ function newGame() {
   lastMove = null;
   selectedSquare = null;
   updateStatus("White to move");
-}
-
-function simulateMove(from, to) {
-  const move = game.move({ from, to, sloppy: true });
-  if (move) {
-    lastMove = move;
-    speakNarration(move);
-    playMoveFeedback();
-    currentTimerColor = game.turn();
-    updateStatus(`${currentTimerColor === "w" ? "White" : "Black"} to move`);
-    updateTimerUI();
-  }
+  renderBoard();
 }
 
 function updateStatus(text) {
@@ -247,6 +222,70 @@ function playSound(src, volume = 1) {
   audio.play().catch(() => {});
 }
 
+// === Basic Board Rendering & Click Handling ===
+function renderBoard() {
+  boardEl.innerHTML = "";
+  const squares = game.board();
+
+  for (let r = 7; r >= 0; r--) {
+    for (let f = 0; f < 8; f++) {
+      const squareName = "abcdefgh"[f] + (r + 1);
+      const piece = squares[r][f];
+      const div = document.createElement("div");
+      div.className = "square";
+      div.dataset.square = squareName;
+      if ((r + f) % 2 === 0) {
+        div.classList.add("light");
+      } else {
+        div.classList.add("dark");
+      }
+      if (piece) {
+        const img = document.createElement("img");
+        img.src = `pieces/${piece.color}${piece.type}.png`;
+        img.className = "piece";
+        div.appendChild(img);
+      }
+      boardEl.appendChild(div);
+    }
+  }
+}
+
+boardEl.addEventListener("click", (e) => {
+  const target = e.target.closest(".square");
+  if (!target) return;
+
+  const clickedSquare = target.dataset.square;
+  if (!clickedSquare) return;
+
+  if (selectedSquare) {
+    const legalMoves = game.moves({ square: selectedSquare, verbose: true });
+    const isLegal = legalMoves.some(m => m.to === clickedSquare);
+
+    if (isLegal) {
+      simulateMove(selectedSquare, clickedSquare);
+      renderBoard();
+      selectedSquare = null;
+    } else {
+      selectedSquare = clickedSquare;
+    }
+  } else {
+    selectedSquare = clickedSquare;
+  }
+});
+
+simulateMove = (from, to) => {
+  const move = game.move({ from, to, sloppy: true });
+  if (move) {
+    lastMove = move;
+    speakNarration(move);
+    playMoveFeedback();
+    currentTimerColor = game.turn();
+    updateStatus(`${currentTimerColor === "w" ? "White" : "Black"} to move`);
+    updateTimerUI();
+  }
+};
+
+// Init
 initLangSelect();
 loadVoices();
 
