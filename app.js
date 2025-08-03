@@ -1,4 +1,4 @@
-// ChessProEvolution – app.js v3.2 (PvP-only, animated timers, low-time beep, blue/red pulse)
+// ChessProEvolution – app.js v3.3 (Improved sound, PvP-only, animated timers, blue/red pulse, vibration)
 
 const game = new Chess();
 let boardSquares = [];
@@ -21,17 +21,30 @@ const startMenu = document.getElementById("startMenu");
 const startBtn = document.getElementById("startGameBtn");
 const themeToggleMenu = document.getElementById("themeToggleMenu");
 
-const winSound = new Audio("win.mp3");
-const drawSound = new Audio("draw.mp3");
-const moveSound = new Audio("move.mp3");
-const beepSound = new Audio("beep.mp3");
-
 let whiteTimeLeft = 600;
 let blackTimeLeft = 600;
 let currentTimerColor = "w";
 let timerInterval = null;
 let lastWhiteSeconds = 600;
 let lastBlackSeconds = 600;
+let selectedDuration = 600;
+
+// 🔊 Improved Sound Playback Logic
+function playSound(src, volume = 1.0) {
+  try {
+    const audio = new Audio(src);
+    audio.volume = volume;
+    audio.play().catch(() => {});
+  } catch (e) {
+    console.error("Sound error:", e);
+  }
+}
+
+// 🔓 Unlock audio on first user gesture
+document.body.addEventListener("click", () => {
+  const dummy = new Audio();
+  dummy.play().catch(() => {});
+}, { once: true });
 
 function initBoard() {
   board.innerHTML = "";
@@ -151,7 +164,7 @@ function updateStatus() {
     const winner = loser === "White" ? "Black" : "White";
     winnerText.innerHTML = `<span>${winner} wins by checkmate!</span>`;
     winnerModal.className = "show shake glow-" + winner.toLowerCase();
-    winSound.play();
+    playSound("win.mp3", 1.0);
     navigator.vibrate?.([200, 100, 200]);
     return;
   }
@@ -160,7 +173,7 @@ function updateStatus() {
     stopTimer();
     winnerText.innerHTML = `<span>It's a draw!</span>`;
     winnerModal.className = "show glow-white";
-    drawSound.play();
+    playSound("draw.mp3", 1.0);
     navigator.vibrate?.([300]);
     return;
   }
@@ -171,7 +184,7 @@ function updateStatus() {
 }
 
 function playMoveFeedback() {
-  moveSound.play();
+  playSound("move.mp3", 0.8);
   navigator.vibrate?.([50]);
 }
 
@@ -205,9 +218,6 @@ function stopTimer() {
   clearInterval(timerInterval);
 }
 
-// Global fallback in case selectedDuration not yet set
-let selectedDuration = 600; // Default: 10 minutes
-
 function updateTimerDisplay() {
   const format = (t) => {
     const m = Math.floor(t / 60).toString().padStart(2, "0");
@@ -218,9 +228,7 @@ function updateTimerDisplay() {
   whiteTimerEl.textContent = format(whiteTimeLeft);
   blackTimerEl.textContent = format(blackTimeLeft);
 
-  // Use selectedDuration or fallback
   const total = selectedDuration || 600;
-
   const whiteBox = document.querySelector(".timer.white");
   const blackBox = document.querySelector(".timer.black");
 
@@ -244,25 +252,22 @@ function updateTimerUI() {
   whiteBox.classList.toggle("low-time", whiteSecs <= 10);
   blackBox.classList.toggle("low-time", blackSecs <= 10);
 
-  // Beep when crossing 10s
   if (currentTimerColor === "w") {
-    if (whiteSecs <= 10 && lastWhiteSeconds > 10) beepSound.play();
+    if (whiteSecs <= 10 && lastWhiteSeconds > 10) playSound("beep.mp3", 1.0);
     lastWhiteSeconds = whiteSecs;
   } else {
-    if (blackSecs <= 10 && lastBlackSeconds > 10) beepSound.play();
+    if (blackSecs <= 10 && lastBlackSeconds > 10) playSound("beep.mp3", 1.0);
     lastBlackSeconds = blackSecs;
   }
 
-  // Trigger vibration on turn change (short buzz)
-  if (navigator.vibrate) {
-    navigator.vibrate(40);
-  }
+  navigator.vibrate?.(40);
 }
 
 function decideWinnerByPoints() {
   stopTimer();
   const values = { p: 1, n: 3, b: 3, r: 5, q: 9 };
   const score = { w: 0, b: 0 };
+
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
       const piece = game.get(coordsToSquare(i, j));
@@ -278,7 +283,7 @@ function decideWinnerByPoints() {
 
   winnerText.innerHTML = `<span>${result}</span>`;
   winnerModal.className = "show glow-white";
-  drawSound.play();
+  playSound("draw.mp3", 1.0);
   navigator.vibrate?.([100, 100, 100]);
 }
 
@@ -306,6 +311,7 @@ startBtn.onclick = () => {
   const mins = parseInt(timerSelect?.value || "10");
   whiteTimeLeft = blackTimeLeft = mins * 60;
   lastWhiteSeconds = lastBlackSeconds = mins * 60;
+  selectedDuration = mins * 60;
 
   newGame();
 };
