@@ -12,7 +12,7 @@
   <div id="app">
     <!-- Header -->
     <header>
-      <h1></i> ChessProEvolution</h1>
+      <h1>ChessProEvolution</h1>
       <div class="top-controls">
         <button id="menuBtn" title="Menu"><i data-lucide="more-horizontal"></i></button>
         <button onclick="toggleTheme()" title="Toggle Theme"><i data-lucide="moon-star"></i></button>
@@ -62,20 +62,8 @@
     </div>
   </div>
 
-  <!-- Move History Modal -->
-  <div id="moveHistoryModal" class="modal" style="display: none;">
-    <div class="modal-content">
-      <h2>Move History</h2>
-      <ol id="moveList"></ol>
-      <button id="closeHistoryModal"><i data-lucide="x"></i> Close</button>
-    </div>
-  </div>
-
   <!-- 3-dot Compact Menu Modal -->
   <div id="menuModal" class="menu-modal" style="display: none;">
-    <button id="exportBtn"><i data-lucide="download"></i> Export PGN</button>
-    <button id="importBtn"><i data-lucide="upload"></i> Import PGN</button>
-    <button id="toggleHistoryBtn"><i data-lucide="scroll"></i> Toggle History</button>
     <label>
       <input type="checkbox" id="speechToggleMenu" />
       <i data-lucide="mic"></i> Move Speech
