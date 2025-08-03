@@ -1,19 +1,17 @@
-// ChessProEvolution – app.js v3.9 (PvP-only, narration, animated timers, vibration, 3-dot menu, voice/lang selector – voice loading fixed)
+// ChessProEvolution – app.js v4.1 (PvP-only, narration, filtered voices, lang→voice sync, "No Voice" option)
 
 const game = new Chess();
 let boardSquares = [];
 let selectedSquare = null;
 let legalMoves = [];
 let lastMove = null;
-let speechEnabled = false;
 let selectedVoice = null;
 let selectedLang = "en-US";
 
 const board = document.getElementById("board");
 const timerSelect = document.getElementById("timerSelect");
-const speechToggle = document.getElementById("speechToggle");
-const voiceSelect = document.getElementById("voiceSelect");
 const langSelect = document.getElementById("langSelect");
+const voiceSelect = document.getElementById("voiceSelect"); // can be hidden if not needed visually
 const whiteTimerEl = document.getElementById("whiteTimer");
 const blackTimerEl = document.getElementById("blackTimer");
 const winnerModal = document.getElementById("winnerModal");
@@ -33,59 +31,75 @@ let lastWhiteSeconds = 600;
 let lastBlackSeconds = 600;
 let selectedDuration = 600;
 
-// ✅ Voice loading fix
-function loadVoicesWhenAvailable() {
-  return new Promise((resolve) => {
-    let voices = speechSynthesis.getVoices();
-    if (voices.length) return resolve(voices);
-    const onVoicesChanged = () => {
-      voices = speechSynthesis.getVoices();
-      if (voices.length) {
-        speechSynthesis.removeEventListener("voiceschanged", onVoicesChanged);
-        resolve(voices);
-      }
-    };
-    speechSynthesis.addEventListener("voiceschanged", onVoicesChanged);
-  });
+const allowedLangs = [
+  { code: "none", label: "No Voice" },
+  { code: "en-US", label: "English (US)" },
+  { code: "en-GB", label: "English (UK)" },
+  { code: "hi", label: "Hindi" },
+  { code: "fr", label: "French" },
+  { code: "de", label: "German" },
+  { code: "es", label: "Spanish" },
+  { code: "ja", label: "Japanese" },
+];
+
+// === Setup language dropdown ===
+function initLangSelect() {
+  langSelect.innerHTML = allowedLangs.map(lang =>
+    `<option value="${lang.code}">${lang.label}</option>`
+  ).join("");
+  langSelect.value = selectedLang;
 }
 
+// === Load available voices and sync to selectedLang ===
 async function loadVoices() {
-  const voices = await loadVoicesWhenAvailable();
-  voiceSelect.innerHTML = voices.map(v => `<option value="${v.name}">${v.name} (${v.lang})</option>`).join("");
-  if (!selectedVoice && voices.length > 0) {
-    selectedVoice = voices.find(v => v.name.includes("Google")) || voices[0];
-    voiceSelect.value = selectedVoice.name;
+  const allVoices = await new Promise((resolve) => {
+    const tryLoad = () => {
+      const voices = speechSynthesis.getVoices();
+      if (voices.length) resolve(voices);
+    };
+    tryLoad();
+    speechSynthesis.onvoiceschanged = tryLoad;
+  });
+
+  const filtered = allVoices.filter(v => allowedLangs.some(lang => lang.code !== "none" && v.lang.startsWith(lang.code)));
+
+  if (selectedLang !== "none") {
+    const bestMatch = filtered.find(v => v.lang === selectedLang)
+      || filtered.find(v => v.lang.startsWith(selectedLang.split("-")[0]));
+    if (bestMatch) {
+      selectedVoice = bestMatch;
+      voiceSelect.value = bestMatch.name;
+    } else {
+      selectedVoice = null;
+    }
+  } else {
+    selectedVoice = null;
   }
+
+  // Optional: Populate voice select (debug)
+  voiceSelect.innerHTML = filtered.map(v =>
+    `<option value="${v.name}" data-lang="${v.lang}">${v.name} (${v.lang})</option>`
+  ).join("");
+  if (selectedVoice) voiceSelect.value = selectedVoice.name;
 }
 
-voiceSelect?.addEventListener("change", () => {
-  const voices = speechSynthesis.getVoices();
-  selectedVoice = voices.find(v => v.name === voiceSelect.value);
-});
-
-langSelect?.addEventListener("change", () => {
+// === Language dropdown change ===
+langSelect.addEventListener("change", async () => {
   selectedLang = langSelect.value;
+  await loadVoices();
 });
 
-function playSound(src, volume = 1.0) {
-  try {
-    const audio = new Audio(src);
-    audio.volume = volume;
-    audio.play().catch(() => {});
-  } catch (e) {
-    console.error("Sound error:", e);
-  }
-}
-
-// Trigger TTS & preload voices after user click
+// === Preload voices on first interaction ===
 document.body.addEventListener("click", () => {
   const dummy = new Audio();
   dummy.play().catch(() => {});
+  initLangSelect();
   loadVoices();
 }, { once: true });
 
+// === Narration logic ===
 function speakNarration(move) {
-  if (!speechEnabled || !move) return;
+  if (!move || selectedLang === "none" || !selectedVoice) return;
 
   const from = move.from?.toUpperCase() || "";
   const to = move.to?.toUpperCase() || "";
@@ -114,28 +128,16 @@ function speakNarration(move) {
     sentence += `. ${color} is running low on time.`;
   }
 
-  // ✅ Voice check and fallback
   const utter = new SpeechSynthesisUtterance(sentence);
-  utter.lang = selectedLang;
-
-  const voices = speechSynthesis.getVoices();
-  if (!selectedVoice && voices.length > 0) {
-    selectedVoice = voices.find(v => v.name.includes("Google")) || voices[0];
-  }
-
-  if (selectedVoice) {
-    utter.voice = selectedVoice;
-  } else {
-    console.warn("No speech voice available.");
-    return;
-  }
-
+  utter.voice = selectedVoice;
+  utter.lang = selectedVoice?.lang || selectedLang;
   utter.pitch = 1;
   utter.rate = 1;
   speechSynthesis.speak(utter);
 }
 
-// ✅ Init voices immediately on load
+// === Call once on load ===
+initLangSelect();
 loadVoices();
 
 function playMoveFeedback() {
