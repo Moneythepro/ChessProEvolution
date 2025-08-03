@@ -417,51 +417,64 @@ body.dark .timer {
   100% { background-position: 40px 40px, 50px 50px; }
 }
 
-/* === Updated Header === */
+/* === HEADER FIX === */
+header {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+}
+
 header h1 {
   font-size: 1.4rem;
-  background: none;
   color: #000;
   font-weight: bold;
+  background: none;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: unset;
   animation: none;
 }
 
-/* === Updated Status Box === */
+/* === STATUS BOX ("White to move") === */
 #status {
   position: absolute;
-  top: -2.2rem;
+  top: -2rem;
+  font-size: 0.9rem;
   font-weight: bold;
-  font-size: 1rem;
-  text-align: center;
   background: #000;
   color: #fff;
   padding: 0.3rem 1rem;
-  border-radius: 0.8rem;
+  border-radius: 1rem;
   animation: none;
   z-index: 10;
 }
 
-/* === Updated Timers (Smaller + Themed) === */
+/* === TIMER CONTAINER FIX === */
 #timers {
   display: flex;
   justify-content: space-between;
-  gap: 0.5rem;
   width: 100%;
-  padding: 0 0.5rem;
-  margin-top: 0.3rem;
+  margin-top: 0.4rem;
+  padding: 0 0.2rem;
+  box-sizing: border-box;
 }
 
+/* === TIMER BOXES === */
 .timer {
-  flex: 1;
-  font-size: 0.75rem;
-  padding: 0.4rem 0.5rem;
-  border-radius: 0.6rem;
+  width: 45%;
+  font-size: 0.7rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.5rem;
   font-weight: bold;
   text-align: center;
   border: 2px solid #000;
   box-shadow: none;
   animation: none;
-  transition: none;
+  display: block;
 }
 
 .timer#whiteTimer {
@@ -472,12 +485,4 @@ header h1 {
 .timer#blackTimer {
   background: #000;
   color: #fff;
-}
-
-.timer.active {
-  outline: 2px solid var(--accent);
-}
-
-.timer.low-time {
-  animation: lowTimePulse 1s ease-in-out infinite;
 }
