@@ -1,5 +1,6 @@
-// ChessProEvolution – app.js v4.1.2 (PvP-only, narration, filtered voices, lang→voice sync, language icons, fixed startBtn, no speech toggle)
+// ChessProEvolution – app.js v4.1.3 (PvP-only, narration, fixed game reference, no speech toggle)
 
+let game = new Chess();
 let selectedVoice = null;
 let selectedLang = "en-US";
 let whiteTimeLeft = 600;
@@ -133,7 +134,7 @@ function playMoveFeedback() {
   navigator.vibrate?.([100]);
 }
 
-// === Timer UI ===
+// === Timer UI Update ===
 function updateTimerUI() {
   const whiteBox = document.querySelector(".timer.white");
   const blackBox = document.querySelector(".timer.black");
@@ -156,7 +157,7 @@ function updateTimerUI() {
   }
 }
 
-// === 3-dot menu toggle ===
+// === Menu Toggle ===
 menuBtn.onclick = (e) => {
   e.stopPropagation();
   menuModal.classList.toggle("show");
@@ -174,9 +175,11 @@ if (themeToggleMenu) {
   });
 }
 
-// === Start Game Button ===
+// === Start Game Handler ===
 startBtn.onclick = () => {
-  const speechEnabled = selectedLang !== "none"; // no speech toggle, rely on language
+  game = new Chess();
+  const speechEnabled = selectedLang !== "none";
+
   startMenu.style.display = "none";
   document.getElementById("boardWrapper").style.display = "flex";
 
@@ -188,7 +191,27 @@ startBtn.onclick = () => {
   newGame();
 };
 
-// === Initialize ===
+// === Game Setup ===
+function newGame() {
+  game.reset();
+  updateStatus("White to move");
+  // Add your board rendering, timer start, move handling here
+}
+
+// === Status Message ===
+function updateStatus(text) {
+  const status = document.getElementById("status");
+  if (status) status.textContent = text;
+}
+
+// === Simple Sound Loader ===
+function playSound(src, volume = 1) {
+  const audio = new Audio(src);
+  audio.volume = volume;
+  audio.play().catch(() => {});
+}
+
+// === Init ===
 initLangSelect();
 loadVoices();
 
