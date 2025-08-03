@@ -195,7 +195,7 @@ startBtn.onclick = () => {
 function newGame() {
   game.reset();
   updateStatus("White to move");
-  // Add your board rendering, timer start, move handling here
+  // TODO: Add board rendering, move event handling, and timer logic
 }
 
 // === Status Message ===
