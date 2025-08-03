@@ -1,6 +1,7 @@
-// ChessProEvolution – app.js v4.1.3 (PvP-only, narration, fixed game reference, no speech toggle)
+// ChessProEvolution – app.js v4.1.4 (PvP-only, narration, fixed game & lastMove reference, no speech toggle)
 
 let game = new Chess();
+let lastMove = null; // ✅ Fix: define lastMove
 let selectedVoice = null;
 let selectedLang = "en-US";
 let whiteTimeLeft = 600;
@@ -178,7 +179,7 @@ if (themeToggleMenu) {
 // === Start Game Handler ===
 startBtn.onclick = () => {
   game = new Chess();
-  const speechEnabled = selectedLang !== "none";
+  lastMove = null;
 
   startMenu.style.display = "none";
   document.getElementById("boardWrapper").style.display = "flex";
@@ -194,8 +195,23 @@ startBtn.onclick = () => {
 // === Game Setup ===
 function newGame() {
   game.reset();
+  lastMove = null;
   updateStatus("White to move");
-  // TODO: Add board rendering, move event handling, and timer logic
+
+  // Example move handler:
+  // Add your actual UI interaction to call this
+  // simulateMove("e2", "e4"); ← your code should call this on real move
+}
+
+function simulateMove(from, to) {
+  const move = game.move({ from, to, sloppy: true });
+  if (move) {
+    lastMove = move;
+    speakNarration(move);
+    playMoveFeedback();
+    updateStatus(`${game.turn() === "w" ? "White" : "Black"} to move`);
+    updateTimerUI();
+  }
 }
 
 // === Status Message ===
