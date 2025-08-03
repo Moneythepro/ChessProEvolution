@@ -147,11 +147,13 @@ menuBtn.onclick = (e) => {
   e.stopPropagation();
   menuModal.classList.toggle("show");
 };
+
 document.addEventListener("click", (e) => {
   if (!menuModal.contains(e.target) && e.target !== menuBtn) {
     menuModal.classList.remove("show");
   }
 });
+
 if (themeToggleMenu) {
   themeToggleMenu.addEventListener("change", () => {
     document.body.classList.toggle("dark", themeToggleMenu.checked);
@@ -160,7 +162,8 @@ if (themeToggleMenu) {
 
 // Start game
 startBtn.onclick = () => {
-  speechEnabled = speechToggle?.checked;
+  const speechEnabled = selectedLang !== "none"; // ✅ No checkbox; use langSelect instead
+
   startMenu.style.display = "none";
   document.getElementById("boardWrapper").style.display = "flex";
 
