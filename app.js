@@ -1,7 +1,5 @@
-// ChessProEvolution – app.js v4.1.4 (PvP-only, narration, fixed game & lastMove reference, no speech toggle)
-
 let game = new Chess();
-let lastMove = null; // ✅ Fix: define lastMove
+let lastMove = null;
 let selectedVoice = null;
 let selectedLang = "en-US";
 let whiteTimeLeft = 600;
@@ -10,6 +8,7 @@ let lastWhiteSeconds = 600;
 let lastBlackSeconds = 600;
 let currentTimerColor = "w";
 let selectedDuration = 600;
+let timerInterval = null;
 
 const langSelect = document.getElementById("langSelect");
 const voiceSelect = document.getElementById("voiceSelect");
@@ -19,6 +18,7 @@ const themeToggleMenu = document.getElementById("themeToggleMenu");
 const startBtn = document.getElementById("startGameBtn");
 const startMenu = document.getElementById("startMenu");
 const timerSelect = document.getElementById("timerSelect");
+const statusEl = document.getElementById("status"); // ✅ Fixed reference
 
 const allowedLangs = [
   { code: "none", label: "🚫 No Voice" },
@@ -31,7 +31,7 @@ const allowedLangs = [
   { code: "ja",     label: "🇯🇵 Japanese" }
 ];
 
-// === Populate Language Dropdown ===
+// === Language Dropdown ===
 function initLangSelect() {
   langSelect.innerHTML = allowedLangs.map(lang =>
     `<option value="${lang.code}">${lang.label}</option>`
@@ -39,9 +39,9 @@ function initLangSelect() {
   langSelect.value = selectedLang;
 }
 
-// === Load Voices and Select Based on Language ===
+// === Load Voices ===
 async function loadVoices() {
-  const allVoices = await new Promise((resolve) => {
+  const allVoices = await new Promise(resolve => {
     const tryLoad = () => {
       const voices = speechSynthesis.getVoices();
       if (voices.length) resolve(voices);
@@ -69,20 +69,17 @@ async function loadVoices() {
   }
 }
 
-// === Sync Language Change → Voice Change ===
 langSelect.addEventListener("change", async () => {
   selectedLang = langSelect.value;
   await loadVoices();
 });
 
-// === Manual Voice Selection (optional) ===
 voiceSelect.addEventListener("change", () => {
   const voiceName = voiceSelect.value;
   const allVoices = speechSynthesis.getVoices();
   selectedVoice = allVoices.find(v => v.name === voiceName) || null;
 });
 
-// === Preload Voices on First Click ===
 document.body.addEventListener("click", () => {
   const dummy = new Audio();
   dummy.play().catch(() => {});
@@ -90,7 +87,6 @@ document.body.addEventListener("click", () => {
   loadVoices();
 }, { once: true });
 
-// === Narration Function ===
 function speakNarration(move) {
   if (!move || selectedLang === "none" || !selectedVoice) return;
 
@@ -112,6 +108,7 @@ function speakNarration(move) {
 
   if (game.in_checkmate()) {
     sentence += `. Checkmate! ${color} wins!`;
+    clearInterval(timerInterval);
   } else if (game.in_check()) {
     sentence += `. ${color} king is in check.`;
   }
@@ -129,13 +126,11 @@ function speakNarration(move) {
   speechSynthesis.speak(utter);
 }
 
-// === Play move sound and vibrate ===
 function playMoveFeedback() {
   playSound("move.mp3", 0.8);
   navigator.vibrate?.([100]);
 }
 
-// === Timer UI Update ===
 function updateTimerUI() {
   const whiteBox = document.querySelector(".timer.white");
   const blackBox = document.querySelector(".timer.black");
@@ -156,9 +151,18 @@ function updateTimerUI() {
     if (blackSecs <= 10 && lastBlackSeconds > 10) playSound("beep.mp3", 1.0);
     lastBlackSeconds = blackSecs;
   }
+
+  document.getElementById("whiteTimer").textContent = formatTime(whiteTimeLeft);
+  document.getElementById("blackTimer").textContent = formatTime(blackTimeLeft);
 }
 
-// === Menu Toggle ===
+function formatTime(secs) {
+  const m = Math.floor(secs / 60).toString().padStart(2, "0");
+  const s = (secs % 60).toString().padStart(2, "0");
+  return `${m}:${s}`;
+}
+
+// === Menu ===
 menuBtn.onclick = (e) => {
   e.stopPropagation();
   menuModal.classList.toggle("show");
@@ -176,7 +180,7 @@ if (themeToggleMenu) {
   });
 }
 
-// === Start Game Handler ===
+// === Start Game ===
 startBtn.onclick = () => {
   game = new Chess();
   lastMove = null;
@@ -190,17 +194,30 @@ startBtn.onclick = () => {
   selectedDuration = mins * 60;
 
   newGame();
+
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    if (currentTimerColor === "w") {
+      whiteTimeLeft = Math.max(0, whiteTimeLeft - 1);
+      if (whiteTimeLeft === 0) {
+        clearInterval(timerInterval);
+        updateStatus("Black wins on time!");
+      }
+    } else {
+      blackTimeLeft = Math.max(0, blackTimeLeft - 1);
+      if (blackTimeLeft === 0) {
+        clearInterval(timerInterval);
+        updateStatus("White wins on time!");
+      }
+    }
+    updateTimerUI();
+  }, 1000);
 };
 
-// === Game Setup ===
 function newGame() {
   game.reset();
   lastMove = null;
   updateStatus("White to move");
-
-  // Example move handler:
-  // Add your actual UI interaction to call this
-  // simulateMove("e2", "e4"); ← your code should call this on real move
 }
 
 function simulateMove(from, to) {
@@ -209,25 +226,22 @@ function simulateMove(from, to) {
     lastMove = move;
     speakNarration(move);
     playMoveFeedback();
-    updateStatus(`${game.turn() === "w" ? "White" : "Black"} to move`);
+    currentTimerColor = game.turn();
+    updateStatus(`${currentTimerColor === "w" ? "White" : "Black"} to move`);
     updateTimerUI();
   }
 }
 
-// === Status Message ===
 function updateStatus(text) {
-  const status = document.getElementById("status");
-  if (status) status.textContent = text;
+  if (statusEl) statusEl.textContent = text;
 }
 
-// === Simple Sound Loader ===
 function playSound(src, volume = 1) {
   const audio = new Audio(src);
   audio.volume = volume;
   audio.play().catch(() => {});
 }
 
-// === Init ===
 initLangSelect();
 loadVoices();
 
