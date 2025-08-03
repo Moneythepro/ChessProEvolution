@@ -398,3 +398,74 @@ body.dark .timer.black {
   align-items: center;
   gap: 0.5rem;
 }
+
+/* DBZ Aura Background for Board */
+#boardWrapper::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 110%;
+  height: 110%;
+  background: radial-gradient(circle, rgba(0, 191, 255, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: boardAura 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes boardAura {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.05);
+    opacity: 0.7;
+  }
+}
+
+/* Animated Piece Movement */
+.square img.piece {
+  animation: pieceEntry 0.2s ease;
+  transition: transform 0.1s;
+}
+
+@keyframes pieceEntry {
+  0% {
+    transform: scale(1.6) rotate(5deg);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* Vibrate Feedback on Move */
+.square.vibrate {
+  animation: vibrateMove 0.25s ease-in-out;
+}
+
+@keyframes vibrateMove {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(2px, -2px); }
+  50% { transform: translate(-2px, 2px); }
+  75% { transform: translate(2px, 2px); }
+}
+
+/* Glowing Button Style */
+button, #startGameBtn {
+  animation: glowButton 2s ease-in-out infinite;
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+}
+
+@keyframes glowButton {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(0, 191, 255, 0.7);
+  }
+}
