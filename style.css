@@ -416,3 +416,68 @@ body.dark .timer {
   0% { background-position: 0 0, 10px 10px; }
   100% { background-position: 40px 40px, 50px 50px; }
 }
+
+/* === Updated Header === */
+header h1 {
+  font-size: 1.4rem;
+  background: none;
+  color: #000;
+  font-weight: bold;
+  animation: none;
+}
+
+/* === Updated Status Box === */
+#status {
+  position: absolute;
+  top: -2.2rem;
+  font-weight: bold;
+  font-size: 1rem;
+  text-align: center;
+  background: #000;
+  color: #fff;
+  padding: 0.3rem 1rem;
+  border-radius: 0.8rem;
+  animation: none;
+  z-index: 10;
+}
+
+/* === Updated Timers (Smaller + Themed) === */
+#timers {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0 0.5rem;
+  margin-top: 0.3rem;
+}
+
+.timer {
+  flex: 1;
+  font-size: 0.75rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.6rem;
+  font-weight: bold;
+  text-align: center;
+  border: 2px solid #000;
+  box-shadow: none;
+  animation: none;
+  transition: none;
+}
+
+.timer#whiteTimer {
+  background: #fff;
+  color: #000;
+}
+
+.timer#blackTimer {
+  background: #000;
+  color: #fff;
+}
+
+.timer.active {
+  outline: 2px solid var(--accent);
+}
+
+.timer.low-time {
+  animation: lowTimePulse 1s ease-in-out infinite;
+}
