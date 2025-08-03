@@ -1,4 +1,4 @@
-// ChessProEvolution – app.js v3.6 (PvP-only, animated timers, narration, sound, vibration, voice/language selector)
+// ChessProEvolution – app.js v3.8 (PvP-only, full version with narration, animated timers, fixed vibration, 3-dot menu, voice/lang selector)
 
 const game = new Chess();
 let boardSquares = [];
@@ -33,97 +33,150 @@ let lastWhiteSeconds = 600;
 let lastBlackSeconds = 600;
 let selectedDuration = 600;
 
-// Load voices reliably across all browsers
 function loadVoicesWhenAvailable() {
-return new Promise((resolve) => {
-const interval = setInterval(() => {
-const voices = speechSynthesis.getVoices();
-if (voices.length !== 0) {
-clearInterval(interval);
-resolve(voices);
-}
-}, 200);
-});
+  return new Promise((resolve) => {
+    const interval = setInterval(() => {
+      const voices = speechSynthesis.getVoices();
+      if (voices.length !== 0) {
+        clearInterval(interval);
+        resolve(voices);
+      }
+    }, 200);
+  });
 }
 
 async function loadVoices() {
-const voices = await loadVoicesWhenAvailable();
-voiceSelect.innerHTML = voices.map(v => <option value="${v.name}">${v.name} (${v.lang})</option>).join("");
-if (!selectedVoice && voices.length > 0) {
-selectedVoice = voices.find(v => v.name.includes("Google")) || voices[0];
-voiceSelect.value = selectedVoice.name;
-}
+  const voices = await loadVoicesWhenAvailable();
+  voiceSelect.innerHTML = voices.map(v => `<option value="${v.name}">${v.name} (${v.lang})</option>`).join("");
+  if (!selectedVoice && voices.length > 0) {
+    selectedVoice = voices.find(v => v.name.includes("Google")) || voices[0];
+    voiceSelect.value = selectedVoice.name;
+  }
 }
 
 voiceSelect?.addEventListener("change", () => {
-const voices = speechSynthesis.getVoices();
-selectedVoice = voices.find(v => v.name === voiceSelect.value);
+  const voices = speechSynthesis.getVoices();
+  selectedVoice = voices.find(v => v.name === voiceSelect.value);
 });
 
 langSelect?.addEventListener("change", () => {
-selectedLang = langSelect.value;
+  selectedLang = langSelect.value;
 });
 
 function playSound(src, volume = 1.0) {
-try {
-const audio = new Audio(src);
-audio.volume = volume;
-audio.play().catch(() => {});
-} catch (e) {
-console.error("Sound error:", e);
-}
+  try {
+    const audio = new Audio(src);
+    audio.volume = volume;
+    audio.play().catch(() => {});
+  } catch (e) {
+    console.error("Sound error:", e);
+  }
 }
 
-// Preload interaction for mobile autoplay policies
 document.body.addEventListener("click", () => {
-const dummy = new Audio();
-dummy.play().catch(() => {});
-loadVoices(); // Also trigger voices on first interaction
+  const dummy = new Audio();
+  dummy.play().catch(() => {});
+  loadVoices();
 }, { once: true });
 
-// Narration logic
 function speakNarration(move) {
-if (!speechEnabled || !move) return;
+  if (!speechEnabled || !move) return;
 
-const from = move.from?.toUpperCase() || "";
-const to = move.to?.toUpperCase() || "";
-const color = move.color === "w" ? "White" : "Black";
-const pieceMap = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen", k: "king" };
-const piece = pieceMap[move.piece] || "piece";
+  const from = move.from?.toUpperCase() || "";
+  const to = move.to?.toUpperCase() || "";
+  const color = move.color === "w" ? "White" : "Black";
+  const pieceMap = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen", k: "king" };
+  const piece = pieceMap[move.piece] || "piece";
 
-let sentence = "";
+  let sentence = "";
 
-if (move.flags.includes("c")) {
-const victimColor = move.color === "w" ? "black" : "white";
-const capturedPiece = game.get(to)?.type || "piece";
-sentence = ${color} ${piece} captured ${victimColor} ${pieceMap[capturedPiece] || "piece"} on ${to};
-} else {
-sentence = ${color} ${piece} moved from ${from} to ${to};
+  if (move.flags.includes("c")) {
+    const victimColor = move.color === "w" ? "black" : "white";
+    const capturedPiece = game.get(to)?.type || "piece";
+    sentence = `${color} ${piece} captured ${victimColor} ${pieceMap[capturedPiece] || "piece"} on ${to}`;
+  } else {
+    sentence = `${color} ${piece} moved from ${from} to ${to}`;
+  }
+
+  if (game.in_checkmate()) {
+    sentence += `. Checkmate! ${color} wins!`;
+  } else if (game.in_check()) {
+    sentence += `. ${color} king is in check.`;
+  }
+
+  const lowTime = currentTimerColor === "w" ? whiteTimeLeft : blackTimeLeft;
+  if (lowTime <= 10) {
+    sentence += `. ${color} is running low on time.`;
+  }
+
+  const utter = new SpeechSynthesisUtterance(sentence);
+  utter.lang = selectedLang;
+  if (selectedVoice) utter.voice = selectedVoice;
+  utter.pitch = 1;
+  utter.rate = 1;
+  speechSynthesis.speak(utter);
 }
 
-if (game.in_checkmate()) {
-sentence += . Checkmate! ${color} wins!;
-} else if (game.in_check()) {
-sentence += . ${color} king is in check.;
+function playMoveFeedback() {
+  playSound("move.mp3", 0.8);
+  navigator.vibrate?.([100]);
 }
 
-const lowTime = currentTimerColor === "w" ? whiteTimeLeft : blackTimeLeft;
-if (lowTime <= 10) {
-sentence += . ${color} is running low on time.;
+function updateTimerUI() {
+  const whiteBox = document.querySelector(".timer.white");
+  const blackBox = document.querySelector(".timer.black");
+
+  whiteBox.classList.toggle("active", currentTimerColor === "w");
+  blackBox.classList.toggle("active", currentTimerColor === "b");
+
+  const whiteSecs = whiteTimeLeft;
+  const blackSecs = blackTimeLeft;
+
+  whiteBox.classList.toggle("low-time", whiteSecs <= 10);
+  blackBox.classList.toggle("low-time", blackSecs <= 10);
+
+  if (currentTimerColor === "w") {
+    if (whiteSecs <= 10 && lastWhiteSeconds > 10) playSound("beep.mp3", 1.0);
+    lastWhiteSeconds = whiteSecs;
+  } else {
+    if (blackSecs <= 10 && lastBlackSeconds > 10) playSound("beep.mp3", 1.0);
+    lastBlackSeconds = blackSecs;
+  }
 }
 
-const utter = new SpeechSynthesisUtterance(sentence);
-utter.lang = selectedLang;
-if (selectedVoice) utter.voice = selectedVoice;
-utter.pitch = 1;
-utter.rate = 1;
-speechSynthesis.speak(utter);
+// 3-dot menu logic
+menuBtn.onclick = (e) => {
+  e.stopPropagation();
+  menuModal.classList.toggle("show");
+};
+document.addEventListener("click", (e) => {
+  if (!menuModal.contains(e.target) && e.target !== menuBtn) {
+    menuModal.classList.remove("show");
+  }
+});
+if (themeToggleMenu) {
+  themeToggleMenu.addEventListener("change", () => {
+    document.body.classList.toggle("dark", themeToggleMenu.checked);
+  });
 }
 
-// ✅ Call once DOM loads
+// Init game
+startBtn.onclick = () => {
+  speechEnabled = speechToggle?.checked;
+  startMenu.style.display = "none";
+  document.getElementById("boardWrapper").style.display = "flex";
+
+  const mins = parseInt(timerSelect?.value || "10");
+  whiteTimeLeft = blackTimeLeft = mins * 60;
+  lastWhiteSeconds = lastBlackSeconds = mins * 60;
+  selectedDuration = mins * 60;
+
+  newGame();
+};
+
 loadVoices();
 
-// Rest of your app.js (board rendering, game logic, UI, timer, event handlers...) remains unchanged.
+// Add your game logic (initBoard, renderBoard, move handlers, checkmate, timers...) BELOW THIS LINE.
 
 function initBoard() {
 board.innerHTML = "";
