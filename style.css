@@ -222,48 +222,6 @@ header h1 {
   color: #444;
 }
 
-/* Move List (modal only) */
-#moveList {
-  list-style: none;
-  padding-left: 1rem;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-/* Modal */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
-}
-
-.modal-content {
-  background: var(--bg);
-  color: var(--text);
-  padding: 1rem;
-  border-radius: 1rem;
-  max-width: 90%;
-  width: 350px;
-  text-align: center;
-}
-
-.modal-content button {
-  margin-top: 1rem;
-  padding: 0.4rem 1rem;
-  border: none;
-  background: var(--accent);
-  color: white;
-  border-radius: 0.5rem;
-  cursor: pointer;
-}
-
 /* Winner Modal */
 #winnerModal {
   display: none;
@@ -315,7 +273,6 @@ header h1 {
   display: flex;
 }
 
-.menu-modal button,
 .menu-modal label {
   background: none;
   border: none;
