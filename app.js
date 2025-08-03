@@ -1,4 +1,4 @@
-// ChessProEvolution – app.js v3.1 (PvP-only, DBZ-style animations, fixes)
+// ChessProEvolution – app.js v3.2 (PvP-only, animated timers, low-time beep, blue/red pulse)
 
 const game = new Chess();
 let boardSquares = [];
@@ -24,11 +24,14 @@ const themeToggleMenu = document.getElementById("themeToggleMenu");
 const winSound = new Audio("win.mp3");
 const drawSound = new Audio("draw.mp3");
 const moveSound = new Audio("move.mp3");
+const beepSound = new Audio("beep.mp3");
 
 let whiteTimeLeft = 600;
 let blackTimeLeft = 600;
 let currentTimerColor = "w";
 let timerInterval = null;
+let lastWhiteSeconds = 600;
+let lastBlackSeconds = 600;
 
 function initBoard() {
   board.innerHTML = "";
@@ -64,6 +67,7 @@ function initBoard() {
   renderBoard();
   updateStatus();
   updateTimerDisplay();
+  updateTimerUI();
 }
 
 function coordsToSquare(i, j) {
@@ -180,6 +184,7 @@ function speakMove(san) {
 function resetTimer() {
   stopTimer();
   updateTimerDisplay();
+  updateTimerUI();
   currentTimerColor = game.turn();
 
   timerInterval = setInterval(() => {
@@ -190,7 +195,9 @@ function resetTimer() {
       blackTimeLeft--;
       if (blackTimeLeft <= 0) return decideWinnerByPoints();
     }
+
     updateTimerDisplay();
+    updateTimerUI();
   }, 1000);
 }
 
@@ -206,6 +213,30 @@ function updateTimerDisplay() {
   };
   whiteTimerEl.textContent = format(whiteTimeLeft);
   blackTimerEl.textContent = format(blackTimeLeft);
+}
+
+// New timer style/glow logic
+function updateTimerUI() {
+  const whiteBox = document.querySelector(".timer.white");
+  const blackBox = document.querySelector(".timer.black");
+
+  whiteBox.classList.toggle("active", currentTimerColor === "w");
+  blackBox.classList.toggle("active", currentTimerColor === "b");
+
+  const whiteSecs = whiteTimeLeft;
+  const blackSecs = blackTimeLeft;
+
+  whiteBox.classList.toggle("low-time", whiteSecs <= 10);
+  blackBox.classList.toggle("low-time", blackSecs <= 10);
+
+  // Beep once when crossing 10s
+  if (currentTimerColor === "w") {
+    if (whiteSecs <= 10 && lastWhiteSeconds > 10) beepSound.play();
+    lastWhiteSeconds = whiteSecs;
+  } else {
+    if (blackSecs <= 10 && lastBlackSeconds > 10) beepSound.play();
+    lastBlackSeconds = blackSecs;
+  }
 }
 
 function decideWinnerByPoints() {
@@ -254,6 +285,7 @@ startBtn.onclick = () => {
 
   const mins = parseInt(timerSelect?.value || "10");
   whiteTimeLeft = blackTimeLeft = mins * 60;
+  lastWhiteSeconds = lastBlackSeconds = mins * 60;
 
   newGame();
 };
@@ -266,6 +298,7 @@ function newGame() {
   winnerModal.className = "";
   const mins = parseInt(timerSelect?.value || "10");
   whiteTimeLeft = blackTimeLeft = mins * 60;
+  lastWhiteSeconds = lastBlackSeconds = mins * 60;
   resetTimer();
   renderBoard();
   updateStatus();
