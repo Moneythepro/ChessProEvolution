@@ -1,4 +1,4 @@
-// ChessProEvolution – app.js v2.6 (clean PvP only, [object Object] fixed, checkmate winner correct)
+// ChessProEvolution – app.js v2.7 (PvP-only, bug-free, speech-safe)
 
 const game = new Chess();
 let boardSquares = [];
@@ -71,22 +71,21 @@ function coordsToSquare(i, j) {
 
 function handleSquareClick(i, j) {
   if (game.game_over()) return;
+
   const square = coordsToSquare(i, j);
   const piece = game.get(square);
 
   if (selectedSquare) {
     const move = { from: selectedSquare, to: square, promotion: "q" };
     const played = game.move(move);
+
     if (played) {
       lastMove = { from: played.from, to: played.to };
       selectedSquare = null;
       legalMoves = [];
       playMoveFeedback();
 
-      // Safe speech call
-      const moveSAN = typeof played.san === "string" ? played.san : `${played.from} to ${played.to}`;
-      speakMove(moveSAN);
-
+      speakMove(played?.san || `${played.from}-${played.to}`);
       renderBoard();
       updateStatus();
       currentTimerColor = game.turn();
@@ -112,11 +111,13 @@ function renderBoard() {
       square.innerHTML = piece
         ? `<img src="./pieces/${piece.color}${piece.type}.svg" class="piece" />`
         : "";
+
       square.classList.remove("selected", "last-move", "check", "legal");
 
       if (lastMove && (squareId === lastMove.from || squareId === lastMove.to)) {
         square.classList.add("last-move");
       }
+
       if (selectedSquare === squareId) square.classList.add("selected");
       if (legalMoves.includes(squareId)) square.classList.add("legal");
 
@@ -169,7 +170,11 @@ function playMoveFeedback() {
 }
 
 function speakMove(san) {
-  if (!speechEnabled || typeof san !== "string") return;
+  if (!speechEnabled) return;
+  if (typeof san !== "string") {
+    console.warn("Speech error: invalid SAN", san);
+    return;
+  }
   const utter = new SpeechSynthesisUtterance(san);
   speechSynthesis.speak(utter);
 }
@@ -218,16 +223,18 @@ function decideWinnerByPoints() {
       }
     }
   }
+
   let result = "Draw by equal points!";
   if (score.w > score.b) result = "White wins on points!";
   else if (score.b > score.w) result = "Black wins on points!";
+
   winnerText.innerHTML = `<span>${result}</span>`;
   winnerModal.classList.add("show");
   drawSound.play();
   navigator.vibrate?.([100, 100, 100]);
 }
 
-// Menu toggle
+// 3-dot menu toggle
 menuBtn.onclick = () => menuModal.classList.add("show");
 document.addEventListener("click", (e) => {
   if (!menuModal.contains(e.target) && e.target !== menuBtn) {
@@ -235,7 +242,7 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// Start game
+// Start button
 startBtn.onclick = () => {
   speechEnabled = speechToggle?.checked;
   startMenu.style.display = "none";
