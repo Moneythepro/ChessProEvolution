@@ -35,6 +35,7 @@ const allowedLangs = [
   { code: "ja",     label: "🇯🇵 Japanese" }
 ];
 
+// === LANGUAGE SELECT ===
 function initLangSelect() {
   langSelect.innerHTML = allowedLangs.map(lang =>
     `<option value="${lang.code}">${lang.label}</option>`
@@ -89,11 +90,12 @@ document.body.addEventListener("click", () => {
   loadVoices();
 }, { once: true });
 
+// === SPEECH ===
 function speakNarration(move) {
   if (!move || selectedLang === "none" || !selectedVoice) return;
 
-  const from = move.from?.toUpperCase() || "";
-  const to = move.to?.toUpperCase() || "";
+  const from = move.from?.toUpperCase();
+  const to = move.to?.toUpperCase();
   const color = move.color === "w" ? "White" : "Black";
   const pieceMap = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen", k: "king" };
   const piece = pieceMap[move.piece] || "piece";
@@ -102,35 +104,46 @@ function speakNarration(move) {
 
   if (move.flags.includes("c")) {
     const victimColor = move.color === "w" ? "black" : "white";
-    const capturedPiece = game.get(to)?.type || "piece";
-    sentence = `${color} ${piece} captured ${victimColor} ${pieceMap[capturedPiece] || "piece"} on ${to}`;
+    const captured = game.get(to)?.type || "piece";
+    sentence = `${color} ${piece} captured ${victimColor} ${pieceMap[captured] || "piece"} on ${to}`;
   } else {
     sentence = `${color} ${piece} moved from ${from} to ${to}`;
   }
 
-  if (game.in_checkmate()) {
-    sentence += `. Checkmate! ${color} wins!`;
-    clearInterval(timerInterval);
-  } else if (game.in_check()) {
-    sentence += `. ${color} king is in check.`;
-  }
+  if (game.in_checkmate()) sentence += `. Checkmate! ${color} wins!`;
+  else if (game.in_check()) sentence += `. ${color} king is in check.`;
 
   const lowTime = currentTimerColor === "w" ? whiteTimeLeft : blackTimeLeft;
-  if (lowTime <= 10) {
-    sentence += `. ${color} is running low on time.`;
-  }
+  if (lowTime <= 10) sentence += `. ${color} is running low on time.`;
 
   const utter = new SpeechSynthesisUtterance(sentence);
   utter.voice = selectedVoice;
-  utter.lang = selectedVoice?.lang || selectedLang;
+  utter.lang = selectedVoice.lang || selectedLang;
   utter.pitch = 1;
   utter.rate = 1;
   speechSynthesis.speak(utter);
 }
 
+// === UTILITY ===
 function playMoveFeedback() {
   playSound("move.mp3", 0.8);
   navigator.vibrate?.([100]);
+}
+
+function formatTime(secs) {
+  const m = Math.floor(secs / 60).toString().padStart(2, "0");
+  const s = (secs % 60).toString().padStart(2, "0");
+  return `${m}:${s}`;
+}
+
+function updateStatus(text) {
+  if (statusEl) statusEl.textContent = text;
+}
+
+function playSound(src, volume = 1) {
+  const audio = new Audio(src);
+  audio.volume = volume;
+  audio.play().catch(() => {});
 }
 
 function updateTimerUI() {
@@ -147,12 +160,7 @@ function updateTimerUI() {
   blackTimerEl.textContent = formatTime(blackTimeLeft);
 }
 
-function formatTime(secs) {
-  const m = Math.floor(secs / 60).toString().padStart(2, "0");
-  const s = (secs % 60).toString().padStart(2, "0");
-  return `${m}:${s}`;
-}
-
+// === MENU ===
 menuBtn.onclick = (e) => {
   e.stopPropagation();
   menuModal.classList.toggle("show");
@@ -170,10 +178,11 @@ if (themeToggleMenu) {
   });
 }
 
+// === GAME START ===
 startBtn.onclick = () => {
   game = new Chess();
-  lastMove = null;
   selectedSquare = null;
+  lastMove = null;
 
   startMenu.style.display = "none";
   document.getElementById("boardWrapper").style.display = "flex";
@@ -206,39 +215,23 @@ startBtn.onclick = () => {
 
 function newGame() {
   game.reset();
-  lastMove = null;
   selectedSquare = null;
+  lastMove = null;
   updateStatus("White to move");
   renderBoard();
 }
 
-function updateStatus(text) {
-  if (statusEl) statusEl.textContent = text;
-}
-
-function playSound(src, volume = 1) {
-  const audio = new Audio(src);
-  audio.volume = volume;
-  audio.play().catch(() => {});
-}
-
-// === Basic Board Rendering & Click Handling ===
 function renderBoard() {
   boardEl.innerHTML = "";
   const squares = game.board();
-
   for (let r = 7; r >= 0; r--) {
     for (let f = 0; f < 8; f++) {
       const squareName = "abcdefgh"[f] + (r + 1);
       const piece = squares[r][f];
       const div = document.createElement("div");
-      div.className = "square";
+      div.className = "square " + ((r + f) % 2 === 0 ? "light" : "dark");
       div.dataset.square = squareName;
-      if ((r + f) % 2 === 0) {
-        div.classList.add("light");
-      } else {
-        div.classList.add("dark");
-      }
+
       if (piece) {
         const img = document.createElement("img");
         img.src = `pieces/${piece.color}${piece.type}.png`;
@@ -253,17 +246,13 @@ function renderBoard() {
 boardEl.addEventListener("click", (e) => {
   const target = e.target.closest(".square");
   if (!target) return;
-
   const clickedSquare = target.dataset.square;
-  if (!clickedSquare) return;
 
   if (selectedSquare) {
-    const legalMoves = game.moves({ square: selectedSquare, verbose: true });
-    const isLegal = legalMoves.some(m => m.to === clickedSquare);
-
-    if (isLegal) {
-      simulateMove(selectedSquare, clickedSquare);
-      renderBoard();
+    const possibleMoves = game.moves({ square: selectedSquare, verbose: true });
+    const move = possibleMoves.find(m => m.to === clickedSquare);
+    if (move) {
+      makeMove(selectedSquare, clickedSquare);
       selectedSquare = null;
     } else {
       selectedSquare = clickedSquare;
@@ -273,7 +262,7 @@ boardEl.addEventListener("click", (e) => {
   }
 });
 
-simulateMove = (from, to) => {
+function makeMove(from, to) {
   const move = game.move({ from, to, sloppy: true });
   if (move) {
     lastMove = move;
@@ -282,10 +271,11 @@ simulateMove = (from, to) => {
     currentTimerColor = game.turn();
     updateStatus(`${currentTimerColor === "w" ? "White" : "Black"} to move`);
     updateTimerUI();
+    renderBoard();
   }
-};
+}
 
-// Init
+// === INIT ===
 initLangSelect();
 loadVoices();
 
