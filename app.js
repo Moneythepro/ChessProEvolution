@@ -1,4 +1,4 @@
-// ChessProEvolution – app.js v2.7 (PvP-only, bug-free, speech-safe)
+// ChessProEvolution – app.js v2.8 (PvP-only, bug-free, startup draw bug fixed)
 
 const game = new Chess();
 let boardSquares = [];
@@ -84,7 +84,6 @@ function handleSquareClick(i, j) {
       selectedSquare = null;
       legalMoves = [];
       playMoveFeedback();
-
       speakMove(played?.san || `${played.from}-${played.to}`);
       renderBoard();
       updateStatus();
@@ -181,8 +180,6 @@ function speakMove(san) {
 
 function resetTimer() {
   stopTimer();
-  const mins = parseInt(timerSelect?.value || "10");
-  whiteTimeLeft = blackTimeLeft = mins * 60;
   currentTimerColor = game.turn();
   updateTimerDisplay();
   timerInterval = setInterval(() => {
@@ -234,7 +231,7 @@ function decideWinnerByPoints() {
   navigator.vibrate?.([100, 100, 100]);
 }
 
-// 3-dot menu toggle
+// Menu toggle
 menuBtn.onclick = () => menuModal.classList.add("show");
 document.addEventListener("click", (e) => {
   if (!menuModal.contains(e.target) && e.target !== menuBtn) {
@@ -242,11 +239,16 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// Start button
+// Start Game
 startBtn.onclick = () => {
   speechEnabled = speechToggle?.checked;
   startMenu.style.display = "none";
   document.getElementById("boardWrapper").style.display = "flex";
+
+  // ✅ Set timer BEFORE starting game
+  const mins = parseInt(timerSelect?.value || "10");
+  whiteTimeLeft = blackTimeLeft = mins * 60;
+
   newGame();
 };
 
