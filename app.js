@@ -1,4 +1,4 @@
-// ChessProEvolution – app.js v3.0 (PvP-only, DBZ-style animations)
+// ChessProEvolution – app.js v3.1 (PvP-only, DBZ-style animations, fixes)
 
 const game = new Chess();
 let boardSquares = [];
@@ -19,6 +19,7 @@ const menuBtn = document.getElementById("menuBtn");
 const menuModal = document.getElementById("menuModal");
 const startMenu = document.getElementById("startMenu");
 const startBtn = document.getElementById("startGameBtn");
+const themeToggleMenu = document.getElementById("themeToggleMenu");
 
 const winSound = new Audio("win.mp3");
 const drawSound = new Audio("draw.mp3");
@@ -85,7 +86,7 @@ function handleSquareClick(i, j) {
       legalMoves = [];
       playMoveFeedback();
       speakMove(played?.san || `${played.from}-${played.to}`);
-      renderBoard(true); // animate move
+      renderBoard(true);
       updateStatus();
       currentTimerColor = game.turn();
     } else {
@@ -161,6 +162,8 @@ function updateStatus() {
   }
 
   statusEl.textContent = `${game.turn() === "w" ? "White" : "Black"} to move`;
+  statusEl.classList.add("pulse");
+  setTimeout(() => statusEl.classList.remove("pulse"), 500);
 }
 
 function playMoveFeedback() {
@@ -176,8 +179,9 @@ function speakMove(san) {
 
 function resetTimer() {
   stopTimer();
-  currentTimerColor = game.turn();
   updateTimerDisplay();
+  currentTimerColor = game.turn();
+
   timerInterval = setInterval(() => {
     if (currentTimerColor === "w") {
       whiteTimeLeft--;
@@ -227,13 +231,20 @@ function decideWinnerByPoints() {
   navigator.vibrate?.([100, 100, 100]);
 }
 
-// Menu toggle
-menuBtn.onclick = () => menuModal.classList.add("show");
+// Menu logic
+menuBtn.onclick = () => menuModal.classList.toggle("show");
 document.addEventListener("click", (e) => {
   if (!menuModal.contains(e.target) && e.target !== menuBtn) {
     menuModal.classList.remove("show");
   }
 });
+
+// Theme toggle inside menu
+if (themeToggleMenu) {
+  themeToggleMenu.addEventListener("click", () => {
+    document.body.classList.toggle("dark");
+  });
+}
 
 // Start Game
 startBtn.onclick = () => {
@@ -253,6 +264,8 @@ function newGame() {
   lastMove = null;
   legalMoves = [];
   winnerModal.className = "";
+  const mins = parseInt(timerSelect?.value || "10");
+  whiteTimeLeft = blackTimeLeft = mins * 60;
   resetTimer();
   renderBoard();
   updateStatus();
