@@ -469,12 +469,3 @@ button, #startGameBtn {
     box-shadow: 0 0 30px rgba(0, 191, 255, 0.7);
   }
 }
-
-.piece.animate-move {
-  animation: pieceMove 0.4s ease-in-out;
-}
-
-@keyframes pieceMove {
-  0% { transform: scale(1.2) rotate(5deg); opacity: 0.2; }
-  100% { transform: scale(1) rotate(0deg); opacity: 1; }
-}
