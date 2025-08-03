@@ -287,10 +287,13 @@ function decideWinnerByPoints() {
   navigator.vibrate?.([100, 100, 100]);
 }
 
-// Menu logic
-menuBtn.onclick = () => menuModal.classList.toggle("show");
+// ✅ FIXED MENU TOGGLE BEHAVIOR
+menuBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  menuModal.classList.toggle("show");
+});
 document.addEventListener("click", (e) => {
-  if (!menuModal.contains(e.target) && e.target !== menuBtn) {
+  if (!menuModal.contains(e.target)) {
     menuModal.classList.remove("show");
   }
 });
