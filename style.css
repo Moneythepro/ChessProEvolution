@@ -228,15 +228,17 @@ header h1 {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 2rem;
+  gap: 3rem; /* Space between white & black */
   margin-top: 0.6rem;
   padding: 0;
   width: 100%;
   box-sizing: border-box;
+  position: relative;
 }
 
 /* === TIMER BOXES COMPACT INLINE === */
 .timer {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -248,6 +250,20 @@ header h1 {
   border: 2px solid #000;
   min-width: 90px;
   text-align: center;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+/* === SLIDING PROGRESS BAR === */
+.timer::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  background: var(--accent);
+  width: var(--progress, 100%);
+  transition: width 1s linear;
 }
 
 /* === WHITE TIMER === */
@@ -260,6 +276,31 @@ header h1 {
 .timer.black {
   background: #000;
   color: #fff;
+}
+
+/* === ACTIVE TURN GLOW === */
+.timer.active {
+  box-shadow: 0 0 15px rgba(0, 191, 255, 0.8);
+  border-color: #00bfff;
+  z-index: 2;
+}
+
+/* === LOW TIME WARNING (<10s) === */
+.timer.low-time {
+  animation: lowTimePulse 1s ease-in-out infinite;
+  border-color: #ff5e5e;
+  box-shadow: 0 0 12px rgba(255, 94, 94, 0.8);
+  color: #fff !important;
+}
+
+/* === LOW TIME ANIMATION === */
+@keyframes lowTimePulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(255, 94, 94, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(255, 94, 94, 1);
+  }
 }
 
 /* Winner Modal */
