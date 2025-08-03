@@ -79,7 +79,7 @@
   </div>
 
   <!-- 3-dot Compact Menu Modal -->
-  <div id="menuModal" class="menu-modal">
+  <div id="menuModal" class="menu-modal" style="display: none;">
     <button id="exportBtn"><i data-lucide="download"></i> Export PGN</button>
     <button id="importBtn"><i data-lucide="upload"></i> Import PGN</button>
     <button id="toggleHistoryBtn"><i data-lucide="scroll"></i> Toggle History</button>
@@ -97,9 +97,6 @@
 
   <!-- Chess Engine & Game -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-  <script>
-    window.stockfish = new Worker("stockfish.js");
-  </script>
   <script src="app.js"></script>
 
   <!-- Lucide Icons -->
