@@ -42,7 +42,23 @@
 
       <label>
         <input type="checkbox" id="speechToggle" />
-        Enable Move Speech
+        Enable Move Narration
+      </label>
+
+      <label>
+        Language:
+        <select id="langSelect">
+          <option value="en-US" selected>English (US)</option>
+          <option value="en-GB">English (UK)</option>
+          <option value="hi-IN">Hindi</option>
+          <option value="fr-FR">French</option>
+          <option value="de-DE">German</option>
+        </select>
+      </label>
+
+      <label>
+        Voice:
+        <select id="voiceSelect"></select>
       </label>
 
       <button id="startGameBtn"><i data-lucide="play"></i> Start Game</button>
@@ -56,7 +72,7 @@
       <div id="info">
         <div id="timers">
           <div class="timer white">White: <span id="whiteTimer">10:00</span></div>
-<div class="timer black">Black: <span id="blackTimer">10:00</span></div>
+          <div class="timer black">Black: <span id="blackTimer">10:00</span></div>
         </div>
       </div>
     </div>
@@ -66,7 +82,7 @@
   <div id="menuModal" class="menu-modal">
     <label>
       <input type="checkbox" id="speechToggleMenu" />
-      <i data-lucide="mic"></i> Speech
+      <i data-lucide="mic"></i> Narration
     </label>
     <label>
       <input type="checkbox" id="themeToggleMenu" />
