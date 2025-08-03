@@ -1,4 +1,4 @@
-// ChessProEvolution – app.js v3.5 (PvP-only, animated timers, narration, sound, vibration, voice/language selector)
+// ChessProEvolution – app.js v3.6 (PvP-only, animated timers, narration, sound, vibration, voice/language selector)
 
 const game = new Chess();
 let boardSquares = [];
@@ -33,15 +33,27 @@ let lastWhiteSeconds = 600;
 let lastBlackSeconds = 600;
 let selectedDuration = 600;
 
-function loadVoices() {
-  const voices = speechSynthesis.getVoices();
+// Load voices reliably across all browsers
+function loadVoicesWhenAvailable() {
+  return new Promise((resolve) => {
+    const interval = setInterval(() => {
+      const voices = speechSynthesis.getVoices();
+      if (voices.length !== 0) {
+        clearInterval(interval);
+        resolve(voices);
+      }
+    }, 200);
+  });
+}
+
+async function loadVoices() {
+  const voices = await loadVoicesWhenAvailable();
   voiceSelect.innerHTML = voices.map(v => `<option value="${v.name}">${v.name} (${v.lang})</option>`).join("");
   if (!selectedVoice && voices.length > 0) {
     selectedVoice = voices.find(v => v.name.includes("Google")) || voices[0];
     voiceSelect.value = selectedVoice.name;
   }
 }
-speechSynthesis.onvoiceschanged = loadVoices;
 
 voiceSelect?.addEventListener("change", () => {
   const voices = speechSynthesis.getVoices();
@@ -62,15 +74,13 @@ function playSound(src, volume = 1.0) {
   }
 }
 
+// Preload interaction for mobile autoplay policies
 document.body.addEventListener("click", () => {
   const dummy = new Audio();
   dummy.play().catch(() => {});
 }, { once: true });
 
-// Updated narration support in app.js v3.6 – voice selection, language selector, full move narration
-
-// ...keep everything as is before...
-
+// Narration logic
 function speakNarration(move) {
   if (!speechEnabled || !move) return;
 
@@ -96,7 +106,6 @@ function speakNarration(move) {
     sentence += `. ${color} king is in check.`;
   }
 
-  // Low time warning
   const lowTime = currentTimerColor === "w" ? whiteTimeLeft : blackTimeLeft;
   if (lowTime <= 10) {
     sentence += `. ${color} is running low on time.`;
@@ -110,7 +119,10 @@ function speakNarration(move) {
   speechSynthesis.speak(utter);
 }
 
-// ...rest remains unchanged (rest of app.js stays same as your v3.5)
+// ✅ Call once DOM loads
+loadVoices();
+
+// (Keep rest of your app.js unchanged after this — game logic, timers, rendering, etc.)
 
 function initBoard() {
   board.innerHTML = "";
