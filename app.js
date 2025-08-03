@@ -1,10 +1,22 @@
-// ChessProEvolution – app.js v4.1.1 (PvP-only, narration, filtered voices, lang→voice sync, language icons)
+// ChessProEvolution – app.js v4.1.2 (PvP-only, narration, filtered voices, lang→voice sync, language icons, fixed startBtn, no speech toggle)
 
 let selectedVoice = null;
 let selectedLang = "en-US";
+let whiteTimeLeft = 600;
+let blackTimeLeft = 600;
+let lastWhiteSeconds = 600;
+let lastBlackSeconds = 600;
+let currentTimerColor = "w";
+let selectedDuration = 600;
 
 const langSelect = document.getElementById("langSelect");
 const voiceSelect = document.getElementById("voiceSelect");
+const menuBtn = document.getElementById("menuBtn");
+const menuModal = document.getElementById("menuModal");
+const themeToggleMenu = document.getElementById("themeToggleMenu");
+const startBtn = document.getElementById("startGameBtn");
+const startMenu = document.getElementById("startMenu");
+const timerSelect = document.getElementById("timerSelect");
 
 const allowedLangs = [
   { code: "none", label: "🚫 No Voice" },
@@ -115,11 +127,13 @@ function speakNarration(move) {
   speechSynthesis.speak(utter);
 }
 
+// === Play move sound and vibrate ===
 function playMoveFeedback() {
   playSound("move.mp3", 0.8);
   navigator.vibrate?.([100]);
 }
 
+// === Timer UI ===
 function updateTimerUI() {
   const whiteBox = document.querySelector(".timer.white");
   const blackBox = document.querySelector(".timer.black");
@@ -142,7 +156,7 @@ function updateTimerUI() {
   }
 }
 
-// 3-dot menu
+// === 3-dot menu toggle ===
 menuBtn.onclick = (e) => {
   e.stopPropagation();
   menuModal.classList.toggle("show");
@@ -160,10 +174,9 @@ if (themeToggleMenu) {
   });
 }
 
-// Start game
+// === Start Game Button ===
 startBtn.onclick = () => {
-  const speechEnabled = selectedLang !== "none"; // ✅ No checkbox; use langSelect instead
-
+  const speechEnabled = selectedLang !== "none"; // no speech toggle, rely on language
   startMenu.style.display = "none";
   document.getElementById("boardWrapper").style.display = "flex";
 
@@ -175,6 +188,8 @@ startBtn.onclick = () => {
   newGame();
 };
 
+// === Initialize ===
+initLangSelect();
 loadVoices();
 
 function initBoard() {
