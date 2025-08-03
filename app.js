@@ -67,27 +67,50 @@ document.body.addEventListener("click", () => {
   dummy.play().catch(() => {});
 }, { once: true });
 
+// Updated narration support in app.js v3.6 – voice selection, language selector, full move narration
+
+// ...keep everything as is before...
+
 function speakNarration(move) {
   if (!speechEnabled || !move) return;
+
   const from = move.from?.toUpperCase() || "";
   const to = move.to?.toUpperCase() || "";
   const color = move.color === "w" ? "White" : "Black";
   const pieceMap = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen", k: "king" };
   const piece = pieceMap[move.piece] || "piece";
-  let sentence = `${color} ${piece} moved from ${from} to ${to}`;
-  if (move.from === "checkmate") sentence = `Checkmate! ${color} wins!`;
-  if (move.from === "draw") sentence = "The game is a draw.";
-  if (move.from === "king" && move.to === "in check") sentence = `${color} king is in danger – check!`;
-  if (move.from && move.to && move.captured) {
+
+  let sentence = "";
+
+  if (move.flags.includes("c")) {
     const victimColor = move.color === "w" ? "black" : "white";
     const capturedPiece = game.get(to)?.type || "piece";
-    sentence = `${color} ${piece} captured ${victimColor} ${capturedPiece} on ${to}`;
+    sentence = `${color} ${piece} captured ${victimColor} ${pieceMap[capturedPiece] || "piece"} on ${to}`;
+  } else {
+    sentence = `${color} ${piece} moved from ${from} to ${to}`;
   }
+
+  if (game.in_checkmate()) {
+    sentence += `. Checkmate! ${color} wins!`;
+  } else if (game.in_check()) {
+    sentence += `. ${color} king is in check.`;
+  }
+
+  // Low time warning
+  const lowTime = currentTimerColor === "w" ? whiteTimeLeft : blackTimeLeft;
+  if (lowTime <= 10) {
+    sentence += `. ${color} is running low on time.`;
+  }
+
   const utter = new SpeechSynthesisUtterance(sentence);
   utter.lang = selectedLang;
   if (selectedVoice) utter.voice = selectedVoice;
+  utter.pitch = 1;
+  utter.rate = 1;
   speechSynthesis.speak(utter);
 }
+
+// ...rest remains unchanged (rest of app.js stays same as your v3.5)
 
 function initBoard() {
   board.innerHTML = "";
