@@ -1,4 +1,4 @@
-// ChessProEvolution – app.js v2.5 (clean PvP only, fixed [object Object])
+// ChessProEvolution – app.js v2.5 (clean PvP only, fixed [object Object], correct checkmate winner)
 
 const game = new Chess();
 let boardSquares = [];
@@ -82,7 +82,7 @@ function handleSquareClick(i, j) {
       selectedSquare = null;
       legalMoves = [];
       playMoveFeedback();
-      speakMove(played.san);
+      speakMove(played.san); // only speak SAN string
       renderBoard();
       updateStatus();
       currentTimerColor = game.turn();
@@ -138,7 +138,8 @@ function findKing(color) {
 function updateStatus() {
   if (game.in_checkmate()) {
     stopTimer();
-    const winner = game.turn() === "w" ? "Black" : "White";
+    const loser = game.turn() === "w" ? "White" : "Black";
+    const winner = loser === "White" ? "Black" : "White";
     winnerText.innerHTML = `<span>${winner} wins by checkmate!</span>`;
     winnerModal.classList.add("show");
     winSound.play();
@@ -162,7 +163,7 @@ function playMoveFeedback() {
 }
 
 function speakMove(san) {
-  if (!speechEnabled) return;
+  if (!speechEnabled || !san) return;
   const utter = new SpeechSynthesisUtterance(san);
   speechSynthesis.speak(utter);
 }
