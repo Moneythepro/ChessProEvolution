@@ -1,4 +1,4 @@
-// ChessProEvolution – app.js v2.8 (PvP-only, bug-free, startup draw bug fixed)
+// ChessProEvolution – app.js v2.9 (PvP-only, animated winner modal)
 
 const game = new Chess();
 let boardSquares = [];
@@ -145,7 +145,7 @@ function updateStatus() {
     const loser = game.turn() === "w" ? "White" : "Black";
     const winner = loser === "White" ? "Black" : "White";
     winnerText.innerHTML = `<span>${winner} wins by checkmate!</span>`;
-    winnerModal.classList.add("show");
+    winnerModal.classList.add("show", "animated-win");
     winSound.play();
     navigator.vibrate?.([200, 100, 200]);
     return;
@@ -154,7 +154,7 @@ function updateStatus() {
   if (game.in_draw()) {
     stopTimer();
     winnerText.innerHTML = `<span>It's a draw!</span>`;
-    winnerModal.classList.add("show");
+    winnerModal.classList.add("show", "animated-draw");
     drawSound.play();
     navigator.vibrate?.([300]);
     return;
@@ -226,7 +226,7 @@ function decideWinnerByPoints() {
   else if (score.b > score.w) result = "Black wins on points!";
 
   winnerText.innerHTML = `<span>${result}</span>`;
-  winnerModal.classList.add("show");
+  winnerModal.classList.add("show", "animated-draw");
   drawSound.play();
   navigator.vibrate?.([100, 100, 100]);
 }
@@ -257,7 +257,7 @@ function newGame() {
   selectedSquare = null;
   lastMove = null;
   legalMoves = [];
-  winnerModal.classList.remove("show");
+  winnerModal.classList.remove("show", "animated-win", "animated-draw");
   resetTimer();
   renderBoard();
   updateStatus();
