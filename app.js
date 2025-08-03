@@ -211,11 +211,23 @@ function updateTimerDisplay() {
     const s = (t % 60).toString().padStart(2, "0");
     return `${m}:${s}`;
   };
+
   whiteTimerEl.textContent = format(whiteTimeLeft);
   blackTimerEl.textContent = format(blackTimeLeft);
+
+  // Update progress bar based on full game time (you can replace with dynamic if needed)
+  const total = selectedDuration || 600; // fallback 10 min
+
+  const whiteBox = document.querySelector(".timer.white");
+  const blackBox = document.querySelector(".timer.black");
+
+  const whitePercent = Math.max(0, (whiteTimeLeft / total) * 100);
+  const blackPercent = Math.max(0, (blackTimeLeft / total) * 100);
+
+  whiteBox.style.setProperty("--progress", `${whitePercent}%`);
+  blackBox.style.setProperty("--progress", `${blackPercent}%`);
 }
 
-// New timer style/glow logic
 function updateTimerUI() {
   const whiteBox = document.querySelector(".timer.white");
   const blackBox = document.querySelector(".timer.black");
@@ -229,13 +241,18 @@ function updateTimerUI() {
   whiteBox.classList.toggle("low-time", whiteSecs <= 10);
   blackBox.classList.toggle("low-time", blackSecs <= 10);
 
-  // Beep once when crossing 10s
+  // Beep when crossing 10s
   if (currentTimerColor === "w") {
     if (whiteSecs <= 10 && lastWhiteSeconds > 10) beepSound.play();
     lastWhiteSeconds = whiteSecs;
   } else {
     if (blackSecs <= 10 && lastBlackSeconds > 10) beepSound.play();
     lastBlackSeconds = blackSecs;
+  }
+
+  // Trigger vibration on turn change
+  if (navigator.vibrate) {
+    navigator.vibrate(40);
   }
 }
 
