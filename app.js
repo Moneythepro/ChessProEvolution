@@ -1,4 +1,4 @@
-// ChessProEvolution – app.js v2.0 Final Stable
+// ChessProEvolution – app.js v2.1 Final
 
 const game = new Chess();
 let boardSquares = [];
@@ -8,7 +8,6 @@ let lastMove = null;
 let history = [];
 let mode = "pvp";
 let aiThinking = false;
-let showHistory = true;
 let speechEnabled = false;
 let initialized = false;
 
@@ -58,7 +57,7 @@ aiWorker.onmessage = (e) => {
       const played = game.move({ from: move.slice(0, 2), to: move.slice(2, 4), promotion: "q" });
       if (played) {
         lastMove = { from: played.from, to: played.to };
-        history.push(played.san);
+        history.push(played.san); // ✅ FIXED: only push .san
         playMoveFeedback();
         speakMove(played);
         renderBoard();
@@ -150,7 +149,7 @@ function renderBoard() {
       const piece = game.get(squareId);
 
       square.innerHTML = piece
-  ? `<img src="./pieces/${piece.color}${piece.type}.svg" class="piece" />`
+        ? `<img src="./pieces/${piece.color}${piece.type}.svg" class="piece" />`
         : "";
       square.classList.remove("selected", "last-move", "check", "legal");
 
@@ -285,7 +284,7 @@ function decideWinnerByPoints() {
   navigator.vibrate?.([100, 100, 100]);
 }
 
-// Menu actions
+// Menu toggle
 menuBtn.onclick = () => menuModal.classList.add("show");
 document.addEventListener("click", (e) => {
   if (!menuModal.contains(e.target) && e.target !== menuBtn) {
@@ -296,10 +295,11 @@ document.addEventListener("click", (e) => {
 toggleHistoryBtn.onclick = () => {
   if (moveHistoryModal) moveHistoryModal.classList.add("show");
 };
-if (closeHistoryModal)
+if (closeHistoryModal) {
   closeHistoryModal.onclick = () => {
     moveHistoryModal.classList.remove("show");
   };
+}
 
 // Export & Import
 exportBtn.onclick = () => {
@@ -331,7 +331,6 @@ importBtn.onclick = () => {
   input.click();
 };
 
-// Start game
 startBtn.onclick = () => {
   mode = modeSelect.value;
   speechEnabled = speechToggle?.checked;
