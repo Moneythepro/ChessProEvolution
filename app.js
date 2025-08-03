@@ -1,4 +1,4 @@
-// ChessProEvolution – app.js v2.5 (clean PvP only, fixed [object Object], correct checkmate winner)
+// ChessProEvolution – app.js v2.6 (clean PvP only, [object Object] fixed, checkmate winner correct)
 
 const game = new Chess();
 let boardSquares = [];
@@ -82,7 +82,11 @@ function handleSquareClick(i, j) {
       selectedSquare = null;
       legalMoves = [];
       playMoveFeedback();
-      speakMove(played.san); // only speak SAN string
+
+      // Safe speech call
+      const moveSAN = typeof played.san === "string" ? played.san : `${played.from} to ${played.to}`;
+      speakMove(moveSAN);
+
       renderBoard();
       updateStatus();
       currentTimerColor = game.turn();
@@ -146,6 +150,7 @@ function updateStatus() {
     navigator.vibrate?.([200, 100, 200]);
     return;
   }
+
   if (game.in_draw()) {
     stopTimer();
     winnerText.innerHTML = `<span>It's a draw!</span>`;
@@ -154,6 +159,7 @@ function updateStatus() {
     navigator.vibrate?.([300]);
     return;
   }
+
   statusEl.textContent = `${game.turn() === "w" ? "White" : "Black"} to move`;
 }
 
@@ -163,7 +169,7 @@ function playMoveFeedback() {
 }
 
 function speakMove(san) {
-  if (!speechEnabled || !san) return;
+  if (!speechEnabled || typeof san !== "string") return;
   const utter = new SpeechSynthesisUtterance(san);
   speechSynthesis.speak(utter);
 }
