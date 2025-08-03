@@ -10,13 +10,15 @@
 </head>
 <body>
   <div id="app">
-    <!-- Header -->
-    <header>
+    <!-- Centered Header -->
+    <header class="centered-header">
       <h1>ChessProEvolution</h1>
-      <div class="top-controls">
-        <button id="menuBtn" title="Menu"><i data-lucide="more-horizontal"></i></button>
-      </div>
     </header>
+
+    <!-- Floating 3-dot Menu Button -->
+    <button id="menuBtn" class="menu-button" title="Menu">
+      <i data-lucide="more-horizontal"></i>
+    </button>
 
     <!-- Start Menu -->
     <div id="startMenu">
@@ -48,15 +50,14 @@
 
     <!-- Game Area -->
     <div id="boardWrapper" style="display: none;">
+      <div id="status" class="status-floating">Ready</div>
       <div id="board"></div>
 
-      <!-- Timers and Status -->
       <div id="info">
         <div id="timers">
           <div class="timer white"><i data-lucide="clock"></i> White: <span id="whiteTimer">10:00</span></div>
           <div class="timer black"><i data-lucide="clock"></i> Black: <span id="blackTimer">10:00</span></div>
         </div>
-        <p>Status: <span id="status">Ready</span></p>
       </div>
     </div>
   </div>
@@ -83,7 +84,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
   <script src="app.js"></script>
 
-  <!-- Icon & Sync Logic -->
+  <!-- Icons & Sync -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       lucide.createIcons();
@@ -101,7 +102,6 @@
         });
       }
 
-      // Theme toggle sync
       themeMenu.checked = document.body.classList.contains("dark");
       themeMenu.addEventListener("change", () => {
         document.body.classList.toggle("dark", themeMenu.checked);
