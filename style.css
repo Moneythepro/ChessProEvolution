@@ -38,7 +38,7 @@ body {
 
 /* App Layout */
 #app {
-  max-width: 500px;
+  max-width: 600px;
   width: 100%;
 }
 
@@ -54,6 +54,11 @@ header h1 {
   font-size: 1.4rem;
   display: flex;
   align-items: center;
+  gap: 0.5rem;
+}
+
+.top-controls {
+  display: flex;
   gap: 0.5rem;
 }
 
@@ -140,8 +145,8 @@ header h1 {
 }
 
 .square img.piece {
-  width: 90%;
-  height: 90%;
+  width: 85%;
+  height: 85%;
   object-fit: contain;
   pointer-events: none;
 }
@@ -199,6 +204,7 @@ header h1 {
   justify-content: space-between;
   font-weight: bold;
   margin-bottom: 0.5rem;
+  gap: 1rem;
 }
 
 .timer.white {
