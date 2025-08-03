@@ -39,8 +39,6 @@ body {
   display: flex;
   justify-content: center;
   padding: 1rem;
-  overflow: hidden;
-  touch-action: none;
 }
 
 /* App Layout */
@@ -222,6 +220,11 @@ header h1 {
   color: #444;
 }
 
+body.dark .timer.white,
+body.dark .timer.black {
+  color: #eee;
+}
+
 /* Winner Modal */
 #winnerModal {
   display: none;
@@ -230,7 +233,7 @@ header h1 {
   justify-content: center;
   gap: 1rem;
   text-align: center;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0, 0, 0, 0.85);
   color: white;
   position: fixed;
   top: 0;
@@ -238,6 +241,7 @@ header h1 {
   z-index: 1000;
   width: 100%;
   height: 100%;
+  padding: 2rem;
 }
 
 #winnerModal.show {
@@ -245,7 +249,7 @@ header h1 {
 }
 
 #winnerModal button {
-  padding: 0.5rem 1rem;
+  padding: 0.6rem 1.2rem;
   font-size: 1rem;
   border: none;
   background: var(--accent);
@@ -267,6 +271,7 @@ header h1 {
   gap: 0.4rem;
   border-radius: 0.5rem;
   z-index: 999;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 #menuModal.show {
