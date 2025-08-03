@@ -1,4 +1,4 @@
-// ChessProEvolution – app.js v2.1 Final
+// ChessProEvolution – app.js v2.2 (AI removed)
 
 const game = new Chess();
 let boardSquares = [];
@@ -6,15 +6,10 @@ let selectedSquare = null;
 let legalMoves = [];
 let lastMove = null;
 let history = [];
-let mode = "pvp";
-let aiThinking = false;
 let speechEnabled = false;
-let initialized = false;
 
 const board = document.getElementById("board");
 const moveList = document.getElementById("moveList");
-const modeSelect = document.getElementById("modeSelect");
-const aiLevelInput = document.getElementById("aiLevel");
 const timerSelect = document.getElementById("timerSelect");
 const speechToggle = document.getElementById("speechToggle");
 const whiteTimerEl = document.getElementById("whiteTimer");
@@ -40,35 +35,6 @@ let whiteTimeLeft = 600;
 let blackTimeLeft = 600;
 let currentTimerColor = "w";
 let timerInterval = null;
-
-const aiWorker = new Worker("stockfish-worker.js");
-aiWorker.onmessage = (e) => {
-  const line = e.data;
-  if (typeof line !== "string") return;
-
-  if (!initialized && line.includes("uciok")) {
-    initialized = true;
-    aiWorker.postMessage("isready");
-  }
-
-  if (line.startsWith("bestmove")) {
-    const move = line.split(" ")[1];
-    if (move) {
-      const played = game.move({ from: move.slice(0, 2), to: move.slice(2, 4), promotion: "q" });
-      if (played) {
-        lastMove = { from: played.from, to: played.to };
-        history.push(played.san); // ✅ FIXED: only push .san
-        playMoveFeedback();
-        speakMove(played);
-        renderBoard();
-        updateStatus();
-        currentTimerColor = game.turn();
-      }
-    }
-    aiThinking = false;
-  }
-};
-aiWorker.postMessage("uci");
 
 function initBoard() {
   board.innerHTML = "";
@@ -111,7 +77,7 @@ function coordsToSquare(i, j) {
 }
 
 function handleSquareClick(i, j) {
-  if (aiThinking || game.game_over()) return;
+  if (game.game_over()) return;
   const square = coordsToSquare(i, j);
   const piece = game.get(square);
 
@@ -128,7 +94,6 @@ function handleSquareClick(i, j) {
       renderBoard();
       updateStatus();
       currentTimerColor = game.turn();
-      if (mode === "ai" && !game.game_over()) requestAIMove();
     } else {
       selectedSquare = null;
       legalMoves = [];
@@ -223,14 +188,6 @@ function speakMove(move) {
   speechSynthesis.speak(utter);
 }
 
-function requestAIMove() {
-  aiThinking = true;
-  const level = parseInt(aiLevelInput.value || 5);
-  aiWorker.postMessage(`setoption name Skill Level value ${level}`);
-  aiWorker.postMessage(`position fen ${game.fen()}`);
-  aiWorker.postMessage(`go depth ${Math.min(20, level + 4)}`);
-}
-
 function resetTimer() {
   stopTimer();
   const mins = parseInt(timerSelect?.value || "10");
@@ -292,14 +249,8 @@ document.addEventListener("click", (e) => {
   }
 });
 
-toggleHistoryBtn.onclick = () => {
-  if (moveHistoryModal) moveHistoryModal.classList.add("show");
-};
-if (closeHistoryModal) {
-  closeHistoryModal.onclick = () => {
-    moveHistoryModal.classList.remove("show");
-  };
-}
+toggleHistoryBtn.onclick = () => moveHistoryModal?.classList.add("show");
+closeHistoryModal.onclick = () => moveHistoryModal.classList.remove("show");
 
 // Export & Import
 exportBtn.onclick = () => {
@@ -332,7 +283,6 @@ importBtn.onclick = () => {
 };
 
 startBtn.onclick = () => {
-  mode = modeSelect.value;
   speechEnabled = speechToggle?.checked;
   startMenu.style.display = "none";
   document.getElementById("boardWrapper").style.display = "flex";
@@ -345,7 +295,6 @@ function newGame() {
   selectedSquare = null;
   lastMove = null;
   legalMoves = [];
-  aiThinking = false;
   winnerModal.classList.remove("show");
   resetTimer();
   renderBoard();
