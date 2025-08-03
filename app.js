@@ -1,4 +1,4 @@
-// ChessProEvolution – app.js v2.0 Final Stable
+// ChessProEvolution – app.js v2.1 Final Stable Polished
 
 const game = new Chess();
 let boardSquares = [];
@@ -8,7 +8,6 @@ let lastMove = null;
 let history = [];
 let mode = "pvp";
 let aiThinking = false;
-let showHistory = true;
 let speechEnabled = false;
 let initialized = false;
 
@@ -46,19 +45,17 @@ const aiWorker = new Worker("stockfish-worker.js");
 aiWorker.onmessage = (e) => {
   const line = e.data;
   if (typeof line !== "string") return;
-
   if (!initialized && line.includes("uciok")) {
     initialized = true;
     aiWorker.postMessage("isready");
   }
-
   if (line.startsWith("bestmove")) {
     const move = line.split(" ")[1];
     if (move) {
       const played = game.move({ from: move.slice(0, 2), to: move.slice(2, 4), promotion: "q" });
       if (played) {
         lastMove = { from: played.from, to: played.to };
-        history.push(played.san);
+        history = game.history(); // <- fix [object Object]
         playMoveFeedback();
         speakMove(played);
         renderBoard();
@@ -74,7 +71,6 @@ aiWorker.postMessage("uci");
 function initBoard() {
   board.innerHTML = "";
   boardSquares = [];
-
   for (let i = 0; i < 8; i++) {
     const row = [];
     for (let j = 0; j < 8; j++) {
@@ -85,7 +81,6 @@ function initBoard() {
       square.addEventListener("click", () => handleSquareClick(i, j));
       board.appendChild(square);
       row.push(square);
-
       if (i === 7) {
         const fileLabel = document.createElement("div");
         fileLabel.className = "file-label";
@@ -101,7 +96,6 @@ function initBoard() {
     }
     boardSquares.push(row);
   }
-
   renderBoard();
   updateStatus();
   updateTimerDisplay();
@@ -115,13 +109,12 @@ function handleSquareClick(i, j) {
   if (aiThinking || game.game_over()) return;
   const square = coordsToSquare(i, j);
   const piece = game.get(square);
-
   if (selectedSquare) {
     const move = { from: selectedSquare, to: square, promotion: "q" };
     const played = game.move(move);
     if (played) {
       lastMove = { from: played.from, to: played.to };
-      history.push(played.san);
+      history = game.history(); // ← fix here too
       selectedSquare = null;
       legalMoves = [];
       playMoveFeedback();
@@ -148,18 +141,15 @@ function renderBoard() {
       const square = boardSquares[i][j];
       const squareId = coordsToSquare(i, j);
       const piece = game.get(squareId);
-
       square.innerHTML = piece
-  ? `<img src="./pieces/${piece.color}${piece.type}.svg" class="piece" />`
+        ? `<img src="./pieces/${piece.color}${piece.type}.svg" class="piece" />`
         : "";
       square.classList.remove("selected", "last-move", "check", "legal");
-
       if (lastMove && (squareId === lastMove.from || squareId === lastMove.to)) {
         square.classList.add("last-move");
       }
       if (selectedSquare === squareId) square.classList.add("selected");
       if (legalMoves.includes(squareId)) square.classList.add("legal");
-
       if (game.in_check()) {
         const king = findKing(game.turn());
         if (squareId === king) square.classList.add("check");
@@ -183,11 +173,8 @@ function findKing(color) {
 function renderMoveList() {
   moveList.innerHTML = "";
   for (let i = 0; i < history.length; i += 2) {
-    const moveNumber = i / 2 + 1;
-    const white = history[i] || "";
-    const black = history[i + 1] || "";
     const li = document.createElement("li");
-    li.textContent = `${moveNumber}. ${white} ${black}`;
+    li.textContent = `${i / 2 + 1}. ${history[i] || ""} ${history[i + 1] || ""}`;
     moveList.appendChild(li);
   }
 }
@@ -285,7 +272,7 @@ function decideWinnerByPoints() {
   navigator.vibrate?.([100, 100, 100]);
 }
 
-// Menu actions
+// Menu Modal
 menuBtn.onclick = () => menuModal.classList.add("show");
 document.addEventListener("click", (e) => {
   if (!menuModal.contains(e.target) && e.target !== menuBtn) {
@@ -293,15 +280,11 @@ document.addEventListener("click", (e) => {
   }
 });
 
-toggleHistoryBtn.onclick = () => {
-  if (moveHistoryModal) moveHistoryModal.classList.add("show");
-};
-if (closeHistoryModal)
-  closeHistoryModal.onclick = () => {
-    moveHistoryModal.classList.remove("show");
-  };
+// Move history modal
+toggleHistoryBtn.onclick = () => moveHistoryModal?.classList.add("show");
+closeHistoryModal.onclick = () => moveHistoryModal?.classList.remove("show");
 
-// Export & Import
+// PGN Export
 exportBtn.onclick = () => {
   const blob = new Blob([game.pgn()], { type: "text/plain" });
   const url = URL.createObjectURL(blob);
@@ -312,6 +295,7 @@ exportBtn.onclick = () => {
   URL.revokeObjectURL(url);
 };
 
+// PGN Import
 importBtn.onclick = () => {
   const input = document.createElement("input");
   input.type = "file";
@@ -331,7 +315,7 @@ importBtn.onclick = () => {
   input.click();
 };
 
-// Start game
+// Start
 startBtn.onclick = () => {
   mode = modeSelect.value;
   speechEnabled = speechToggle?.checked;
