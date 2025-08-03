@@ -1,4 +1,4 @@
-// ChessProEvolution – app.js v4.1 (PvP-only, narration, filtered voices, lang→voice sync, "No Voice" option)
+// ChessProEvolution – app.js v4.1.1 (PvP-only, narration, filtered voices, lang→voice sync, language icons)
 
 let selectedVoice = null;
 let selectedLang = "en-US";
@@ -7,14 +7,14 @@ const langSelect = document.getElementById("langSelect");
 const voiceSelect = document.getElementById("voiceSelect");
 
 const allowedLangs = [
-  { code: "none", label: "No Voice" },
-  { code: "en-US", label: "English (US)" },
-  { code: "en-GB", label: "English (UK)" },
-  { code: "hi", label: "Hindi" },
-  { code: "fr", label: "French" },
-  { code: "de", label: "German" },
-  { code: "es", label: "Spanish" },
-  { code: "ja", label: "Japanese" }
+  { code: "none", label: "🚫 No Voice" },
+  { code: "en-US", label: "🇺🇸 English (US)" },
+  { code: "en-GB", label: "🇬🇧 English (UK)" },
+  { code: "hi",     label: "🇮🇳 Hindi" },
+  { code: "fr",     label: "🇫🇷 French" },
+  { code: "de",     label: "🇩🇪 German" },
+  { code: "es",     label: "🇪🇸 Spanish" },
+  { code: "ja",     label: "🇯🇵 Japanese" }
 ];
 
 // === Populate Language Dropdown ===
