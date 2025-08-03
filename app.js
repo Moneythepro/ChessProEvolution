@@ -249,10 +249,10 @@ boardEl.addEventListener("click", (e) => {
   const clickedSquare = target.dataset.square;
 
   if (selectedSquare) {
-    const possibleMoves = game.moves({ square: selectedSquare, verbose: true });
-    const move = possibleMoves.find(m => m.to === clickedSquare);
+    const legalMoves = game.moves({ square: selectedSquare, verbose: true });
+    const move = legalMoves.find(m => m.to === clickedSquare);
     if (move) {
-      makeMove(selectedSquare, clickedSquare);
+      makeMove(move.from, move.to);
       selectedSquare = null;
     } else {
       selectedSquare = clickedSquare;
