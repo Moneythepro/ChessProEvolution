@@ -58,7 +58,7 @@
     <div id="boardWrapper" style="display: none;">
       <div id="board"></div>
 
-      <!-- Timer + Info -->
+      <!-- Timers and Info -->
       <div id="info">
         <div id="timers">
           <div class="timer white"><i data-lucide="clock"></i> White: <span id="whiteTimer">10:00</span></div>
@@ -70,7 +70,7 @@
   </div>
 
   <!-- Move History Modal -->
-  <div id="moveHistoryModal" style="display: none;">
+  <div id="moveHistoryModal" class="modal" style="display: none;">
     <div class="modal-content">
       <h2>Move History</h2>
       <ol id="moveList"></ol>
@@ -78,34 +78,45 @@
     </div>
   </div>
 
-  <!-- 3-dot Compact Menu -->
-  <div id="menuModal" style="display: none;">
+  <!-- 3-dot Compact Menu Modal -->
+  <div id="menuModal" class="menu-modal">
     <button id="exportBtn"><i data-lucide="download"></i> Export PGN</button>
     <button id="importBtn"><i data-lucide="upload"></i> Import PGN</button>
     <button id="toggleHistoryBtn"><i data-lucide="scroll"></i> Toggle History</button>
-    <label class="horizontal-toggle">
-      <input type="checkbox" id="speechToggleMenu" onchange="speechToggle.checked = this.checked;" />
+    <label>
+      <input type="checkbox" id="speechToggleMenu" />
       <i data-lucide="mic"></i> Move Speech
     </label>
   </div>
 
   <!-- Winner Modal -->
-  <div id="winnerModal" class="modal" style="display: none;">
+  <div id="winnerModal" style="display: none;">
     <h2 id="winnerText">Checkmate!</h2>
     <button onclick="newGame()"><i data-lucide="rotate-ccw"></i> Play Again</button>
   </div>
 
-  <!-- Required Libraries -->
+  <!-- Chess Engine & Game -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
   <script>
     window.stockfish = new Worker("stockfish.js");
   </script>
   <script src="app.js"></script>
 
-  <!-- Lucide Icon Init -->
+  <!-- Lucide Icons -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       lucide.createIcons();
+
+      const toggle = document.getElementById("speechToggle");
+      const syncToggle = document.getElementById("speechToggleMenu");
+      if (toggle && syncToggle) {
+        toggle.addEventListener("change", () => {
+          syncToggle.checked = toggle.checked;
+        });
+        syncToggle.addEventListener("change", () => {
+          toggle.checked = syncToggle.checked;
+        });
+      }
     });
 
     function toggleTheme() {
