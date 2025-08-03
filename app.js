@@ -1,4 +1,4 @@
-// ChessProEvolution – app.js v2.9 (PvP-only, animated winner modal)
+// ChessProEvolution – app.js v3.0 (PvP-only, DBZ-style animations)
 
 const game = new Chess();
 let boardSquares = [];
@@ -85,7 +85,7 @@ function handleSquareClick(i, j) {
       legalMoves = [];
       playMoveFeedback();
       speakMove(played?.san || `${played.from}-${played.to}`);
-      renderBoard();
+      renderBoard(true); // animate move
       updateStatus();
       currentTimerColor = game.turn();
     } else {
@@ -100,7 +100,7 @@ function handleSquareClick(i, j) {
   }
 }
 
-function renderBoard() {
+function renderBoard(animate = false) {
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
       const square = boardSquares[i][j];
@@ -108,7 +108,7 @@ function renderBoard() {
       const piece = game.get(squareId);
 
       square.innerHTML = piece
-        ? `<img src="./pieces/${piece.color}${piece.type}.png" class="piece" />`
+        ? `<img src="./pieces/${piece.color}${piece.type}.png" class="piece${animate && lastMove?.to === squareId ? ' animate-move' : ''}" />`
         : "";
 
       square.classList.remove("selected", "last-move", "check", "legal");
@@ -145,7 +145,7 @@ function updateStatus() {
     const loser = game.turn() === "w" ? "White" : "Black";
     const winner = loser === "White" ? "Black" : "White";
     winnerText.innerHTML = `<span>${winner} wins by checkmate!</span>`;
-    winnerModal.classList.add("show", "animated-win");
+    winnerModal.className = "show shake glow-" + winner.toLowerCase();
     winSound.play();
     navigator.vibrate?.([200, 100, 200]);
     return;
@@ -154,7 +154,7 @@ function updateStatus() {
   if (game.in_draw()) {
     stopTimer();
     winnerText.innerHTML = `<span>It's a draw!</span>`;
-    winnerModal.classList.add("show", "animated-draw");
+    winnerModal.className = "show glow-white";
     drawSound.play();
     navigator.vibrate?.([300]);
     return;
@@ -169,11 +169,7 @@ function playMoveFeedback() {
 }
 
 function speakMove(san) {
-  if (!speechEnabled) return;
-  if (typeof san !== "string") {
-    console.warn("Speech error: invalid SAN", san);
-    return;
-  }
+  if (!speechEnabled || typeof san !== "string") return;
   const utter = new SpeechSynthesisUtterance(san);
   speechSynthesis.speak(utter);
 }
@@ -226,7 +222,7 @@ function decideWinnerByPoints() {
   else if (score.b > score.w) result = "Black wins on points!";
 
   winnerText.innerHTML = `<span>${result}</span>`;
-  winnerModal.classList.add("show", "animated-draw");
+  winnerModal.className = "show glow-white";
   drawSound.play();
   navigator.vibrate?.([100, 100, 100]);
 }
@@ -245,7 +241,6 @@ startBtn.onclick = () => {
   startMenu.style.display = "none";
   document.getElementById("boardWrapper").style.display = "flex";
 
-  // ✅ Set timer BEFORE starting game
   const mins = parseInt(timerSelect?.value || "10");
   whiteTimeLeft = blackTimeLeft = mins * 60;
 
@@ -257,7 +252,7 @@ function newGame() {
   selectedSquare = null;
   lastMove = null;
   legalMoves = [];
-  winnerModal.classList.remove("show", "animated-win", "animated-draw");
+  winnerModal.className = "";
   resetTimer();
   renderBoard();
   updateStatus();
