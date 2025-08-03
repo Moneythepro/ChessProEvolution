@@ -205,6 +205,9 @@ function stopTimer() {
   clearInterval(timerInterval);
 }
 
+// Global fallback in case selectedDuration not yet set
+let selectedDuration = 600; // Default: 10 minutes
+
 function updateTimerDisplay() {
   const format = (t) => {
     const m = Math.floor(t / 60).toString().padStart(2, "0");
@@ -215,8 +218,8 @@ function updateTimerDisplay() {
   whiteTimerEl.textContent = format(whiteTimeLeft);
   blackTimerEl.textContent = format(blackTimeLeft);
 
-  // Update progress bar based on full game time (you can replace with dynamic if needed)
-  const total = selectedDuration || 600; // fallback 10 min
+  // Use selectedDuration or fallback
+  const total = selectedDuration || 600;
 
   const whiteBox = document.querySelector(".timer.white");
   const blackBox = document.querySelector(".timer.black");
@@ -250,7 +253,7 @@ function updateTimerUI() {
     lastBlackSeconds = blackSecs;
   }
 
-  // Trigger vibration on turn change
+  // Trigger vibration on turn change (short buzz)
   if (navigator.vibrate) {
     navigator.vibrate(40);
   }
