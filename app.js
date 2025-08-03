@@ -1,5 +1,7 @@
 let game = new Chess();
 let lastMove = null;
+let selectedSquare = null; // ✅ FIXED
+let timerInterval = null;
 let selectedVoice = null;
 let selectedLang = "en-US";
 let whiteTimeLeft = 600;
@@ -8,7 +10,6 @@ let lastWhiteSeconds = 600;
 let lastBlackSeconds = 600;
 let currentTimerColor = "w";
 let selectedDuration = 600;
-let timerInterval = null;
 
 const langSelect = document.getElementById("langSelect");
 const voiceSelect = document.getElementById("voiceSelect");
@@ -18,7 +19,9 @@ const themeToggleMenu = document.getElementById("themeToggleMenu");
 const startBtn = document.getElementById("startGameBtn");
 const startMenu = document.getElementById("startMenu");
 const timerSelect = document.getElementById("timerSelect");
-const statusEl = document.getElementById("status"); // ✅ Fixed reference
+const statusEl = document.getElementById("status");
+const whiteTimerEl = document.getElementById("whiteTimer"); // ✅ FIXED
+const blackTimerEl = document.getElementById("blackTimer");
 
 const allowedLangs = [
   { code: "none", label: "🚫 No Voice" },
@@ -31,7 +34,7 @@ const allowedLangs = [
   { code: "ja",     label: "🇯🇵 Japanese" }
 ];
 
-// === Language Dropdown ===
+// === Populate Language Dropdown ===
 function initLangSelect() {
   langSelect.innerHTML = allowedLangs.map(lang =>
     `<option value="${lang.code}">${lang.label}</option>`
@@ -152,8 +155,8 @@ function updateTimerUI() {
     lastBlackSeconds = blackSecs;
   }
 
-  document.getElementById("whiteTimer").textContent = formatTime(whiteTimeLeft);
-  document.getElementById("blackTimer").textContent = formatTime(blackTimeLeft);
+  whiteTimerEl.textContent = formatTime(whiteTimeLeft);
+  blackTimerEl.textContent = formatTime(blackTimeLeft);
 }
 
 function formatTime(secs) {
@@ -162,7 +165,7 @@ function formatTime(secs) {
   return `${m}:${s}`;
 }
 
-// === Menu ===
+// === Menu Toggle ===
 menuBtn.onclick = (e) => {
   e.stopPropagation();
   menuModal.classList.toggle("show");
@@ -184,6 +187,7 @@ if (themeToggleMenu) {
 startBtn.onclick = () => {
   game = new Chess();
   lastMove = null;
+  selectedSquare = null;
 
   startMenu.style.display = "none";
   document.getElementById("boardWrapper").style.display = "flex";
@@ -217,6 +221,7 @@ startBtn.onclick = () => {
 function newGame() {
   game.reset();
   lastMove = null;
+  selectedSquare = null;
   updateStatus("White to move");
 }
 
