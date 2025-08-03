@@ -1,4 +1,4 @@
-// ChessProEvolution – app.js v3.8 (PvP-only, narration, animated timers, vibration, 3-dot menu, voice/lang selector)
+// ChessProEvolution – app.js v3.9 (PvP-only, narration, animated timers, vibration, 3-dot menu, voice/lang selector – voice loading fixed)
 
 const game = new Chess();
 let boardSquares = [];
@@ -33,15 +33,19 @@ let lastWhiteSeconds = 600;
 let lastBlackSeconds = 600;
 let selectedDuration = 600;
 
+// ✅ Voice loading fix
 function loadVoicesWhenAvailable() {
   return new Promise((resolve) => {
-    const interval = setInterval(() => {
-      const voices = speechSynthesis.getVoices();
-      if (voices.length !== 0) {
-        clearInterval(interval);
+    let voices = speechSynthesis.getVoices();
+    if (voices.length) return resolve(voices);
+    const onVoicesChanged = () => {
+      voices = speechSynthesis.getVoices();
+      if (voices.length) {
+        speechSynthesis.removeEventListener("voiceschanged", onVoicesChanged);
         resolve(voices);
       }
-    }, 200);
+    };
+    speechSynthesis.addEventListener("voiceschanged", onVoicesChanged);
   });
 }
 
@@ -73,6 +77,7 @@ function playSound(src, volume = 1.0) {
   }
 }
 
+// Trigger TTS & preload voices after user click
 document.body.addEventListener("click", () => {
   const dummy = new Audio();
   dummy.play().catch(() => {});
@@ -109,13 +114,29 @@ function speakNarration(move) {
     sentence += `. ${color} is running low on time.`;
   }
 
+  // ✅ Voice check and fallback
   const utter = new SpeechSynthesisUtterance(sentence);
   utter.lang = selectedLang;
-  if (selectedVoice) utter.voice = selectedVoice;
+
+  const voices = speechSynthesis.getVoices();
+  if (!selectedVoice && voices.length > 0) {
+    selectedVoice = voices.find(v => v.name.includes("Google")) || voices[0];
+  }
+
+  if (selectedVoice) {
+    utter.voice = selectedVoice;
+  } else {
+    console.warn("No speech voice available.");
+    return;
+  }
+
   utter.pitch = 1;
   utter.rate = 1;
   speechSynthesis.speak(utter);
 }
+
+// ✅ Init voices immediately on load
+loadVoices();
 
 function playMoveFeedback() {
   playSound("move.mp3", 0.8);
