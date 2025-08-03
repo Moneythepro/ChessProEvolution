@@ -403,3 +403,78 @@ body.dark .timer {
   0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
   50% { box-shadow: 0 0 30px rgba(0, 191, 255, 0.7); }
 }
+
+/* Override Header - Top Left */
+header {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+}
+
+header h1 {
+  font-size: 1.4rem;
+  background: linear-gradient(to right, var(--accent), #00bfff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: bold;
+  animation: glowText 2s ease-in-out infinite;
+}
+
+/* Glowing Animated Timers */
+#timers {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  margin: 0.5rem 0;
+  padding: 0 0.5rem;
+}
+
+.timer {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid var(--accent);
+  border-radius: 1rem;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--text);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+  backdrop-filter: blur(6px);
+  animation: timerPulse 2.5s ease-in-out infinite;
+  transition: all 0.3s ease-in-out;
+}
+
+body.dark .timer {
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+}
+
+/* Active Turn Timer - Blue Glow */
+.timer.active {
+  border-color: #00bfff;
+  box-shadow: 0 0 20px rgba(0, 191, 255, 0.8);
+}
+
+/* Low Time Warning (<10s) - Orange Red Pulse */
+.timer.low-time {
+  border-color: #ff5e5e;
+  animation: lowTimePulse 1s ease-in-out infinite;
+  box-shadow: 0 0 18px rgba(255, 94, 94, 0.8);
+  color: #fff;
+}
+
+@keyframes lowTimePulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(255, 94, 94, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(255, 94, 94, 1);
+  }
+}
