@@ -15,7 +15,6 @@
       <h1>ChessProEvolution</h1>
       <div class="top-controls">
         <button id="menuBtn" title="Menu"><i data-lucide="more-horizontal"></i></button>
-        <button onclick="toggleTheme()" title="Toggle Theme"><i data-lucide="moon-star"></i></button>
       </div>
     </header>
 
@@ -62,11 +61,15 @@
     </div>
   </div>
 
-  <!-- Menu Modal -->
+  <!-- Menu Modal (3-dot) -->
   <div id="menuModal" class="menu-modal">
     <label>
       <input type="checkbox" id="speechToggleMenu" />
-      <i data-lucide="mic"></i> Move Speech
+      <i data-lucide="mic"></i> Speech
+    </label>
+    <label>
+      <input type="checkbox" id="themeToggleMenu" />
+      <i data-lucide="moon-star"></i> Theme
     </label>
   </div>
 
@@ -80,28 +83,30 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
   <script src="app.js"></script>
 
-  <!-- Icon and Theme Logic -->
+  <!-- Icon & Sync Logic -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       lucide.createIcons();
 
-      // Sync both speech toggles
-      const toggleMain = document.getElementById("speechToggle");
-      const toggleMenu = document.getElementById("speechToggleMenu");
+      const speechMain = document.getElementById("speechToggle");
+      const speechMenu = document.getElementById("speechToggleMenu");
+      const themeMenu = document.getElementById("themeToggleMenu");
 
-      if (toggleMain && toggleMenu) {
-        toggleMain.addEventListener("change", () => {
-          toggleMenu.checked = toggleMain.checked;
+      if (speechMain && speechMenu) {
+        speechMain.addEventListener("change", () => {
+          speechMenu.checked = speechMain.checked;
         });
-        toggleMenu.addEventListener("change", () => {
-          toggleMain.checked = toggleMenu.checked;
+        speechMenu.addEventListener("change", () => {
+          speechMain.checked = speechMenu.checked;
         });
       }
-    });
 
-    function toggleTheme() {
-      document.body.classList.toggle("dark");
-    }
+      // Theme toggle sync
+      themeMenu.checked = document.body.classList.contains("dark");
+      themeMenu.addEventListener("change", () => {
+        document.body.classList.toggle("dark", themeMenu.checked);
+      });
+    });
   </script>
 </body>
 </html>
