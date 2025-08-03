@@ -384,3 +384,7 @@ img.piece {
   width: 90vmin;
   height: 90vmin;
 }
+
+#menuModal.show {
+  display: block;
+}
