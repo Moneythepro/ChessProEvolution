@@ -78,6 +78,7 @@ function playSound(src, volume = 1.0) {
 document.body.addEventListener("click", () => {
   const dummy = new Audio();
   dummy.play().catch(() => {});
+  loadVoices(); // Also trigger voices on first interaction
 }, { once: true });
 
 // Narration logic
@@ -122,7 +123,7 @@ function speakNarration(move) {
 // ✅ Call once DOM loads
 loadVoices();
 
-// (Keep rest of your app.js unchanged after this — game logic, timers, rendering, etc.)
+// Rest of your app.js (board rendering, game logic, UI, timer, event handlers...) remains unchanged.
 
 function initBoard() {
   board.innerHTML = "";
