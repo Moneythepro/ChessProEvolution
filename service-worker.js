@@ -5,18 +5,18 @@ const ASSETS = [
   "./style.css",
   "./app.js",
   "./manifest.json",
-  "./pieces/wp.svg",
-  "./pieces/wr.svg",
-  "./pieces/wn.svg",
-  "./pieces/wb.svg",
-  "./pieces/wq.svg",
-  "./pieces/wk.svg",
-  "./pieces/bp.svg",
-  "./pieces/br.svg",
-  "./pieces/bn.svg",
-  "./pieces/bb.svg",
-  "./pieces/bq.svg",
-  "./pieces/bk.svg",
+  "./pieces/wp.png",
+  "./pieces/wr.png",
+  "./pieces/wn.png",
+  "./pieces/wb.png",
+  "./pieces/wq.png",
+  "./pieces/wk.png",
+  "./pieces/bp.png",
+  "./pieces/br.png",
+  "./pieces/bn.png",
+  "./pieces/bb.png",
+  "./pieces/bq.png",
+  "./pieces/bk.png",
   "./win.mp3",
   "./draw.mp3",
   "./move.mp3"
@@ -39,9 +39,9 @@ self.addEventListener("fetch", (e) => {
 // Activate event – clean old caches
 self.addEventListener("activate", (e) => {
   e.waitUntil(
-    caches.keys().then(keys =>
+    caches.keys().then((keys) =>
       Promise.all(
-        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
       )
     )
   );
