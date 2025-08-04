@@ -1,7 +1,6 @@
-let game = new Chess();
+let game;
 let lastMove = null;
 let selectedSquare = null;
-let legalMoves = []; 
 let timerInterval = null;
 let selectedVoice = null;
 let selectedLang = "en-US";
@@ -38,14 +37,13 @@ const allowedLangs = [
   { code: "ja",     label: "🇯🇵 Japanese" }
 ];
 
-// === LANGUAGE SELECT ===
 function initLangSelect() {
   langSelect.innerHTML = allowedLangs.map(lang =>
     `<option value="${lang.code}">${lang.label}</option>`
   ).join("");
   langSelect.value = selectedLang;
 }
-console.log("✅ app.js loaded!");
+
 async function loadVoices() {
   const allVoices = await new Promise(resolve => {
     const tryLoad = () => {
@@ -93,7 +91,6 @@ document.body.addEventListener("click", () => {
   loadVoices();
 }, { once: true });
 
-// === SPEECH ===
 function speakNarration(move) {
   if (!move || selectedLang === "none" || !selectedVoice) return;
 
@@ -103,15 +100,9 @@ function speakNarration(move) {
   const pieceMap = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen", k: "king" };
   const piece = pieceMap[move.piece] || "piece";
 
-  let sentence = "";
-
-  if (move.flags.includes("c")) {
-    const victimColor = move.color === "w" ? "black" : "white";
-    const captured = game.get(to)?.type || "piece";
-    sentence = `${color} ${piece} captured ${victimColor} ${pieceMap[captured] || "piece"} on ${to}`;
-  } else {
-    sentence = `${color} ${piece} moved from ${from} to ${to}`;
-  }
+  let sentence = move.flags.includes("c")
+    ? `${color} ${piece} captured on ${to}`
+    : `${color} ${piece} moved from ${from} to ${to}`;
 
   if (game.in_checkmate()) sentence += `. Checkmate! ${color} wins!`;
   else if (game.in_check()) sentence += `. ${color} king is in check.`;
@@ -127,7 +118,6 @@ function speakNarration(move) {
   speechSynthesis.speak(utter);
 }
 
-// === UTILITY ===
 function playMoveFeedback() {
   playSound("move.mp3", 0.8);
   navigator.vibrate?.([100]);
@@ -163,7 +153,6 @@ function updateTimerUI() {
   blackTimerEl.textContent = formatTime(blackTimeLeft);
 }
 
-// === MENU ===
 menuBtn.onclick = (e) => {
   e.stopPropagation();
   menuModal.classList.toggle("show");
@@ -181,7 +170,6 @@ if (themeToggleMenu) {
   });
 }
 
-// === GAME START ===
 startBtn.onclick = () => {
   game = new Chess();
   selectedSquare = null;
