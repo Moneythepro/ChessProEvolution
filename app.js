@@ -316,7 +316,9 @@ function decideWinnerByPoints() {
 }
 
 function newGame() {
-  game = new Chess();
+  const mode = document.getElementById("modeSelect")?.value || "pvp";
+  game = mode === "illegal" ? new IllegalChess() : new Chess();
+
   selectedSquare = null;
   lastMove = null;
   legalMoves = [];
