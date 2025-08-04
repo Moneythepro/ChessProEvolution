@@ -117,6 +117,31 @@ function formatTime(secs) {
 }
 
 function updateStatus() {
+  // 🟨 Handle win by king capture in IllegalChess
+  const board = game.board();
+  let whiteKing = false;
+  let blackKing = false;
+
+  for (const row of board) {
+    for (const cell of row) {
+      if (cell?.type === "k") {
+        if (cell.color === "w") whiteKing = true;
+        if (cell.color === "b") blackKing = true;
+      }
+    }
+  }
+
+  if (!whiteKing || !blackKing) {
+    stopTimer();
+    const winner = whiteKing ? "White" : "Black";
+    winnerText.innerHTML = `<span>${winner} wins by king capture!</span>`;
+    winnerModal.className = "show shake glow-" + winner.toLowerCase();
+    playSound("win.mp3", 1.0);
+    navigator.vibrate?.([200, 100, 200]);
+    return;
+  }
+
+  // ✅ Standard checkmate logic for regular Chess mode
   if (game.in_checkmate()) {
     stopTimer();
     const loser = game.turn() === "w" ? "White" : "Black";
@@ -127,6 +152,7 @@ function updateStatus() {
     navigator.vibrate?.([200, 100, 200]);
     return;
   }
+
   if (game.in_draw()) {
     stopTimer();
     winnerText.innerHTML = `<span>It's a draw!</span>`;
@@ -135,6 +161,7 @@ function updateStatus() {
     navigator.vibrate?.([300]);
     return;
   }
+
   statusEl.textContent = `${game.turn() === "w" ? "White" : "Black"} to move`;
   statusEl.classList.add("pulse");
   setTimeout(() => statusEl.classList.remove("pulse"), 500);
