@@ -32,11 +32,11 @@ const allowedLangs = [
   { code: "none", label: "🚫 No Voice" },
   { code: "en-US", label: "🇺🇸 English (US)" },
   { code: "en-GB", label: "🇬🇧 English (UK)" },
-  { code: "hi",     label: "🇮🇳 Hindi" },
-  { code: "fr",     label: "🇫🇷 French" },
-  { code: "de",     label: "🇩🇪 German" },
-  { code: "es",     label: "🇪🇸 Spanish" },
-  { code: "ja",     label: "🇯🇵 Japanese" }
+  { code: "hi", label: "🇮🇳 Hindi" },
+  { code: "fr", label: "🇫🇷 French" },
+  { code: "de", label: "🇩🇪 German" },
+  { code: "es", label: "🇪🇸 Spanish" },
+  { code: "ja", label: "🇯🇵 Japanese" }
 ];
 
 function initLangSelect() {
@@ -191,7 +191,7 @@ function renderBoard(animate = false) {
         ? `<img src="./pieces/${piece.color}${piece.type}.png" class="piece${animate && lastMove?.to === squareId ? ' animate-move' : ''}" />`
         : "";
       square.classList.remove("selected", "last-move", "check", "legal");
-      
+
       if (lastMove && (squareId === lastMove.from || squareId === lastMove.to)) square.classList.add("last-move");
       if (selectedSquare === squareId) square.classList.add("selected");
       if (legalMoves.includes(squareId)) square.classList.add("legal");
@@ -318,16 +318,18 @@ function newGame() {
   lastMove = null;
   legalMoves = [];
   winnerModal.className = "";
+
   const mins = parseInt(timerSelect?.value || "10");
   whiteTimeLeft = blackTimeLeft = mins * 60;
   lastWhiteSeconds = lastBlackSeconds = mins * 60;
   selectedDuration = mins * 60;
+
+  initBoard();
   resetTimer();
-  renderBoard();
   updateStatus();
 }
 
-// Event Listeners
+// --- Event Listeners ---
 langSelect.addEventListener("change", async () => {
   selectedLang = langSelect.value;
   await loadVoices();
@@ -338,13 +340,6 @@ voiceSelect.addEventListener("change", () => {
   const allVoices = speechSynthesis.getVoices();
   selectedVoice = allVoices.find(v => v.name === voiceName) || null;
 });
-
-document.body.addEventListener("click", () => {
-  const dummy = new Audio();
-  dummy.play().catch(() => {});
-  initLangSelect();
-  loadVoices();
-}, { once: true });
 
 menuBtn.onclick = (e) => {
   e.stopPropagation();
@@ -363,13 +358,17 @@ if (themeToggleMenu) {
   });
 }
 
+// ✅ Start Game (safe init here)
 startBtn.onclick = () => {
   newGame();
   startMenu.style.display = "none";
   document.getElementById("boardWrapper").style.display = "flex";
 };
 
-// Initialize
-initLangSelect();
-loadVoices();
-initBoard();
+// 🟢 Only load voices/langs on first user interaction
+document.body.addEventListener("click", () => {
+  const dummy = new Audio();
+  dummy.play().catch(() => {});
+  initLangSelect();
+  loadVoices();
+}, { once: true });
