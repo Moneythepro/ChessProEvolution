@@ -3,7 +3,7 @@ let lastMove = null;
 let selectedSquare = null;
 let timerInterval = null;
 let selectedVoice = null;
-let selectedLang = "en-US";
+let selectedLang = "none"; // ✅ Default to No Voice
 let whiteTimeLeft = 600;
 let blackTimeLeft = 600;
 let lastWhiteSeconds = 600;
@@ -32,11 +32,11 @@ const allowedLangs = [
   { code: "none", label: "🚫 No Voice" },
   { code: "en-US", label: "🇺🇸 English (US)" },
   { code: "en-GB", label: "🇬🇧 English (UK)" },
-  { code: "hi", label: "🇮🇳 Hindi" },
-  { code: "fr", label: "🇫🇷 French" },
-  { code: "de", label: "🇩🇪 German" },
-  { code: "es", label: "🇪🇸 Spanish" },
-  { code: "ja", label: "🇯🇵 Japanese" }
+  { code: "hi",     label: "🇮🇳 Hindi" },
+  { code: "fr",     label: "🇫🇷 French" },
+  { code: "de",     label: "🇩🇪 German" },
+  { code: "es",     label: "🇪🇸 Spanish" },
+  { code: "ja",     label: "🇯🇵 Japanese" }
 ];
 
 function initLangSelect() {
@@ -65,8 +65,10 @@ async function loadVoices() {
   ).join("");
 
   if (selectedLang !== "none") {
-    const bestMatch = filtered.find(v => v.lang === selectedLang)
-      || filtered.find(v => v.lang.startsWith(selectedLang.split("-")[0]));
+    const bestMatch = filtered.find(v => {
+      const langCode = selectedLang === "hi" ? "hi-IN" : selectedLang;
+      return v.lang === langCode || v.lang.startsWith(langCode);
+    });
     selectedVoice = bestMatch || null;
     if (selectedVoice) voiceSelect.value = selectedVoice.name;
   } else {
@@ -77,6 +79,9 @@ async function loadVoices() {
 
 function speakNarration(move) {
   if (!move || selectedLang === "none" || !selectedVoice) return;
+
+  // ✅ Cancel ongoing TTS instantly if move is rapid
+  speechSynthesis.cancel();
 
   const from = move.from?.toUpperCase();
   const to = move.to?.toUpperCase();
@@ -96,7 +101,7 @@ function speakNarration(move) {
 
   const utter = new SpeechSynthesisUtterance(sentence);
   utter.voice = selectedVoice;
-  utter.lang = selectedVoice.lang || selectedLang;
+  utter.lang = selectedVoice.lang || (selectedLang === "hi" ? "hi-IN" : selectedLang);
   utter.pitch = 1;
   utter.rate = 1;
   speechSynthesis.speak(utter);
