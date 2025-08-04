@@ -23,11 +23,12 @@
     <!-- Start Menu -->
     <div id="startMenu">
       <h2>Select Game Mode</h2>
-      
+
       <label>
         Mode:
-        <select id="modeSelect" disabled>
+        <select id="modeSelect">
           <option value="pvp" selected>Player vs Player</option>
+          <option value="illegal">🚨 Illegal PvP</option>
         </select>
       </label>
 
@@ -89,7 +90,8 @@
 
   <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-  <script src="app.js" onerror="alert('app.js failed to load! Check file location or server config.')"></script>
+  <script src="chessillegal.js" onerror="alert('Failed to load chessillegal.js')"></script>
+  <script src="app.js" onerror="alert('Failed to load app.js! Check file path or server config.')"></script>
 
   <!-- Icons + Theme Toggle -->
   <script>
