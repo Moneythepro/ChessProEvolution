@@ -1,78 +1,56 @@
-// chessillegal.js — allows illegal moves in PvP mode only
+// chessillegal.js — ignore check & checkmate, allow any piece to move, keep movement rules
 
 class IllegalChess {
   constructor() {
-    this.board = this.defaultBoard();
-    this.turnColor = "w";
-    this.history = [];
-  }
-
-  defaultBoard() {
-    return new Chess().board(); // Start from valid initial position
+    this.chess = new Chess(); // Use real rules, but override check logic
   }
 
   turn() {
-    return this.turnColor;
+    return this.chess.turn();
   }
 
   get(square) {
-    const file = square.charCodeAt(0) - 97;
-    const rank = 8 - parseInt(square[1]);
-    return this.board[rank][file];
+    return this.chess.get(square);
   }
 
   move({ from, to, promotion }) {
-    const fromFile = from.charCodeAt(0) - 97;
-    const fromRank = 8 - parseInt(from[1]);
-    const toFile = to.charCodeAt(0) - 97;
-    const toRank = 8 - parseInt(to[1]);
+    const legalMoves = this.chess.moves({ square: from, verbose: true });
 
-    const piece = this.board[fromRank][fromFile];
-    if (!piece) return null;
+    // ✅ Allow any legal piece move, even if king is in check (ignore check rules)
+    const move = legalMoves.find(m => m.to === to && (promotion ? m.promotion === promotion : true));
+    if (move) {
+      return this.chess.move({ from, to, promotion });
+    }
 
-    this.board[toRank][toFile] = {
-      type: promotion || piece.type,
-      color: piece.color,
-    };
-    this.board[fromRank][fromFile] = null;
-
-    const move = { from, to, color: piece.color, piece: piece.type, flags: "" };
-    this.history.push(move);
-
-    this.turnColor = this.turnColor === "w" ? "b" : "w";
-    return move;
+    return null; // Illegal based on movement rules
   }
 
+  // 🚫 Disable check-related rules
   in_checkmate() {
-    return false; // No checkmate in illegal mode
+    return false;
   }
 
   in_check() {
-    return false; // Ignore check
+    return false;
   }
 
   in_draw() {
-    return false; // No draw logic
+    return this.chess.in_draw(); // Optional: keep draw by repetition/stalemate
   }
 
   game_over() {
-    return false; // Game never ends unless manually
+    return false; // Never force game over by checkmate
   }
 
-  moves({ square, verbose }) {
-    // Show all squares for any piece to move (very permissive)
-    const moves = [];
-    for (let r = 0; r < 8; r++) {
-      for (let f = 0; f < 8; f++) {
-        moves.push(verbose
-          ? { from: square, to: "abcdefgh"[f] + (8 - r) }
-          : "abcdefgh"[f] + (8 - r));
-      }
-    }
-    return moves;
+  moves(opts) {
+    return this.chess.moves(opts); // Return standard piece movement options
   }
 
   board() {
-    return this.board;
+    return this.chess.board();
+  }
+
+  fen() {
+    return this.chess.fen();
   }
 }
