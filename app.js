@@ -1,6 +1,7 @@
 let game = new Chess();
 let lastMove = null;
 let selectedSquare = null;
+let legalMoves = []; 
 let timerInterval = null;
 let selectedVoice = null;
 let selectedLang = "en-US";
