@@ -15,13 +15,23 @@ class IllegalChess {
     const piece = this.chess.get(from);
     if (!piece || piece.color !== this.turn()) return null;
 
-    const captured = this.chess.get(to); // Check capture before placing
+    const legal = new Chess(this.chess.fen()).moves({ square: from, verbose: true });
+    const validMove = legal.find(m => m.to === to && (promotion ? m.promotion === promotion : true));
 
-    // Move the piece manually
+    if (!validMove) return null;
+
+    const captured = this.chess.get(to);
+
+    // If it's a pawn reaching last rank, require promotion
+    const isPromotion = piece.type === "p" && (to.endsWith("8") || to.endsWith("1"));
+    const finalType = isPromotion ? (promotion || "q") : piece.type;
+
     this.chess.remove(from);
-    this.chess.put({ type: promotion || piece.type, color: piece.color }, to);
+    this.chess.put({ type: finalType, color: piece.color }, to);
 
-    // Swap turn manually
+    // Check if king was captured
+    if (captured?.type === "k") this._kingCaptured = true;
+
     this._swapTurn();
 
     return {
@@ -29,7 +39,7 @@ class IllegalChess {
       to,
       color: piece.color,
       piece: piece.type,
-      promotion: promotion || undefined,
+      promotion: isPromotion ? finalType : undefined,
       flags: captured ? "c" : "",
     };
   }
@@ -38,38 +48,19 @@ class IllegalChess {
     const piece = this.chess.get(square);
     if (!piece || piece.color !== this.turn()) return [];
 
-    const validMoves = [];
+    const legal = new Chess(this.chess.fen()).moves({ square, verbose: true });
 
-    for (let i = 0; i < 8; i++) {
-      for (let j = 0; j < 8; j++) {
-        const to = "abcdefgh"[j] + (8 - i);
-        if (to === square) continue;
-
-        const target = this.chess.get(to);
-        if (!target || target.color !== piece.color) {
-          validMoves.push(
-            verbose ? { from: square, to, promotion: "q" } : to
-          );
-        }
-      }
-    }
-
-    return validMoves;
+    return verbose
+      ? legal.map(m => ({ from: m.from, to: m.to, promotion: m.promotion }))
+      : legal.map(m => m.to);
   }
 
-  // Override check functions: always false
   in_check() {
-    return false;
+    return false; // Always false — no check logic
   }
 
   in_checkmate() {
-    const currentTurn = this.chess.turn();
-    const tempChess = new Chess(this.chess.fen());
-
-    const moves = tempChess.moves({ verbose: true });
-    if (moves.length === 0 && tempChess.in_check()) return true;
-
-    return false;
+    return false; // Ignored
   }
 
   in_draw() {
@@ -77,7 +68,21 @@ class IllegalChess {
   }
 
   game_over() {
-    return this.in_checkmate() || this.in_draw();
+    // Custom: if a king is missing, game ends
+    const board = this.chess.board();
+    let whiteKing = false;
+    let blackKing = false;
+
+    for (const row of board) {
+      for (const cell of row) {
+        if (cell?.type === "k") {
+          if (cell.color === "w") whiteKing = true;
+          if (cell.color === "b") blackKing = true;
+        }
+      }
+    }
+
+    return !whiteKing || !blackKing || this.chess.in_draw();
   }
 
   board() {
