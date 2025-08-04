@@ -122,7 +122,8 @@ function decideWinnerByPoints() {
   navigator.vibrate?.([100, 100, 100]);
 }
 
-function newGame() {
+
+                           function newGame() {
   const mode = document.getElementById("modeSelect")?.value || "pvp";
   game = mode === "illegal" ? new IllegalChess() : new Chess();
 
@@ -139,7 +140,7 @@ function newGame() {
   initBoard();
   resetTimer();
   updateStatus();
-}
+                           }
 
 // --- Event Listeners ---
 langSelect.addEventListener("change", async () => {
