@@ -1,8 +1,8 @@
-// chessillegal.js — ignore check & checkmate, allow any piece to move, keep movement rules
+// chessillegal.js — ignore check & checkmate, allow any piece to move, follow basic movement rules
 
 class IllegalChess {
   constructor() {
-    this.chess = new Chess(); // Use real rules, but override check logic
+    this.chess = new Chess();
   }
 
   turn() {
@@ -14,18 +14,43 @@ class IllegalChess {
   }
 
   move({ from, to, promotion }) {
-    const legalMoves = this.chess.moves({ square: from, verbose: true });
+    // Temporarily allow all piece moves by loading the position into a new chess instance
+    const clone = new Chess(this.chess.fen());
+    const allMoves = clone.moves({ verbose: true });
+    const move = allMoves.find(m =>
+      m.from === from &&
+      m.to === to &&
+      (promotion ? m.promotion === promotion : true)
+    );
 
-    // ✅ Allow any legal piece move, even if king is in check (ignore check rules)
-    const move = legalMoves.find(m => m.to === to && (promotion ? m.promotion === promotion : true));
-    if (move) {
-      return this.chess.move({ from, to, promotion });
-    }
+    if (!move) return null;
 
-    return null; // Illegal based on movement rules
+    // Execute move manually (bypassing king safety)
+    const piece = this.chess.get(from);
+    if (!piece) return null;
+
+    this.chess.remove(from);
+    this.chess.put({ type: promotion || piece.type, color: piece.color }, to);
+
+    // Push move into history
+    return {
+      from,
+      to,
+      color: piece.color,
+      piece: piece.type,
+      flags: "", // minimal
+    };
   }
 
-  // 🚫 Disable check-related rules
+  moves({ square, verbose }) {
+    // Use normal piece movement rules, but bypass check prevention
+    const clone = new Chess(this.chess.fen());
+    const all = clone.moves({ square, verbose: true });
+    return verbose
+      ? all.map(m => ({ from: m.from, to: m.to, promotion: m.promotion }))
+      : all.map(m => m.to);
+  }
+
   in_checkmate() {
     return false;
   }
@@ -35,15 +60,11 @@ class IllegalChess {
   }
 
   in_draw() {
-    return this.chess.in_draw(); // Optional: keep draw by repetition/stalemate
+    return this.chess.in_draw();
   }
 
   game_over() {
-    return false; // Never force game over by checkmate
-  }
-
-  moves(opts) {
-    return this.chess.moves(opts); // Return standard piece movement options
+    return false;
   }
 
   board() {
