@@ -49,38 +49,44 @@ function initLangSelect() {
 }
 
 async function loadVoices() {
-  const allVoices = await new Promise(resolve => {
+  return new Promise(resolve => {
+    let attempts = 0;
     const tryLoad = () => {
       const voices = speechSynthesis.getVoices();
-      if (voices.length) resolve(voices);
+      if (voices.length || attempts >= 10) {
+        const filtered = voices.filter(v =>
+          allowedLangs.some(lang => lang.code !== "none" && v.lang.startsWith(lang.code))
+        );
+
+        voiceSelect.innerHTML = filtered
+          .map(v => `<option value="${v.name}" data-lang="${v.lang}">${v.name} (${v.lang})</option>`)
+          .join("");
+
+        if (selectedLang !== "none") {
+          const bestMatch = filtered.find(v =>
+            v.lang === selectedLang || v.lang.startsWith(selectedLang.split("-")[0])
+          );
+          selectedVoice = bestMatch || null;
+          if (selectedVoice) voiceSelect.value = selectedVoice.name;
+        } else {
+          selectedVoice = null;
+          voiceSelect.value = "";
+        }
+
+        resolve();
+      } else {
+        attempts++;
+        setTimeout(tryLoad, 200);
+      }
     };
     tryLoad();
-    speechSynthesis.onvoiceschanged = tryLoad;
   });
-
-  const filtered = allVoices.filter(v =>
-    allowedLangs.some(lang => lang.code !== "none" && v.lang.startsWith(lang.code))
-  );
-
-  voiceSelect.innerHTML = filtered
-    .map(v => `<option value="${v.name}" data-lang="${v.lang}">${v.name} (${v.lang})</option>`)
-    .join("");
-
-  if (selectedLang !== "none") {
-    const bestMatch = filtered.find(v =>
-      v.lang === selectedLang || v.lang.startsWith(selectedLang.split("-")[0])
-    );
-    selectedVoice = bestMatch || null;
-    if (selectedVoice) voiceSelect.value = selectedVoice.name;
-  } else {
-    selectedVoice = null;
-    voiceSelect.value = "";
-  }
 }
 
 function speakNarration(move) {
-  if (!move || selectedLang === "none" || !selectedVoice) return;
-  speechSynthesis.cancel();
+  if (!move || selectedLang === "none") return;
+  if (!selectedVoice) return;
+
   const from = move.from?.toUpperCase();
   const to = move.to?.toUpperCase();
   const color = move.color === "w" ? "White" : "Black";
@@ -91,24 +97,47 @@ function speakNarration(move) {
     ? `${color} ${piece} captured on ${to}`
     : `${color} ${piece} moved from ${from} to ${to}`;
 
-  if (game.in_checkmate()) sentence += `. Checkmate! ${color} wins!`;
-  else if (game.in_check()) sentence += `. ${color} king is in check.`;
+  if (game.in_checkmate?.() && game.in_checkmate()) sentence += `. Checkmate! ${color} wins!`;
+  else if (game.in_check?.() && game.in_check()) sentence += `. ${color} king is in check.`;
 
   const lowTime = currentTimerColor === "w" ? whiteTimeLeft : blackTimeLeft;
   if (lowTime <= 10) sentence += `. ${color} is running low on time.`;
 
-  const utter = new SpeechSynthesisUtterance(sentence);
-  utter.voice = selectedVoice;
-  utter.lang = selectedVoice.lang || selectedLang;
-  utter.pitch = 1;
-  utter.rate = 1;
-  speechSynthesis.speak(utter);
+  try {
+    const utter = new SpeechSynthesisUtterance(sentence);
+    utter.voice = selectedVoice;
+    utter.lang = selectedVoice.lang || selectedLang;
+    utter.pitch = 1;
+    utter.rate = 1;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utter);
+  } catch (e) {
+    console.warn("Speech failed:", e);
+  }
+}
+
+function playSound(src, volume = 1) {
+  try {
+    const audio = new Audio(src);
+    audio.volume = volume;
+    audio.play().catch(e => console.warn("Sound error:", e));
+  } catch (e) {
+    console.warn("Play sound failed:", e);
+  }
 }
 
 function playMoveFeedback() {
   playSound("move.mp3", 0.8);
   navigator.vibrate?.([100]);
 }
+
+// 🔊 Unlock audio/speech on first user interaction
+window.addEventListener("click", () => {
+  const dummy = new Audio();
+  dummy.play().catch(() => {});
+  initLangSelect();
+  loadVoices();
+}, { once: true });                           
 
 function formatTime(secs) {
   const m = Math.floor(secs / 60).toString().padStart(2, "0");
