@@ -15,21 +15,19 @@ class IllegalChess {
     const piece = this.chess.get(from);
     if (!piece || piece.color !== this.turn()) return null;
 
-    const legal = new Chess(this.chess.fen()).moves({ square: from, verbose: true });
-    const validMove = legal.find(m => m.to === to && (promotion ? m.promotion === promotion : true));
+    // ✅ Use legal: false to ignore check restrictions
+    const legal = new Chess(this.chess.fen()).moves({ square: from, verbose: true, legal: false });
+    const validMove = legal.find(m => m.to === to); // ← ✅ Fix: allow all normal moves
 
     if (!validMove) return null;
 
     const captured = this.chess.get(to);
-
-    // If it's a pawn reaching last rank, require promotion
     const isPromotion = piece.type === "p" && (to.endsWith("8") || to.endsWith("1"));
     const finalType = isPromotion ? (promotion || "q") : piece.type;
 
     this.chess.remove(from);
     this.chess.put({ type: finalType, color: piece.color }, to);
 
-    // Check if king was captured
     if (captured?.type === "k") this._kingCaptured = true;
 
     this._swapTurn();
@@ -48,7 +46,7 @@ class IllegalChess {
     const piece = this.chess.get(square);
     if (!piece || piece.color !== this.turn()) return [];
 
-    const legal = new Chess(this.chess.fen()).moves({ square, verbose: true });
+    const legal = new Chess(this.chess.fen()).moves({ square, verbose: true, legal: false });
 
     return verbose
       ? legal.map(m => ({ from: m.from, to: m.to, promotion: m.promotion }))
@@ -56,11 +54,11 @@ class IllegalChess {
   }
 
   in_check() {
-    return false; // Always false — no check logic
+    return false;
   }
 
   in_checkmate() {
-    return false; // Ignored
+    return false;
   }
 
   in_draw() {
@@ -68,7 +66,6 @@ class IllegalChess {
   }
 
   game_over() {
-    // Custom: if a king is missing, game ends
     const board = this.chess.board();
     let whiteKing = false;
     let blackKing = false;
