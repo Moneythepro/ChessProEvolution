@@ -45,7 +45,7 @@ function initLangSelect() {
   ).join("");
   langSelect.value = selectedLang;
 }
-
+console.log("✅ app.js loaded!");
 async function loadVoices() {
   const allVoices = await new Promise(resolve => {
     const tryLoad = () => {
