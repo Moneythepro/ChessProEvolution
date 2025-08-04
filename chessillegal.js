@@ -15,9 +15,13 @@ class IllegalChess {
     const piece = this.chess.get(from);
     if (!piece || piece.color !== this.turn()) return null;
 
-    // Always allow move, no legality check
+    const captured = this.chess.get(to); // Check capture before placing
+
+    // Move the piece manually
     this.chess.remove(from);
     this.chess.put({ type: promotion || piece.type, color: piece.color }, to);
+
+    // Swap turn manually
     this._swapTurn();
 
     return {
@@ -26,7 +30,7 @@ class IllegalChess {
       color: piece.color,
       piece: piece.type,
       promotion: promotion || undefined,
-      flags: this.chess.get(to) ? "c" : "", // capture flag if any
+      flags: captured ? "c" : "",
     };
   }
 
@@ -34,28 +38,37 @@ class IllegalChess {
     const piece = this.chess.get(square);
     if (!piece || piece.color !== this.turn()) return [];
 
-    // Allow movement to any empty or enemy-occupied square (excluding king overlap)
-    const all = [];
+    const validMoves = [];
 
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
         const to = "abcdefgh"[j] + (8 - i);
         if (to === square) continue;
+
         const target = this.chess.get(to);
         if (!target || target.color !== piece.color) {
-          all.push(verbose ? { from: square, to } : to);
+          validMoves.push(
+            verbose ? { from: square, to, promotion: "q" } : to
+          );
         }
       }
     }
 
-    return all;
+    return validMoves;
   }
 
+  // Override check functions: always false
   in_check() {
     return false;
   }
 
   in_checkmate() {
+    const currentTurn = this.chess.turn();
+    const tempChess = new Chess(this.chess.fen());
+
+    const moves = tempChess.moves({ verbose: true });
+    if (moves.length === 0 && tempChess.in_check()) return true;
+
     return false;
   }
 
@@ -64,7 +77,7 @@ class IllegalChess {
   }
 
   game_over() {
-    return false;
+    return this.in_checkmate() || this.in_draw();
   }
 
   board() {
