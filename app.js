@@ -626,6 +626,17 @@ function resetToStartMenu() {
   boardWrapper.style.display = "none";
   winnerModal.classList.remove("show");
 
+  // Hide captured box
+  if (typeof capturedBox !== "undefined") {
+    capturedBox.classList.remove("show");
+  }
+
+  // Clear captured pieces
+  const whiteCaptured = document.getElementById("whiteCaptured");
+  const blackCaptured = document.getElementById("blackCaptured");
+  if (whiteCaptured) whiteCaptured.innerHTML = "";
+  if (blackCaptured) blackCaptured.innerHTML = "";
+
   // Restore start menu to its original state
   startMenu.removeAttribute("style"); // remove inline styles so CSS takes over
 
