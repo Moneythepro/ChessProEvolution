@@ -71,6 +71,7 @@
           <div class="timer black">Black: <span id="blackTimer">10:00</span></div>
         </div>
       </div>
+      <button id="quitGameBtn" class="quit-button"><i data-lucide="log-out"></i> Quit Game</button>
     </div>
 
     <!-- ✅ Captured Pieces Container at bottom -->
@@ -88,11 +89,12 @@
     </label>
   </div>
 
-  <!-- Winner Modal -->
-  <div id="winnerModal" class="modal">
-    <h2 id="winnerText">Checkmate!</h2>
-    <button onclick="newGame()"><i data-lucide="rotate-ccw"></i> Play Again</button>
-  </div>
+<!-- Winner Modal -->
+<div id="winnerModal" class="modal">
+  <h2 id="winnerText">Checkmate!</h2>
+  <button onclick="newGame()"><i data-lucide="rotate-ccw"></i> Play Again</button>
+  <button onclick="resetToStartMenu()"><i data-lucide="home"></i> Main Menu</button>
+</div>
 
   <!-- Promotion Modal -->
   <div id="promotionModal" class="promotion-modal hidden">
