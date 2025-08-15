@@ -1,9 +1,11 @@
-// ✅ CLEAN app.js (AI features removed completely)
+// ✅ FULL FIXED app.js for IllegalChess support
 
 let game;
 let lastMove = null;
 let selectedSquare = null;
 let timerInterval = null;
+let selectedVoice = null;
+let selectedLang = "none";
 let whiteTimeLeft = 600;
 let blackTimeLeft = 600;
 let lastWhiteSeconds = 600;
@@ -18,6 +20,8 @@ const whiteCapturedEl = document.getElementById("whiteCaptured");
 const blackCapturedEl = document.getElementById("blackCaptured");
 const capturedPieces = { w: [], b: [] };
 const promotionModal = document.getElementById("promotionModal");
+const langSelect = document.getElementById("langSelect");
+const voiceSelect = document.getElementById("voiceSelect");
 const menuBtn = document.getElementById("menuBtn");
 const menuModal = document.getElementById("menuModal");
 const themeToggleMenu = document.getElementById("themeToggleMenu");
@@ -32,10 +36,110 @@ const boardEl = document.getElementById("board");
 const winnerText = document.getElementById("winnerText");
 const winnerModal = document.getElementById("winnerModal");
 
+const allowedLangs = [
+  { code: "none", label: "🚫 No Voice" },
+  { code: "en-US", label: "🇺🇸 English (US)" },
+  { code: "en-GB", label: "🇬🇧 English (UK)" },
+  { code: "hi-IN", label: "🇮🇳 Hindi" },
+  { code: "fr", label: "🇫🇷 French" },
+  { code: "de", label: "🇩🇪 German" },
+  { code: "es", label: "🇪🇸 Spanish" },
+  { code: "ja", label: "🇯🇵 Japanese" }
+];
+
+function initLangSelect() {
+  langSelect.innerHTML = allowedLangs
+    .map(lang => `<option value="${lang.code}">${lang.label}</option>`)
+    .join("");
+  langSelect.value = selectedLang;
+}
+
+async function loadVoices() {
+  return new Promise(resolve => {
+    let attempts = 0;
+    const tryLoad = () => {
+      const voices = speechSynthesis.getVoices();
+      if (voices.length || attempts >= 10) {
+        const filtered = voices.filter(v =>
+          allowedLangs.some(lang => lang.code !== "none" && v.lang.startsWith(lang.code))
+        );
+
+        voiceSelect.innerHTML = filtered
+          .map(v => `<option value="${v.name}" data-lang="${v.lang}">${v.name} (${v.lang})</option>`)
+          .join("");
+
+        if (selectedLang !== "none") {
+          const bestMatch = filtered.find(v =>
+            v.lang === selectedLang || v.lang.startsWith(selectedLang.split("-")[0])
+          );
+          selectedVoice = bestMatch || null;
+          if (selectedVoice) voiceSelect.value = selectedVoice.name;
+        } else {
+          selectedVoice = null;
+          voiceSelect.value = "";
+        }
+
+        resolve();
+      } else {
+        attempts++;
+        setTimeout(tryLoad, 200);
+      }
+    };
+    tryLoad();
+  });
+}
+
+function speakNarration(move) {
+  if (!move || selectedLang === "none" || !selectedVoice) return;
+
+  const from = move.from?.toUpperCase();
+  const to = move.to?.toUpperCase();
+  const color = move.color === "w" ? "White" : "Black";
+  const pieceMap = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen", k: "king" };
+  const piece = pieceMap[move.piece] || "piece";
+
+  const isCapture = Array.isArray(move.flags)
+    ? move.flags.includes("c")
+    : typeof move.flags === "string"
+      ? move.flags.includes("c")
+      : false;
+
+  let sentence = isCapture
+    ? `${color} ${piece} captured on ${to}`
+    : `${color} ${piece} moved from ${from} to ${to}`;
+
+  if (game.in_checkmate?.() && game.in_checkmate()) {
+    sentence += `. Checkmate! ${color} wins!`;
+  } else if (game.in_check?.() && game.in_check()) {
+    sentence += `. ${color} king is in check.`;
+  }
+
+  const lowTime = currentTimerColor === "w" ? whiteTimeLeft : blackTimeLeft;
+  if (lowTime <= 10) {
+    sentence += `. ${color} is running low on time.`;
+  }
+
+  try {
+    const utter = new SpeechSynthesisUtterance(sentence);
+    utter.voice = selectedVoice;
+    utter.lang = selectedVoice.lang || selectedLang;
+    utter.pitch = 1;
+    utter.rate = 1;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utter);
+  } catch (e) {
+    console.warn("Speech failed:", e);
+  }
+}
+
 function playSound(src, volume = 1) {
-  const audio = new Audio(src);
-  audio.volume = volume;
-  audio.play().catch(() => {});
+  try {
+    const audio = new Audio(src);
+    audio.volume = volume;
+    audio.play().catch(e => console.warn("Sound error:", e));
+  } catch (e) {
+    console.warn("Play sound failed:", e);
+  }
 }
 
 function playMoveFeedback() {
@@ -43,8 +147,18 @@ function playMoveFeedback() {
   navigator.vibrate?.([100]);
 }
 
+// 🔊 Unlock audio/speech on first user interaction
+window.addEventListener("click", () => {
+  const dummy = new Audio();
+  dummy.play().catch(() => {});
+  initLangSelect();
+  loadVoices();
+}, { once: true });                           
+
 function showPromotionModal(color) {
   promotionModal.classList.remove("hidden");
+
+  // Update icons to correct color
   const buttons = promotionModal.querySelectorAll("button");
   buttons.forEach(btn => {
     const type = btn.dataset.piece;
@@ -58,22 +172,28 @@ promotionModal.addEventListener("click", (e) => {
 
   const selectedPiece = btn.dataset.piece;
   pendingPromotion.promotion = selectedPiece;
+
   const from = pendingPromotion.from;
   const to = pendingPromotion.to;
 
-  const legalMove = game
-    .moves({ square: from, verbose: true })
-    .find(m => m.to === to && m.promotion === selectedPiece);
+  const movingPiece = game.get(from);
 
-  const wasCapture = legalMove && (
+  // 🟡 Find matching promotion move and check if it's a capture
+const legalMove = game
+  .moves({ square: from, verbose: true })
+  .find(m => m.to === to && m.promotion === selectedPiece);
+
+const wasCapture =
+  legalMove && (
     (Array.isArray(legalMove.flags) && legalMove.flags.includes("c")) ||
     (typeof legalMove.flags === "string" && legalMove.flags.includes("c"))
   );
 
-  const capturedTarget = wasCapture ? game.get(to) : null;
+const capturedTarget = wasCapture ? game.get(to) : null;
+  
   const played = game.move(pendingPromotion);
-
   if (played) {
+    // ✅ Register capture correctly on promotion
     if (wasCapture && capturedTarget && capturedTarget.type !== "k") {
       const capturerColor = capturedTarget.color === "w" ? "b" : "w";
       capturedPieces[capturerColor].push(capturedTarget);
@@ -84,6 +204,7 @@ promotionModal.addEventListener("click", (e) => {
     selectedSquare = null;
     legalMoves = [];
     playMoveFeedback();
+    speakNarration(played);
     renderBoard(true);
     updateStatus();
     currentTimerColor = game.turn();
@@ -100,6 +221,7 @@ function formatTime(secs) {
 }
 
 function updateStatus() {
+  // 🟨 Handle win by king capture in IllegalChess
   const board = game.board();
   let whiteKing = false;
   let blackKing = false;
@@ -123,6 +245,7 @@ function updateStatus() {
     return;
   }
 
+  // ✅ Standard checkmate logic for regular Chess mode
   if (game.in_checkmate()) {
     stopTimer();
     const loser = game.turn() === "w" ? "White" : "Black";
@@ -146,6 +269,12 @@ function updateStatus() {
   statusEl.textContent = `${game.turn() === "w" ? "White" : "Black"} to move`;
   statusEl.classList.add("pulse");
   setTimeout(() => statusEl.classList.remove("pulse"), 500);
+}
+
+function playSound(src, volume = 1) {
+  const audio = new Audio(src);
+  audio.volume = volume;
+  audio.play().catch(() => {});
 }
 
 function updateTimerUI() {
@@ -213,6 +342,7 @@ function handleSquareClick(i, j) {
     const to = square;
     const movingPiece = game.get(from);
 
+    // ⚠️ Abort if no piece or not your turn
     if (!movingPiece || movingPiece.color !== game.turn()) {
       selectedSquare = null;
       legalMoves = [];
@@ -220,6 +350,7 @@ function handleSquareClick(i, j) {
       return;
     }
 
+    // 🟨 Promotion detection (only valid if move is legal)
     const isPromotion =
       movingPiece.type === "p" &&
       ((movingPiece.color === "w" && to.endsWith("8")) ||
@@ -238,7 +369,6 @@ function handleSquareClick(i, j) {
     }
 
     const played = game.move({ from, to });
-
     if (played) {
       const captured = piece && piece.color !== movingPiece.color ? piece : null;
       if (captured && captured.type !== "k") {
@@ -251,10 +381,10 @@ function handleSquareClick(i, j) {
       selectedSquare = null;
       legalMoves = [];
       playMoveFeedback();
+      speakNarration(played);
       renderBoard(true);
       updateStatus();
       currentTimerColor = game.turn();
-
     } else {
       const fallback = selectedSquare !== square;
       selectedSquare = fallback ? square : null;
@@ -271,10 +401,12 @@ function handleSquareClick(i, j) {
 function updateCapturedUI() {
   whiteCapturedEl.innerHTML = "";
   blackCapturedEl.innerHTML = "";
+
   const pieceOrder = ["q", "r", "b", "n", "p"];
 
   function renderCaptured(color, container) {
     const grouped = {};
+
     capturedPieces[color].forEach(p => {
       grouped[p.type] = (grouped[p.type] || 0) + 1;
     });
@@ -284,6 +416,7 @@ function updateCapturedUI() {
         const wrapper = document.createElement("div");
         wrapper.className = "captured-piece";
         wrapper.title = `${grouped[type]} ${type}`;
+
         const img = document.createElement("img");
         img.src = `./pieces/${color}${type}.png`;
         wrapper.appendChild(img);
@@ -300,9 +433,45 @@ function updateCapturedUI() {
     });
   }
 
-  renderCaptured("w", blackCapturedEl);
-  renderCaptured("b", whiteCapturedEl);
+  renderCaptured("w", blackCapturedEl); // black captured white
+  renderCaptured("b", whiteCapturedEl); // white captured black
 }
+
+// 🟩 Promotion modal click handler
+promotionModal.addEventListener("click", (e) => {
+  const btn = e.target.closest("button");
+  if (!btn || !pendingPromotion) return;
+
+  const selectedPiece = btn.dataset.piece;
+  pendingPromotion.promotion = selectedPiece;
+
+  const from = pendingPromotion.from;
+  const to = pendingPromotion.to;
+  const movingPiece = game.get(from);
+  const targetPiece = game.get(to);
+
+  const played = game.move(pendingPromotion);
+  if (played) {
+    if (targetPiece && targetPiece.color !== movingPiece.color && targetPiece.type !== "k") {
+      const capturerColor = targetPiece.color === "w" ? "b" : "w";
+      capturedPieces[capturerColor].push(targetPiece);
+      capturedBox.style.display = "none"; // Optional: Hide before it starts again
+      updateCapturedUI();
+    }
+
+    lastMove = { from, to };
+    selectedSquare = null;
+    legalMoves = [];
+    playMoveFeedback();
+    speakNarration(played);
+    renderBoard(true);
+    updateStatus();
+    currentTimerColor = game.turn();
+  }
+
+  pendingPromotion = null;
+  promotionModal.classList.add("hidden");
+});
 
 function initBoard() {
   boardEl.innerHTML = "";
@@ -384,7 +553,9 @@ function decideWinnerByPoints() {
 }
 
 function newGame() {
-  game = new Chess();
+  const mode = document.getElementById("modeSelect")?.value || "pvp";
+  game = mode === "illegal" ? new IllegalChess() : new Chess();
+
   selectedSquare = null;
   lastMove = null;
   legalMoves = [];
@@ -394,13 +565,26 @@ function newGame() {
   whiteTimeLeft = blackTimeLeft = mins * 60;
   lastWhiteSeconds = lastBlackSeconds = mins * 60;
   selectedDuration = mins * 60;
+
   capturedPieces.w = [];
-  capturedPieces.b = [];
-  updateCapturedUI();
+capturedPieces.b = [];
+updateCapturedUI();
   initBoard();
   resetTimer();
   updateStatus();
 }
+
+// --- Event Listeners ---
+langSelect.addEventListener("change", async () => {
+  selectedLang = langSelect.value;
+  await loadVoices();
+});
+
+voiceSelect.addEventListener("change", () => {
+  const voiceName = voiceSelect.value;
+  const allVoices = speechSynthesis.getVoices();
+  selectedVoice = allVoices.find(v => v.name === voiceName) || null;
+});
 
 menuBtn.onclick = (e) => {
   e.stopPropagation();
@@ -423,11 +607,26 @@ startBtn.onclick = () => {
   newGame();
   startMenu.style.display = "none";
   document.getElementById("boardWrapper").style.display = "flex";
-  capturedBox.classList.add("show");
+  capturedBox.classList.add("show"); // ✅ Show with animation
 };
 
 function resetToStartMenu() {
   startMenu.style.display = "block";
-  document.getElementById("boardWrapper").style.display = "none";
-  capturedBox.classList.remove("show");
+  boardWrapper.style.display = "none";
+  capturedBox.classList.remove("show"); // ✅ Hide again
 }
+
+setTimeout(() => {
+  const box = document.getElementById("capturedContainer");
+  if (box) {
+    // box.style.border = "1px solid red"; // 🔴 REMOVE THIS LINE
+
+  }
+}, 1000);
+
+document.body.addEventListener("click", () => {
+  const dummy = new Audio();
+  dummy.play().catch(() => {});
+  initLangSelect();
+  loadVoices();
+}, { once: true });

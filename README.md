@@ -1,84 +1,111 @@
-# ♟️ ChessProEvolution™ – The Ultimate Chess Experience
 
-A powerful and visually striking chess game for browsers – featuring illegal mode, animated effects, text-to-speech, countdown timers, and PWA offline support.
+# ♟️ ChessProEvolution
 
-[🎮 Try Demo](https://chess-pro-evolution.vercel.app/)
+A powerful and modern web-based chess game with offline support, illegal mode, voice narration, timers, and more.
+
+[🎮 Live Demo](https://moneythepro.github.io/ChessProEvolution/)
 
 ![screenshot](https://moneythepro.github.io/ChessProEvolution/banner.png)
 
 ---
 
-## 🚀 Key Features
+## 🚀 Features
 
 - 🎮 **Game Modes**
   - Player vs Player (PvP)
-  - *Illegal Chess Mode* – Move any piece, ignore check/checkmate rules
+  - Illegal Chess Mode (any piece, any move, no check constraints)
+  
+- ⏱️ **Timers**
+  - Configurable countdown timers (10, 20, 30 mins)
+  - Time-based win via piece points
 
-- ⏱️ **Smart Timers**
-  - Countdown options (10, 20, 30 mins)
-  - Timer-based win via piece points if time runs out
+- 🗣️ **Move Narration**
+  - Multi-language text-to-speech (English, Hindi, French, etc.)
+  - Automatic voice selection by locale
 
-- 🗣️ **Narrated Moves**
-  - Multilingual text-to-speech
-  - Auto voice detection (English, Hindi, French, and more)
+- 🧠 **Advanced UI**
+  - Chess.com-style board with coordinates
+  - Piece animations and glow effects
+  - Winner modals with screen shake and vibration
 
-- ✨ **Dynamic UI Effects**
-  - Chess.com-style board with full coordinate labels
-  - Vibrant piece animations and glowing captures
-  - Pulse timers and winner screen with shake & FX
-
-- 📱 **Installable Web App (PWA)**
+- 📱 **PWA Support**
   - Works offline
-  - Mobile-first responsive layout
-  - Add to Home Screen for native-like use
+  - Add to Home Screen
+  - Fast and responsive
 
-- 🧩 **Compact 3-Dot Menu**
-  - Export/Import game positions
-  - Toggle narration
-  - Toggle move history (Coming Soon)
-
----
-
-## 📦 Deployment / Installation
-
-This project is **closed-source** and deployed via **Vercel**.
-
-To play the demo:
-
-1. Visit: [https://chessproevolution.vercel.app](https://chessproevolution.vercel.app)
-2. Click your browser’s **Install** or **"Add to Home Screen"** button
-3. Enjoy full offline play like a native chess app!
+- 🕹️ **3-Dot Menu**
+  - Export/import game
+  - Toggle move narration
+  - Toggle move history (coming soon)
 
 ---
 
-## 🔒 Licensing
+## 🛠️ Installation (Local Development)
 
-**ChessProEvolution™** is a **proprietary software product**.  
-All rights reserved © 2025 Moneythepro.
+```bash
+git clone https://github.com/Moneythepro/ChessProEvolution.git
+cd ChessProEvolution
 
-Redistribution, modification, reverse engineering, or commercial use is **strictly prohibited** without written permission.
+Then open index.html in any browser or use a static server like:
 
-To obtain a license for personal or commercial use, contact:  
-📧 **[moneythepro7@gmail.com]**
+npx serve .
 
----
-
-## 🗂️ Project Structure (for internal reference)
-
-├── index.html ├── style.css ├── app.js ├── illegalChess.js ├── manifest.json ├── service-worker.js ├── /pieces         # Chess piece images ├── /assets         # Sounds, icons, banner, etc.
 
 ---
 
-## 💡 Roadmap
+📦 PWA Installation
 
-- 🌐 Online Multiplayer (Coming Soon)
-- 💾 Game Save/Load System
-- 🎨 Theme selector & custom piece sets
-- 👤 User profiles & performance tracking
+You can install ChessProEvolution like an app:
+
+1. Open https://moneythepro.github.io/ChessProEvolution/
+
+
+2. Click the browser's install or "+" icon
+
+
+3. Enjoy it offline like a native app!
+
+
+
 
 ---
 
-## 👑 Developed by
+📂 Project Structure
 
-**@Moneythepro**  
-Crafted with ❤️ for chess lovers, creative coders, and next-gen strategy gaming.
+├── index.html
+├── style.css
+├── app.js
+├── illegalChess.js
+├── manifest.json
+├── service-worker.js
+├── /pieces         # Chess piece images
+├── /assets         # Optional: logo, banner, sounds
+
+
+---
+
+💡 Future Enhancements
+
+Online Multiplayer (Coming Soon)
+
+AI Mode (Stockfish-based)
+
+Save/Load games
+
+Custom themes & piece sets
+
+
+
+---
+
+📄 License
+
+This project is released under the MIT License.
+
+
+---
+
+🧠 Developed by
+
+@Moneythepro
+Made with ❤️ for fun, learning, and powerful chess experiments.
