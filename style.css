@@ -612,3 +612,73 @@ body.dark .menu-modal .menu-btn:hover {
   transform: scale(1.2);
   accent-color: var(--accent);
 }
+
+/* ===== HEADER TITLE DARK MODE ===== */
+body.dark header h1 {
+    color: var(--text);
+}
+
+/* ===== STATUS FLOATING BOX DARK MODE ===== */
+body.dark #status {
+    background: #333;
+    color: #fff;
+}
+
+/* ===== START MENU DARK MODE ===== */
+body.dark #startMenu {
+    background: linear-gradient(135deg, var(--board-light), #2a2a2a);
+    box-shadow: 0 10px 25px rgba(255, 255, 255, 0.05);
+}
+
+body.dark #startMenu h2 {
+    color: var(--text);
+    text-shadow: 0 1px 1px rgba(0,0,0,0.5);
+}
+
+body.dark #startMenu label {
+    color: var(--text);
+}
+
+body.dark #startMenu select,
+body.dark #startMenu input[type="checkbox"] {
+    background: #333;
+    border: 1px solid #555;
+    color: var(--text);
+}
+
+/* ===== TIMER BOXES DARK MODE ===== */
+body.dark .timer.white {
+    background: #ccc;
+    color: #000;
+}
+
+body.dark .timer.black {
+    background: #222;
+    color: #fff;
+}
+
+/* ===== CAPTURED PIECES CONTAINER DARK MODE ===== */
+body.dark #capturedContainer {
+    background: rgba(0, 120, 255, 0.15);
+    border: 1px solid rgba(0, 120, 255, 0.25);
+}
+
+body.dark .captured-piece .count {
+    background: #fff;
+    color: #000;
+}
+
+/* ===== MENU MODAL DARK MODE ===== */
+body.dark .menu-modal {
+    background: #2b2b2b;
+    border: 1px solid #444;
+}
+
+/* Keep quit button red in dark mode (already partially done) */
+body.dark .menu-modal .menu-btn {
+    background: #ff5555;
+}
+
+body.dark .menu-modal .menu-btn:hover {
+    background: #e64545;
+}
