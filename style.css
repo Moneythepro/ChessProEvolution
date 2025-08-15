@@ -373,89 +373,7 @@ header h1 {
   z-index: 1;
 }
 
-/* Menu Modal */
-.menu-modal {
-  position: absolute;
-  top: 3.2rem;
-  right: 1rem;
-  background: var(--bg);
-  border: 1px solid #ccc;
-  padding: 0.5rem;
-  display: none;
-  flex-direction: row;
-  gap: 0.4rem;
-  border-radius: 0.5rem;
-  z-index: 999;
-  box-shadow: none;
-}
 
-#menuModal.show {
-  display: flex;
-}
-
-.menu-modal label {
-  background: none;
-  border: none;
-  color: inherit;
-  font-size: 0.9rem;
-  text-align: left;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.menu-modal input[type="checkbox"] {
-  transform: scale(1.2);
-  accent-color: var(--accent);
-}
-
-/* Animations */
-@keyframes pulseGlow {
-  0% {
-    text-shadow: 0 0 10px rgba(255,255,255,0.5), 0 0 20px var(--accent);
-  }
-  50% {
-    text-shadow: 0 0 30px rgba(255,255,255,0.9), 0 0 50px var(--accent);
-  }
-  100% {
-    text-shadow: 0 0 10px rgba(255,255,255,0.5), 0 0 20px var(--accent);
-  }
-}
-
-@keyframes timerPulse {
-  0%, 100% {
-    box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 20px rgba(0, 191, 255, 0.8);
-  }
-}
-
-@keyframes lowTimePulse {
-  0%, 100% {
-    box-shadow: 0 0 10px rgba(255, 94, 94, 0.7);
-  }
-  50% {
-    box-shadow: 0 0 25px rgba(255, 94, 94, 1);
-  }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes bounceIn {
-  0% { transform: scale(0.5); opacity: 0; }
-  60% { transform: scale(1.2); opacity: 1; }
-  100% { transform: scale(1); }
-}
-
-@keyframes particles {
-  0% { background-position: 0 0, 10px 10px; }
-  100% { background-position: 40px 40px, 50px 50px; }
-}
 
 /* === MODERN HD START MENU STYLING === */
 #startMenu {
@@ -636,3 +554,61 @@ header h1 {
 }
 
 
+/* Menu Modal */
+.menu-modal {
+  position: absolute;
+  top: 3.2rem;
+  right: 1rem;
+  background: var(--bg);
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  display: none;
+  flex-direction: column; /* changed from row to column */
+  gap: 0.4rem;
+  border-radius: 0.5rem;
+  z-index: 999;
+  box-shadow: none;
+}
+
+#menuModal.show {
+  display: flex;
+}
+
+.menu-modal label,
+.menu-modal button {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Quit Game Button inside menu */
+.menu-modal .menu-btn {
+  background: #e53935;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.menu-modal .menu-btn:hover {
+  background: #c62828;
+}
+
+body.dark .menu-modal .menu-btn {
+  background: #ff5555;
+}
+
+body.dark .menu-modal .menu-btn:hover {
+  background: #e64545;
+}
+
+.menu-modal input[type="checkbox"] {
+  transform: scale(1.2);
+  accent-color: var(--accent);
+}
