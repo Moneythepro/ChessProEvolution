@@ -1,4 +1,4 @@
-// ✅ FULL FIXED app.js for IllegalChess support
+// ✅ FULL FIXED app.js for IllegalChess support (Optimized Audio + Narration Preload)
 
 let game;
 let lastMove = null;
@@ -54,6 +54,7 @@ function initLangSelect() {
   langSelect.value = selectedLang;
 }
 
+// 🎙 Preload voices once available
 async function loadVoices() {
   return new Promise(resolve => {
     let attempts = 0;
@@ -89,6 +90,32 @@ async function loadVoices() {
   });
 }
 
+speechSynthesis.onvoiceschanged = loadVoices;
+
+// 🔊 Audio Preload Cache
+const soundCache = {};
+
+function preloadSound(name, src, volume = 1) {
+  const audio = new Audio(src);
+  audio.volume = volume;
+  soundCache[name] = audio;
+}
+
+function playSound(name) {
+  const sound = soundCache[name];
+  if (!sound) return;
+  const clone = sound.cloneNode(); // allows overlapping plays
+  clone.volume = sound.volume;
+  clone.play().catch(e => console.warn("Sound error:", e));
+}
+
+function preloadAllSounds() {
+  preloadSound("move", "move.mp3", 0.8);
+  preloadSound("win", "win.mp3", 1.0);
+  preloadSound("draw", "draw.mp3", 1.0);
+}
+
+// 🎯 Narration with safer start
 function speakNarration(move) {
   if (!move || selectedLang === "none" || !selectedVoice) return;
 
@@ -125,32 +152,20 @@ function speakNarration(move) {
     utter.lang = selectedVoice.lang || selectedLang;
     utter.pitch = 1;
     utter.rate = 1;
-    speechSynthesis.cancel();
     speechSynthesis.speak(utter);
   } catch (e) {
     console.warn("Speech failed:", e);
   }
 }
 
-function playSound(src, volume = 1) {
-  try {
-    const audio = new Audio(src);
-    audio.volume = volume;
-    audio.play().catch(e => console.warn("Sound error:", e));
-  } catch (e) {
-    console.warn("Play sound failed:", e);
-  }
-}
-
 function playMoveFeedback() {
-  playSound("move.mp3", 0.8);
+  playSound("move");
   navigator.vibrate?.([100]);
 }
 
-// 🔊 Unlock audio/speech on first user interaction
+// 🔓 Unlock + Preload on first user action
 window.addEventListener("click", () => {
-  const dummy = new Audio();
-  dummy.play().catch(() => {});
+  preloadAllSounds();
   initLangSelect();
   loadVoices();
 }, { once: true });                           
