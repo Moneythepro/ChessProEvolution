@@ -58,7 +58,10 @@
       <!-- Hidden voice select -->
       <select id="voiceSelect" style="display: none;"></select>
 
-      <button id="startGameBtn"><i data-lucide="play"></i> Start Game</button>
+      <!-- ✅ Updated Start Button -->
+      <button id="startBtn" class="start-btn" data-original-class="start-btn">
+        <i class="icon-play"></i> Start Game
+      </button>
     </div>
 
     <!-- Game Area -->
@@ -80,21 +83,21 @@
     </div>
   </div>
 
-<!-- 3-dot Menu Modal -->
-<div id="menuModal" class="menu-modal vertical">
-  <label>
-    <input type="checkbox" id="themeToggleMenu" />
-    <i data-lucide="moon-star"></i> Theme
-  </label>
-  <button id="quitGameBtn" class="menu-btn"><i data-lucide="log-out"></i> Quit Game</button>
-</div>
+  <!-- 3-dot Menu Modal -->
+  <div id="menuModal" class="menu-modal vertical">
+    <label>
+      <input type="checkbox" id="themeToggleMenu" />
+      <i data-lucide="moon-star"></i> Theme
+    </label>
+    <button id="quitGameBtn" class="menu-btn"><i data-lucide="log-out"></i> Quit Game</button>
+  </div>
 
-<!-- Winner Modal -->
-<div id="winnerModal" class="modal">
-  <h2 id="winnerText">Checkmate!</h2>
-  <button onclick="newGame()"><i data-lucide="rotate-ccw"></i> Play Again</button>
-  <button onclick="resetToStartMenu()"><i data-lucide="home"></i> Main Menu</button>
-</div>
+  <!-- Winner Modal -->
+  <div id="winnerModal" class="modal">
+    <h2 id="winnerText">Checkmate!</h2>
+    <button onclick="newGame()"><i data-lucide="rotate-ccw"></i> Play Again</button>
+    <button onclick="resetToStartMenu()"><i data-lucide="home"></i> Main Menu</button>
+  </div>
 
   <!-- Promotion Modal -->
   <div id="promotionModal" class="promotion-modal hidden">
