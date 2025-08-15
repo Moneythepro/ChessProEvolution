@@ -1,5 +1,4 @@
 // ✅ FULL FIXED app.js for IllegalChess support
-// (Optimized Audio + Narration Preload + Instant Move Hooks + Cancel Safety)
 
 let game;
 let lastMove = null;
@@ -55,15 +54,14 @@ function initLangSelect() {
   langSelect.value = selectedLang;
 }
 
-// 🎙 Preload voices once available
+// 🎤 Load voices reliably for Hindi, US, UK
 async function loadVoices() {
   return new Promise(resolve => {
-    let attempts = 0;
     const tryLoad = () => {
       const voices = speechSynthesis.getVoices();
-      if (voices.length || attempts >= 10) {
+      if (voices.length) {
         const filtered = voices.filter(v =>
-          allowedLangs.some(lang => lang.code !== "none" && v.lang.startsWith(lang.code))
+          allowedLangs.some(lang => lang.code !== "none" && v.lang.toLowerCase().startsWith(lang.code.toLowerCase()))
         );
 
         voiceSelect.innerHTML = filtered
@@ -72,7 +70,8 @@ async function loadVoices() {
 
         if (selectedLang !== "none") {
           const bestMatch = filtered.find(v =>
-            v.lang === selectedLang || v.lang.startsWith(selectedLang.split("-")[0])
+            v.lang.toLowerCase() === selectedLang.toLowerCase() ||
+            v.lang.toLowerCase().startsWith(selectedLang.split("-")[0].toLowerCase())
           );
           selectedVoice = bestMatch || null;
           if (selectedVoice) voiceSelect.value = selectedVoice.name;
@@ -80,50 +79,56 @@ async function loadVoices() {
           selectedVoice = null;
           voiceSelect.value = "";
         }
-
         resolve();
       } else {
-        attempts++;
-        setTimeout(tryLoad, 200);
+        setTimeout(tryLoad, 150);
       }
     };
     tryLoad();
   });
 }
 
-speechSynthesis.onvoiceschanged = loadVoices;
+// 📢 Make sure we reload voices when available
+speechSynthesis.onvoiceschanged = () => {
+  loadVoices();
+};
 
-// 🔊 Audio Preload Cache
+// 🔊 Preload & reuse sounds to avoid delay/volume issues
 const soundCache = {};
-
-function preloadSound(name, src, volume = 1) {
+function preloadSound(key, src) {
   const audio = new Audio(src);
-  audio.volume = volume;
-  soundCache[name] = audio;
+  audio.preload = "auto";
+  audio.volume = 0.8; // consistent volume
+  soundCache[key] = audio;
+}
+function playSound(key) {
+  if (soundCache[key]) {
+    // Clone to allow overlapping plays
+    const sound = soundCache[key].cloneNode();
+    sound.volume = soundCache[key].volume;
+    sound.play().catch(e => console.warn("Sound error:", e));
+  }
 }
 
-function playSound(name) {
-  const sound = soundCache[name];
-  if (!sound) return;
-  const clone = sound.cloneNode(); // allows overlapping plays
-  clone.volume = sound.volume;
-  clone.play().catch(e => console.warn("Sound error:", e));
+// Preload move sound early
+preloadSound("move", "move.mp3");
+
+function playMoveFeedback() {
+  playSound("move");
+  navigator.vibrate?.([100]);
 }
 
-function preloadAllSounds() {
-  preloadSound("move", "move.mp3", 0.8);
-  preloadSound("win", "win.mp3", 1.0);
-  preloadSound("draw", "draw.mp3", 1.0);
-}
+// 🔊 Unlock audio/speech on first user interaction
+window.addEventListener("click", () => {
+  initLangSelect();
+  loadVoices();
+  // Force-play muted sound to unlock
+  const unlock = new Audio();
+  unlock.play().catch(() => {});
+}, { once: true });
 
-// 🎯 Narration with cancel safety
 function speakNarration(move) {
   if (!move || selectedLang === "none" || !selectedVoice) return;
-
-  // Stop current narration immediately if speaking
-  if (speechSynthesis.speaking) {
-    speechSynthesis.cancel();
-  }
 
   const from = move.from?.toUpperCase();
   const to = move.to?.toUpperCase();
@@ -158,35 +163,68 @@ function speakNarration(move) {
     utter.lang = selectedVoice.lang || selectedLang;
     utter.pitch = 1;
     utter.rate = 1;
+    speechSynthesis.cancel();
     speechSynthesis.speak(utter);
   } catch (e) {
     console.warn("Speech failed:", e);
   }
 }
 
-function playMoveFeedback() {
-  playSound("move");
-  navigator.vibrate?.([100]);
+
+function showPromotionModal(color) {
+  promotionModal.classList.remove("hidden");
+
+  // Update icons to correct color
+  const buttons = promotionModal.querySelectorAll("button");
+  buttons.forEach(btn => {
+    const type = btn.dataset.piece;
+    btn.querySelector("img").src = `./pieces/${color}${type}.png`;
+  });
 }
 
-// 🔓 Unlock + Preload on first user action
-window.addEventListener("click", () => {
-  preloadAllSounds();
-  initLangSelect();
-  loadVoices();
-}, { once: true });
+promotionModal.addEventListener("click", (e) => {
+  const btn = e.target.closest("button");
+  if (!btn || !pendingPromotion) return;
 
-// 🚀 Hook to trigger sound + narration instantly
-function handleMove(move) {
-  if (!move) return;
-  lastMove = move;
-  playMoveFeedback();
-  speakNarration(move);
-}
+  const selectedPiece = btn.dataset.piece;
+  pendingPromotion.promotion = selectedPiece;
 
-// Example usage in your move logic:
-// const move = game.move({...});
-// if (move) handleMove(move);                         
+  const from = pendingPromotion.from;
+  const to = pendingPromotion.to;
+
+  const movingPiece = game.get(from);
+
+  // 🟡 Find matching promotion move and check if it's a capture
+const legalMove = game
+  .moves({ square: from, verbose: true })
+  .find(m => m.to === to && m.promotion === selectedPiece);
+
+const wasCapture =
+  legalMove && (
+    (Array.isArray(legalMove.flags) && legalMove.flags.includes("c")) ||
+    (typeof legalMove.flags === "string" && legalMove.flags.includes("c"))
+  );
+
+const capturedTarget = wasCapture ? game.get(to) : null;
+  
+  const played = game.move(pendingPromotion);
+  if (played) {
+    // ✅ Register capture correctly on promotion
+    if (wasCapture && capturedTarget && capturedTarget.type !== "k") {
+      const capturerColor = capturedTarget.color === "w" ? "b" : "w";
+      capturedPieces[capturerColor].push(capturedTarget);
+      updateCapturedUI();
+    }
+
+    lastMove = { from, to };
+    selectedSquare = null;
+    legalMoves = [];
+    playMoveFeedback();
+    speakNarration(played);
+    renderBoard(true);
+    updateStatus();
+    currentTimerColor = game.turn();
+  }
 
 function showPromotionModal(color) {
   promotionModal.classList.remove("hidden");
