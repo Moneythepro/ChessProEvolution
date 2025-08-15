@@ -603,7 +603,8 @@ if (themeToggleMenu) {
   });
 }
 
-startBtn.onclick = () => {
+// Start Game
+document.getElementById("startGameBtn").onclick = () => {
   newGame();
   startMenu.style.display = "none";
   document.getElementById("boardWrapper").style.display = "flex";
@@ -624,12 +625,12 @@ function resetToStartMenu() {
   // Hide game UI
   boardWrapper.style.display = "none";
   winnerModal.classList.remove("show");
-  
+
   // Restore start menu to its original state
-  startMenu.removeAttribute("style"); // remove all inline styles so CSS takes over
+  startMenu.removeAttribute("style"); // remove inline styles so CSS takes over
 
   // Reset Start button to CSS defaults
-  const startBtn = document.getElementById("startBtn");
+  const startBtn = document.getElementById("startGameBtn");
   startBtn.removeAttribute("style"); // remove any inline size changes
   startBtn.className = startBtn.dataset.originalClass || startBtn.className; // restore original classes
 
