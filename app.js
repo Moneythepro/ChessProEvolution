@@ -1,4 +1,4 @@
-// ✅ FULL FIXED app.js for IllegalChess support (Optimized Audio + Narration Preload)
+// ✅ FULL FIXED app.js for IllegalChess support (Optimized Audio + Narration Preload + Instant Move Hooks)
 
 let game;
 let lastMove = null;
@@ -168,7 +168,15 @@ window.addEventListener("click", () => {
   preloadAllSounds();
   initLangSelect();
   loadVoices();
-}, { once: true });                           
+}, { once: true });
+
+/* 🚀 HOOK: Ensure instant sound + narration on every valid move */
+function handleMove(move) {
+  if (!move) return;
+  lastMove = move;
+  playMoveFeedback();
+  speakNarration(move);
+}                           
 
 function showPromotionModal(color) {
   promotionModal.classList.remove("hidden");
