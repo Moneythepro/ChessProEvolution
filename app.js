@@ -621,12 +621,31 @@ document.getElementById("quitGameBtn").onclick = () => {
 };
 
 function resetToStartMenu() {
-  stopTimer();
-  startMenu.style.display = "block";
-  document.getElementById("boardWrapper").style.display = "none";
-  capturedBox.classList.remove("show"); 
-  winnerModal.className = "";
-  game = null;
+  // Hide game UI
+  boardWrapper.style.display = "none";
+  winnerModal.classList.remove("show");
+  
+  // Show start menu
+  startMenu.style.display = "flex";
+  startMenu.style.flexDirection = "column";
+  startMenu.style.alignItems = "center";
+  startMenu.style.justifyContent = "center";
+
+  // Reset Start button size & styles
+  const startBtn = document.getElementById("startBtn");
+  startBtn.style.width = "";
+  startBtn.style.height = "";
+  startBtn.style.fontSize = "";
+  startBtn.classList.remove("expanded", "large", "active"); // remove any game-mode classes
+
+  // Reset any dynamic scaling applied during game
+  document.body.style.overflow = "";
+  document.body.style.touchAction = "";
+
+  // Optional: reset board/game state
+  if (typeof resetBoard === "function") {
+    resetBoard();
+  }
 }
 
 setTimeout(() => {
