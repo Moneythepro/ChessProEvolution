@@ -113,6 +113,11 @@ header h1 {
 }
 
 #startGameBtn {
+  display: inline-flex;       /* make button flex container */
+  align-items: center;        /* vertically center icon & text */
+  justify-content: center;    /* horizontally center content */
+  gap: 0.5rem;                /* spacing between icon and text */
+  
   padding: 0.5rem 1rem;
   border: none;
   background: var(--accent);
