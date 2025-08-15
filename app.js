@@ -625,20 +625,15 @@ function resetToStartMenu() {
   boardWrapper.style.display = "none";
   winnerModal.classList.remove("show");
   
-  // Show start menu
-  startMenu.style.display = "flex";
-  startMenu.style.flexDirection = "column";
-  startMenu.style.alignItems = "center";
-  startMenu.style.justifyContent = "center";
+  // Restore start menu to its original state
+  startMenu.removeAttribute("style"); // remove all inline styles so CSS takes over
 
-  // Reset Start button size & styles
+  // Reset Start button to CSS defaults
   const startBtn = document.getElementById("startBtn");
-  startBtn.style.width = "";
-  startBtn.style.height = "";
-  startBtn.style.fontSize = "";
-  startBtn.classList.remove("expanded", "large", "active"); // remove any game-mode classes
+  startBtn.removeAttribute("style"); // remove any inline size changes
+  startBtn.className = startBtn.dataset.originalClass || startBtn.className; // restore original classes
 
-  // Reset any dynamic scaling applied during game
+  // Reset body scroll/touch
   document.body.style.overflow = "";
   document.body.style.touchAction = "";
 
