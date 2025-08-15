@@ -1,6 +1,6 @@
 {
   "name": "Chess Pro Evolution",
-  "short_name": "Chess PE",
+  "short_name": "ChessProEvolution",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#1e1e2f",
