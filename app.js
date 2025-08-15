@@ -1,7 +1,6 @@
-// ✅ CLEAN app.js (voice narration features removed completely)
+// ✅ CLEAN app.js (AI features removed completely)
 
 let game;
-let gameMode = "ai";
 let lastMove = null;
 let selectedSquare = null;
 let timerInterval = null;
@@ -33,16 +32,6 @@ const boardEl = document.getElementById("board");
 const winnerText = document.getElementById("winnerText");
 const winnerModal = document.getElementById("winnerModal");
 
-async function getAIMove(fen) {
-  const response = await fetch("http://localhost:5000/getmove", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ fen })
-  });
-  const data = await response.json();
-  return data.move;
-}
-
 function playSound(src, volume = 1) {
   const audio = new Audio(src);
   audio.volume = volume;
@@ -56,7 +45,6 @@ function playMoveFeedback() {
 
 function showPromotionModal(color) {
   promotionModal.classList.remove("hidden");
-
   const buttons = promotionModal.querySelectorAll("button");
   buttons.forEach(btn => {
     const type = btn.dataset.piece;
@@ -267,11 +255,6 @@ function handleSquareClick(i, j) {
       updateStatus();
       currentTimerColor = game.turn();
 
-      // 🧠 AI move trigger
-      if (gameMode === "ai" && game.turn() === "b") {
-        setTimeout(requestAIMove, 500);
-      }
-
     } else {
       const fallback = selectedSquare !== square;
       selectedSquare = fallback ? square : null;
@@ -400,12 +383,8 @@ function decideWinnerByPoints() {
   navigator.vibrate?.([100, 100, 100]);
 }
 
-
 function newGame() {
-  const mode = document.getElementById("modeSelect")?.value || "pvp";
-  gameMode = mode;
-
-  game = mode === "illegal" ? new IllegalChess() : new Chess();
+  game = new Chess();
   selectedSquare = null;
   lastMove = null;
   legalMoves = [];
@@ -421,38 +400,6 @@ function newGame() {
   initBoard();
   resetTimer();
   updateStatus();
-}
-
-async function requestAIMove() {
-  if (!game || typeof game.fen !== "function") {
-    console.error("Game not initialized before AI request.");
-    return;
-  }
-
-  const fen = game.fen();
-  try {
-    const response = await fetch('http://localhost:5000/best-move', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fen }),
-    });
-
-    const data = await response.json();
-    if (data.move) {
-      const move = game.move(data.move);
-      if (move) {
-        lastMove = { from: move.from, to: move.to };
-        playMoveFeedback();
-        renderBoard(true);
-        updateStatus();
-        currentTimerColor = game.turn();
-      }
-    } else {
-      console.error("Invalid move from AI:", data);
-    }
-  } catch (err) {
-    console.error("AI server error:", err);
-  }
 }
 
 menuBtn.onclick = (e) => {
@@ -483,6 +430,4 @@ function resetToStartMenu() {
   startMenu.style.display = "block";
   document.getElementById("boardWrapper").style.display = "none";
   capturedBox.classList.remove("show");
-Box.classList.remove("show");
 }
-
