@@ -611,16 +611,17 @@ startBtn.onclick = () => {
 };
 
 function resetToStartMenu() {
+  stopTimer();
   startMenu.style.display = "block";
-  boardWrapper.style.display = "none";
-  capturedBox.classList.remove("show"); // ✅ Hide again
+  document.getElementById("boardWrapper").style.display = "none";
+  capturedBox.classList.remove("show"); 
+  winnerModal.className = "";
+  game = null;
 }
 
 setTimeout(() => {
   const box = document.getElementById("capturedContainer");
   if (box) {
-    // box.style.border = "1px solid red"; // 🔴 REMOVE THIS LINE
-
   }
 }, 1000);
 
