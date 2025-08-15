@@ -109,11 +109,14 @@
     </div>
   </div>
 
-  <!-- Scripts -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-  <script src="chessillegal.js" onerror="alert('❌ Failed to load chessillegal.js')"></script>
-  <script src="app.js" onerror="alert('❌ Failed to load app.js! Check file path or server config.')"></script>
+  <!-- Replace CDN with local -->
+<script src="vendor/lucide.min.js"></script>
+<script src="vendor/chess.min.js"></script>
 
+<!-- Keep your files local too -->
+<script src="chessillegal.js" onerror="alert('❌ Failed to load chessillegal.js')"></script>
+<script src="app.js" onerror="alert('❌ Failed to load app.js! Check file path or server config.')"></script>
+  
   <!-- Icons + Theme Toggle -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
