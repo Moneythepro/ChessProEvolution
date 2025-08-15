@@ -610,28 +610,15 @@ startBtn.onclick = () => {
   capturedBox.classList.add("show"); // ✅ Show with animation
 };
 
-// Quit Game button
+// Quit Game from menu modal
 document.getElementById("quitGameBtn").onclick = () => {
-  if (confirm("Do you want to quit the current game and return to the main menu?")) {
-    resetToStartMenu();
-  }
-};
-
-// Back button (browser/hardware) handling
-window.addEventListener("popstate", (event) => {
   if (boardWrapper.style.display === "flex") {
-    event.preventDefault();
     if (confirm("Do you want to quit the current game and return to the main menu?")) {
       resetToStartMenu();
-      history.pushState(null, "", location.href); // prevent going back out of app
-    } else {
-      history.pushState(null, "", location.href); // stay in game
+      menuModal.classList.remove("show");
     }
   }
-});
-
-// Push initial history state so popstate triggers
-history.pushState(null, "", location.href);
+};
 
 function resetToStartMenu() {
   stopTimer();
