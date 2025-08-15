@@ -1,5 +1,5 @@
 /* service-worker.js */
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const CACHE_NAME = `chess-pro-${CACHE_VERSION}`;
 const ASSETS = [
   "./",
@@ -15,7 +15,7 @@ const ASSETS = [
   "./firebase-config.js",
   "./chessillegal.js",
 
-  // Vendor JS locallly hosted
+  // Vendor JS locally hosted
   "./vendor/lucide.min.js",
   "./vendor/chess.min.js",
 
@@ -60,20 +60,23 @@ self.addEventListener("activate", event => {
   );
 });
 
-// Fetch: Use cache-first strategy with navigation fallback
+// Fetch: Offline-safe navigation + cache-first assets
 self.addEventListener("fetch", event => {
   const { request } = event;
-
   if (request.method !== 'GET') return;
 
   if (request.mode === 'navigate') {
     event.respondWith(
-      caches.match("./index.html").then(res => res || fetch(request))
+      caches.match("./index.html").then(cached => {
+        return cached || fetch(request).catch(() => caches.match("./index.html"));
+      })
     );
     return;
   }
 
   event.respondWith(
-    caches.match(request).then(cached => cached || fetch(request))
+    caches.match(request).then(cached => {
+      return cached || fetch(request);
+    })
   );
 });
