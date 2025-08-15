@@ -1,4 +1,5 @@
-// ✅ FULL FIXED app.js for IllegalChess support (Optimized Audio + Narration Preload + Instant Move Hooks)
+// ✅ FULL FIXED app.js for IllegalChess support
+// (Optimized Audio + Narration Preload + Instant Move Hooks + Cancel Safety)
 
 let game;
 let lastMove = null;
@@ -115,9 +116,14 @@ function preloadAllSounds() {
   preloadSound("draw", "draw.mp3", 1.0);
 }
 
-// 🎯 Narration with safer start
+// 🎯 Narration with cancel safety
 function speakNarration(move) {
   if (!move || selectedLang === "none" || !selectedVoice) return;
+
+  // Stop current narration immediately if speaking
+  if (speechSynthesis.speaking) {
+    speechSynthesis.cancel();
+  }
 
   const from = move.from?.toUpperCase();
   const to = move.to?.toUpperCase();
@@ -170,13 +176,17 @@ window.addEventListener("click", () => {
   loadVoices();
 }, { once: true });
 
-/* 🚀 HOOK: Ensure instant sound + narration on every valid move */
+// 🚀 Hook to trigger sound + narration instantly
 function handleMove(move) {
   if (!move) return;
   lastMove = move;
   playMoveFeedback();
   speakNarration(move);
-}                           
+}
+
+// Example usage in your move logic:
+// const move = game.move({...});
+// if (move) handleMove(move);                         
 
 function showPromotionModal(color) {
   promotionModal.classList.remove("hidden");
