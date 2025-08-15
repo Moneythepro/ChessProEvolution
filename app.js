@@ -226,61 +226,6 @@ const capturedTarget = wasCapture ? game.get(to) : null;
     currentTimerColor = game.turn();
   }
 
-function showPromotionModal(color) {
-  promotionModal.classList.remove("hidden");
-
-  // Update icons to correct color
-  const buttons = promotionModal.querySelectorAll("button");
-  buttons.forEach(btn => {
-    const type = btn.dataset.piece;
-    btn.querySelector("img").src = `./pieces/${color}${type}.png`;
-  });
-}
-
-promotionModal.addEventListener("click", (e) => {
-  const btn = e.target.closest("button");
-  if (!btn || !pendingPromotion) return;
-
-  const selectedPiece = btn.dataset.piece;
-  pendingPromotion.promotion = selectedPiece;
-
-  const from = pendingPromotion.from;
-  const to = pendingPromotion.to;
-
-  const movingPiece = game.get(from);
-
-  // 🟡 Find matching promotion move and check if it's a capture
-const legalMove = game
-  .moves({ square: from, verbose: true })
-  .find(m => m.to === to && m.promotion === selectedPiece);
-
-const wasCapture =
-  legalMove && (
-    (Array.isArray(legalMove.flags) && legalMove.flags.includes("c")) ||
-    (typeof legalMove.flags === "string" && legalMove.flags.includes("c"))
-  );
-
-const capturedTarget = wasCapture ? game.get(to) : null;
-  
-  const played = game.move(pendingPromotion);
-  if (played) {
-    // ✅ Register capture correctly on promotion
-    if (wasCapture && capturedTarget && capturedTarget.type !== "k") {
-      const capturerColor = capturedTarget.color === "w" ? "b" : "w";
-      capturedPieces[capturerColor].push(capturedTarget);
-      updateCapturedUI();
-    }
-
-    lastMove = { from, to };
-    selectedSquare = null;
-    legalMoves = [];
-    playMoveFeedback();
-    speakNarration(played);
-    renderBoard(true);
-    updateStatus();
-    currentTimerColor = game.turn();
-  }
-
   pendingPromotion = null;
   promotionModal.classList.add("hidden");
 });
