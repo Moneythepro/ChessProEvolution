@@ -1,13 +1,13 @@
-// voice.js — Handles voice narration and voice/ language selection
+// voice.js — Handles voice narration and voice/language selection
 
 const langSelect = document.getElementById("langSelect");
 const voiceSelect = document.getElementById("voiceSelect");
 
 const allowedLangs = [
   { code: "none", label: "🚫 No Voice" },
-  { code: "en‑US", label: "🇺🇸 English (US)" },
-  { code: "en‑GB", label: "🇬🇧 English (UK)" },
-  { code: "hi‑IN", label: "🇮🇳 Hindi" },
+  { code: "en-US", label: "🇺🇸 English (US)" },
+  { code: "en-GB", label: "🇬🇧 English (UK)" },
+  { code: "hi-IN", label: "🇮🇳 Hindi" },
   { code: "fr",   label: "🇫🇷 French" },
   { code: "de",   label: "🇩🇪 German" },
   { code: "es",   label: "🇪🇸 Spanish" },
@@ -24,42 +24,31 @@ function initLangSelect() {
   langSelect.value = selectedLang;
 }
 
-async function loadVoices() {
-  return new Promise(resolve => {
-    let attempts = 0;
-    const tryLoad = () => {
-      const voices = speechSynthesis.getVoices();
-      if (voices.length || attempts >= 10) {
-        const filtered = voices.filter(v =>
-          allowedLangs.some(l => l.code !== "none" && v.lang.startsWith(l.code))
-        );
-        voiceSelect.innerHTML = filtered
-          .map(v => `<option value="${v.name}" data‑lang="${v.lang}">${v.name} (${v.lang})</option>`)
-          .join("");
+function populateVoiceList() {
+  const voices = speechSynthesis.getVoices();
+  const filtered = voices.filter(v =>
+    allowedLangs.some(l => l.code !== "none" && v.lang.startsWith(l.code))
+  );
 
-        if (selectedLang !== "none") {
-          const bestMatch = filtered.find(v =>
-            v.lang === selectedLang || v.lang.startsWith(selectedLang.split("-")[0])
-          );
-          selectedVoice = bestMatch || null;
-          if (selectedVoice) voiceSelect.value = selectedVoice.name;
-        } else {
-          selectedVoice = null;
-          voiceSelect.value = "";
-        }
-        resolve();
-      } else {
-        attempts++;
-        setTimeout(tryLoad, 200);
-      }
-    };
-    tryLoad();
-  });
+  voiceSelect.innerHTML = filtered
+    .map(v => `<option value="${v.name}" data-lang="${v.lang}">${v.name} (${v.lang})</option>`)
+    .join("");
+
+  if (selectedLang !== "none") {
+    const bestMatch = filtered.find(v =>
+      v.lang === selectedLang || v.lang.startsWith(selectedLang.split("-")[0])
+    );
+    selectedVoice = bestMatch || null;
+    if (selectedVoice) voiceSelect.value = selectedVoice.name;
+  } else {
+    selectedVoice = null;
+    voiceSelect.value = "";
+  }
 }
 
-langSelect.addEventListener("change", async () => {
+langSelect.addEventListener("change", () => {
   selectedLang = langSelect.value;
-  await loadVoices();
+  populateVoiceList();
 });
 
 voiceSelect.addEventListener("change", () => {
@@ -104,3 +93,12 @@ function speakNarration(game, move, whiteTimeLeft, blackTimeLeft, currentTimerCo
   speechSynthesis.cancel();
   speechSynthesis.speak(utter);
 }
+
+// 🔹 Init voice options
+initLangSelect();
+
+// 🔹 Populate voices when available
+speechSynthesis.onvoiceschanged = populateVoiceList;
+
+// 🔹 Also call it immediately in case voices are already loaded
+populateVoiceList();
