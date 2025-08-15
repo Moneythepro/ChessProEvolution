@@ -667,3 +667,23 @@ document.body.addEventListener("click", () => {
   initLangSelect();
   loadVoices();
 }, { once: true });
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then((reg) => {
+          console.log('SW registered', reg);
+
+          // If a new SW takes control, reload once so new cache is used
+          let refreshing = false;
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (refreshing) return;
+            refreshing = true;
+            location.reload();
+          });
+        })
+        .catch((err) => console.error('SW registration failed:', err));
+    });
+  }
+</script>
