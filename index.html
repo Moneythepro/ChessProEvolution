@@ -71,7 +71,6 @@
           <div class="timer black">Black: <span id="blackTimer">10:00</span></div>
         </div>
       </div>
-      <button id="quitGameBtn" class="quit-button"><i data-lucide="log-out"></i> Quit Game</button>
     </div>
 
     <!-- ✅ Captured Pieces Container at bottom -->
@@ -81,13 +80,14 @@
     </div>
   </div>
 
-  <!-- 3-dot Menu Modal -->
-  <div id="menuModal" class="menu-modal">
-    <label>
-      <input type="checkbox" id="themeToggleMenu" />
-      <i data-lucide="moon-star"></i> Theme
-    </label>
-  </div>
+<!-- 3-dot Menu Modal -->
+<div id="menuModal" class="menu-modal vertical">
+  <label>
+    <input type="checkbox" id="themeToggleMenu" />
+    <i data-lucide="moon-star"></i> Theme
+  </label>
+  <button id="quitGameBtn" class="menu-btn"><i data-lucide="log-out"></i> Quit Game</button>
+</div>
 
 <!-- Winner Modal -->
 <div id="winnerModal" class="modal">
