@@ -72,22 +72,15 @@ async function loadVoices() {
         if (selectedLang !== "none") {
           let bestMatch = null;
 
-          // ✅ Prioritize Hindi exact match
-          if (selectedLang.toLowerCase() === "hi-in") {
+          // ✅ Prioritize exact matches
+          if (selectedLang.toLowerCase() === "hi-in")
             bestMatch = filtered.find(v => v.lang.toLowerCase() === "hi-in");
-          }
-
-          // ✅ Prioritize US English exact match
-          if (!bestMatch && selectedLang.toLowerCase() === "en-us") {
+          if (!bestMatch && selectedLang.toLowerCase() === "en-us")
             bestMatch = filtered.find(v => v.lang.toLowerCase() === "en-us");
-          }
-
-          // ✅ Prioritize UK English exact match
-          if (!bestMatch && selectedLang.toLowerCase() === "en-gb") {
+          if (!bestMatch && selectedLang.toLowerCase() === "en-gb")
             bestMatch = filtered.find(v => v.lang.toLowerCase() === "en-gb");
-          }
 
-          // Fallback: partial match on language code
+          // ✅ Fallback partial match
           if (!bestMatch) {
             bestMatch = filtered.find(v =>
               v.lang.toLowerCase() === selectedLang.toLowerCase() ||
@@ -96,9 +89,7 @@ async function loadVoices() {
           }
 
           selectedVoice = bestMatch || null;
-          if (selectedVoice) {
-            voiceSelect.value = selectedVoice.name;
-          }
+          if (selectedVoice) voiceSelect.value = selectedVoice.name;
         } else {
           selectedVoice = null;
           voiceSelect.value = "";
@@ -118,30 +109,26 @@ speechSynthesis.onvoiceschanged = () => {
   loadVoices();
 };
 
-// 📢 Make sure we reload voices when available
-speechSynthesis.onvoiceschanged = () => {
-  loadVoices();
-};
-
-// 🔊 Preload & reuse sounds to avoid delay/volume issues
+// 🔊 Preload & reuse sounds (no delay, consistent volume)
 const soundCache = {};
-function preloadSound(key, src) {
+function preloadSound(key, src, volume = 0.8) {
   const audio = new Audio(src);
   audio.preload = "auto";
-  audio.volume = 0.8; // consistent volume
+  audio.volume = volume;
   soundCache[key] = audio;
 }
 function playSound(key) {
   if (soundCache[key]) {
-    // Clone to allow overlapping plays
-    const sound = soundCache[key].cloneNode();
+    const sound = soundCache[key].cloneNode(); // allow overlapping
     sound.volume = soundCache[key].volume;
-    sound.play().catch(e => console.warn("Sound error:", e));
+    sound.play().catch(() => {});
   }
 }
 
-// Preload move sound early
-preloadSound("move", "move.mp3");
+// ✅ Preload all game sounds
+preloadSound("move", "move.mp3", 0.8);
+preloadSound("win", "win.mp3", 1.0);
+preloadSound("draw", "draw.mp3", 1.0);
 
 function playMoveFeedback() {
   playSound("move");
@@ -166,11 +153,9 @@ function speakNarration(move) {
   const pieceMap = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen", k: "king" };
   const piece = pieceMap[move.piece] || "piece";
 
-  const isCapture = Array.isArray(move.flags)
+  const isCapture = typeof move.flags === "string"
     ? move.flags.includes("c")
-    : typeof move.flags === "string"
-      ? move.flags.includes("c")
-      : false;
+    : Array.isArray(move.flags) && move.flags.includes("c");
 
   let sentence = isCapture
     ? `${color} ${piece} captured on ${to}`
@@ -200,13 +185,9 @@ function speakNarration(move) {
   }
 }
 
-
 function showPromotionModal(color) {
   promotionModal.classList.remove("hidden");
-
-  // Update icons to correct color
-  const buttons = promotionModal.querySelectorAll("button");
-  buttons.forEach(btn => {
+  promotionModal.querySelectorAll("button").forEach(btn => {
     const type = btn.dataset.piece;
     btn.querySelector("img").src = `./pieces/${color}${type}.png`;
   });
@@ -222,20 +203,12 @@ promotionModal.addEventListener("click", (e) => {
   const from = pendingPromotion.from;
   const to = pendingPromotion.to;
 
-  const movingPiece = game.get(from);
+  const legalMove = game
+    .moves({ square: from, verbose: true })
+    .find(m => m.to === to && m.promotion === selectedPiece);
 
-  // 🟡 Find matching promotion move and check if it's a capture
-const legalMove = game
-  .moves({ square: from, verbose: true })
-  .find(m => m.to === to && m.promotion === selectedPiece);
-
-const wasCapture =
-  legalMove && (
-    (Array.isArray(legalMove.flags) && legalMove.flags.includes("c")) ||
-    (typeof legalMove.flags === "string" && legalMove.flags.includes("c"))
-  );
-
-const capturedTarget = wasCapture ? game.get(to) : null;
+  const wasCapture = legalMove?.flags.includes("c");
+  const capturedTarget = wasCapture ? game.get(to) : null;
   
   const played = game.move(pendingPromotion);
   if (played) {
@@ -286,19 +259,19 @@ function updateStatus() {
     const winner = whiteKing ? "White" : "Black";
     winnerText.innerHTML = `<span>${winner} wins by king capture!</span>`;
     winnerModal.className = "show shake glow-" + winner.toLowerCase();
-    playSound("win.mp3", 1.0);
+    playSound("win");
     navigator.vibrate?.([200, 100, 200]);
     return;
   }
 
-  // ✅ Standard checkmate logic for regular Chess mode
+  // ✅ Standard checkmate logic
   if (game.in_checkmate()) {
     stopTimer();
     const loser = game.turn() === "w" ? "White" : "Black";
     const winner = loser === "White" ? "Black" : "White";
     winnerText.innerHTML = `<span>${winner} wins by checkmate!</span>`;
     winnerModal.className = "show shake glow-" + winner.toLowerCase();
-    playSound("win.mp3", 1.0);
+    playSound("win");
     navigator.vibrate?.([200, 100, 200]);
     return;
   }
@@ -307,7 +280,7 @@ function updateStatus() {
     stopTimer();
     winnerText.innerHTML = `<span>It's a draw!</span>`;
     winnerModal.className = "show glow-white";
-    playSound("draw.mp3", 1.0);
+    playSound("draw");
     navigator.vibrate?.([300]);
     return;
   }
@@ -315,12 +288,6 @@ function updateStatus() {
   statusEl.textContent = `${game.turn() === "w" ? "White" : "Black"} to move`;
   statusEl.classList.add("pulse");
   setTimeout(() => statusEl.classList.remove("pulse"), 500);
-}
-
-function playSound(src, volume = 1) {
-  const audio = new Audio(src);
-  audio.volume = volume;
-  audio.play().catch(() => {});
 }
 
 function updateTimerUI() {
