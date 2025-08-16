@@ -54,7 +54,7 @@ function initLangSelect() {
   langSelect.value = selectedLang;
 }
 
-// 🎤 Load voices reliably for Hindi, US, UK
+// 🎤 Load voices reliably with Hindi + US/UK prioritization
 async function loadVoices() {
   return new Promise(resolve => {
     const tryLoad = () => {
@@ -64,21 +64,46 @@ async function loadVoices() {
           allowedLangs.some(lang => lang.code !== "none" && v.lang.toLowerCase().startsWith(lang.code.toLowerCase()))
         );
 
+        // Fill voice selector
         voiceSelect.innerHTML = filtered
           .map(v => `<option value="${v.name}" data-lang="${v.lang}">${v.name} (${v.lang})</option>`)
           .join("");
 
         if (selectedLang !== "none") {
-          const bestMatch = filtered.find(v =>
-            v.lang.toLowerCase() === selectedLang.toLowerCase() ||
-            v.lang.toLowerCase().startsWith(selectedLang.split("-")[0].toLowerCase())
-          );
+          let bestMatch = null;
+
+          // ✅ Prioritize Hindi exact match
+          if (selectedLang.toLowerCase() === "hi-in") {
+            bestMatch = filtered.find(v => v.lang.toLowerCase() === "hi-in");
+          }
+
+          // ✅ Prioritize US English exact match
+          if (!bestMatch && selectedLang.toLowerCase() === "en-us") {
+            bestMatch = filtered.find(v => v.lang.toLowerCase() === "en-us");
+          }
+
+          // ✅ Prioritize UK English exact match
+          if (!bestMatch && selectedLang.toLowerCase() === "en-gb") {
+            bestMatch = filtered.find(v => v.lang.toLowerCase() === "en-gb");
+          }
+
+          // Fallback: partial match on language code
+          if (!bestMatch) {
+            bestMatch = filtered.find(v =>
+              v.lang.toLowerCase() === selectedLang.toLowerCase() ||
+              v.lang.toLowerCase().startsWith(selectedLang.split("-")[0].toLowerCase())
+            );
+          }
+
           selectedVoice = bestMatch || null;
-          if (selectedVoice) voiceSelect.value = selectedVoice.name;
+          if (selectedVoice) {
+            voiceSelect.value = selectedVoice.name;
+          }
         } else {
           selectedVoice = null;
           voiceSelect.value = "";
         }
+
         resolve();
       } else {
         setTimeout(tryLoad, 150);
@@ -87,6 +112,11 @@ async function loadVoices() {
     tryLoad();
   });
 }
+
+// 📢 Reload voices when available
+speechSynthesis.onvoiceschanged = () => {
+  loadVoices();
+};
 
 // 📢 Make sure we reload voices when available
 speechSynthesis.onvoiceschanged = () => {
