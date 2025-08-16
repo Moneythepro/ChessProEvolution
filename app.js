@@ -1,4 +1,4 @@
-// ✅ FULL FIXED app.js for IllegalChess support
+// ✅ FULL FIXED app.js for IllegalChess support (with Hindi/English narration + robust voice loader)
 
 let game;
 let lastMove = null;
@@ -54,41 +54,39 @@ function initLangSelect() {
   langSelect.value = selectedLang;
 }
 
+// 🌐 Normalize language codes (handles en_US vs en-US etc.)
+function normalizeLang(code) {
+  return code ? code.toLowerCase().replace("_", "-") : "";
+}
+
 // 🎤 Load voices reliably with Hindi + US/UK prioritization
 async function loadVoices() {
   return new Promise(resolve => {
     const tryLoad = () => {
       const voices = speechSynthesis.getVoices();
       if (voices.length) {
-        const filtered = voices.filter(v =>
-          allowedLangs.some(lang => lang.code !== "none" && v.lang.toLowerCase().startsWith(lang.code.toLowerCase()))
-        );
+        const filtered = voices.filter(v => {
+          const lang = normalizeLang(v.lang);
+          return allowedLangs.some(l =>
+            l.code !== "none" &&
+            (lang === normalizeLang(l.code) ||
+             lang.startsWith(l.code.split("-")[0]))
+          );
+        });
 
-        // Fill voice selector
+        // Fill dropdown
         voiceSelect.innerHTML = filtered
           .map(v => `<option value="${v.name}" data-lang="${v.lang}">${v.name} (${v.lang})</option>`)
           .join("");
 
         if (selectedLang !== "none") {
-          let bestMatch = null;
+          let bestMatch = filtered.find(v => normalizeLang(v.lang) === normalizeLang(selectedLang));
 
-          // ✅ Prioritize exact matches
-          if (selectedLang.toLowerCase() === "hi-in")
-            bestMatch = filtered.find(v => v.lang.toLowerCase() === "hi-in");
-          if (!bestMatch && selectedLang.toLowerCase() === "en-us")
-            bestMatch = filtered.find(v => v.lang.toLowerCase() === "en-us");
-          if (!bestMatch && selectedLang.toLowerCase() === "en-gb")
-            bestMatch = filtered.find(v => v.lang.toLowerCase() === "en-gb");
-
-          // ✅ Fallback partial match
           if (!bestMatch) {
-            bestMatch = filtered.find(v =>
-              v.lang.toLowerCase() === selectedLang.toLowerCase() ||
-              v.lang.toLowerCase().startsWith(selectedLang.split("-")[0].toLowerCase())
-            );
+            bestMatch = filtered.find(v => normalizeLang(v.lang).startsWith(selectedLang.split("-")[0].toLowerCase()));
           }
 
-          selectedVoice = bestMatch || null;
+          selectedVoice = bestMatch || filtered[0] || null;
           if (selectedVoice) voiceSelect.value = selectedVoice.name;
         } else {
           selectedVoice = null;
@@ -144,32 +142,55 @@ window.addEventListener("click", () => {
   unlock.play().catch(() => {});
 }, { once: true });
 
+// 🔊 Narration generator
 function speakNarration(move) {
   if (!move || selectedLang === "none" || !selectedVoice) return;
 
   const from = move.from?.toUpperCase();
   const to = move.to?.toUpperCase();
-  const color = move.color === "w" ? "White" : "Black";
-  const pieceMap = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen", k: "king" };
-  const piece = pieceMap[move.piece] || "piece";
+  const colorEn = move.color === "w" ? "White" : "Black";
+  const pieceMapEn = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen", k: "king" };
 
   const isCapture = typeof move.flags === "string"
     ? move.flags.includes("c")
     : Array.isArray(move.flags) && move.flags.includes("c");
 
-  let sentence = isCapture
-    ? `${color} ${piece} captured on ${to}`
-    : `${color} ${piece} moved from ${from} to ${to}`;
+  let sentence = "";
 
-  if (game.in_checkmate?.() && game.in_checkmate()) {
-    sentence += `. Checkmate! ${color} wins!`;
-  } else if (game.in_check?.() && game.in_check()) {
-    sentence += `. ${color} king is in check.`;
+  if (normalizeLang(selectedLang) === "hi-in") {
+    // ✅ Hindi translation
+    const pieceMapHi = { p: "प्यादा", n: "घोड़ा", b: "ऊँट", r: "हाथी", q: "वज़ीर", k: "राजा" };
+    const colorHi = move.color === "w" ? "सफ़ेद" : "काला";
+
+    sentence = isCapture
+      ? `${colorHi} ${pieceMapHi[move.piece]} ने ${to} पर मोहरा मारा`
+      : `${colorHi} ${pieceMapHi[move.piece]} ${from} से ${to} चला`;
+
+    if (game.in_checkmate?.() && game.in_checkmate()) {
+      sentence += `. मात! ${colorHi} जीत गया।`;
+    } else if (game.in_check?.() && game.in_check()) {
+      sentence += `. ${colorHi} राजा शह में है।`;
+    }
+
+  } else {
+    // ✅ Default English narration
+    const piece = pieceMapEn[move.piece] || "piece";
+    sentence = isCapture
+      ? `${colorEn} ${piece} captured on ${to}`
+      : `${colorEn} ${piece} moved from ${from} to ${to}`;
+
+    if (game.in_checkmate?.() && game.in_checkmate()) {
+      sentence += `. Checkmate! ${colorEn} wins!`;
+    } else if (game.in_check?.() && game.in_check()) {
+      sentence += `. ${colorEn} king is in check.`;
+    }
   }
 
   const lowTime = currentTimerColor === "w" ? whiteTimeLeft : blackTimeLeft;
   if (lowTime <= 10) {
-    sentence += `. ${color} is running low on time.`;
+    sentence += normalizeLang(selectedLang) === "hi-in"
+      ? `. ${move.color === "w" ? "सफ़ेद" : "काला"} समय ख़त्म होने वाला है।`
+      : `. ${colorEn} is running low on time.`;
   }
 
   try {
