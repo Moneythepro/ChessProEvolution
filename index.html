@@ -4,40 +4,39 @@
   <meta charset="UTF-8" />
   <meta
     name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
   />
-  <title>ChessProEvolution</title>
-  <link rel="manifest" href="manifest.json" />
+  <title>Chess Pro Evolution</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-  <div id="app">
+  <div id="shell">
+
     <!-- Header -->
-    <header class="centered-header">
-      <h1>𝐂𝐡𝐞𝐬𝐬 𝐏𝐫𝐨 𝐄𝐯𝐨𝐥𝐮𝐭𝐢𝐨𝐧</h1>
+    <header class="app-header">
+      <h1>Chess Pro Evolution</h1>
+      <button id="menuBtn" class="icon-btn" title="Menu">
+        <i data-lucide="more-horizontal"></i>
+      </button>
     </header>
 
-    <!-- 3-dot Menu Button -->
-    <button id="menuBtn" class="menu-button" title="Menu" aria-label="Menu">
-      <i data-lucide="more-horizontal"></i>
-    </button>
-
     <!-- Start Menu -->
-    <div id="startMenu" class="card">
-      <h2>Select Game Mode</h2>
+    <section id="startMenu" class="card">
+      <h2>Start a Game</h2>
 
-      <label>
-        Mode:
+      <label class="field">
+        <span>Mode</span>
         <select id="modeSelect">
-          <option value="pvp" selected>Player vs Player</option>
+          <option value="pvp" selected>Classic PvP</option>
           <option value="illegal">🚨 Illegal PvP</option>
-          <option value="illegal-ultra">🕶️ Illegal Ultra PvP (no hints)</option>
+          <option value="illegal-ultra">🕶️ Illigal Chess Ultra (no hints)</option>
         </select>
       </label>
 
-      <label>
-        Timer:
+      <label class="field">
+        <span>Timer</span>
         <select id="timerSelect">
           <option value="10" selected>10 Minutes</option>
           <option value="20">20 Minutes</option>
@@ -45,11 +44,11 @@
         </select>
       </label>
 
-      <label>
-        Language:
+      <label class="field">
+        <span>Voice</span>
         <select id="langSelect">
-          <option value="none">🚫 No Voice</option>
-          <option value="en-US" selected>🇺🇸 English (US)</option>
+          <option value="none" selected>🚫 No Voice</option>
+          <option value="en-US">🇺🇸 English (US)</option>
           <option value="en-GB">🇬🇧 English (UK)</option>
           <option value="hi-IN">🇮🇳 Hindi</option>
           <option value="fr">🇫🇷 French</option>
@@ -59,86 +58,88 @@
         </select>
       </label>
 
-      <!-- Hidden voice select (auto-filled) -->
+      <!-- Hidden, auto-filled voice list -->
       <select id="voiceSelect" style="display:none"></select>
 
-      <button id="startGameBtn" class="start-btn" data-original-class="start-btn">
-        <i data-lucide="play"></i> Start Game
+      <button id="startGameBtn" class="primary">
+        <i data-lucide="play"></i><span>Start Game</span>
+      </button>
+    </section>
+
+    <!-- Game Area -->
+    <section id="boardWrapper" class="board-wrapper" style="display:none;">
+      <div id="status" class="status-pill">White to move</div>
+
+      <div class="board-frame">
+        <div id="board" class="board"></div>
+      </div>
+
+      <div id="timers" class="timers">
+        <div class="timer white">White: <span id="whiteTimer">10:00</span></div>
+        <div class="timer black">Black: <span id="blackTimer">10:00</span></div>
+      </div>
+
+      <div id="capturedContainer" class="captured">
+        <div>
+          <span class="captured-label">White captured</span>
+          <div id="whiteCaptured" class="captured-row"></div>
+        </div>
+        <div>
+          <span class="captured-label">Black captured</span>
+          <div id="blackCaptured" class="captured-row"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Menu (3-dot) -->
+    <div id="menuModal" class="menu-modal">
+      <button id="themeToggleMenu" class="menu-item">
+        <i data-lucide="moon-star"></i><span>Toggle Theme</span>
+      </button>
+      <button id="quitGameBtn" class="menu-item danger">
+        <i data-lucide="log-out"></i><span>Quit Game</span>
       </button>
     </div>
 
-    <!-- Game Area -->
-    <div id="boardWrapper" style="display:none">
-      <div id="status" class="status-floating">Ready</div>
-      <div id="board"></div>
-      <div id="info">
-        <div id="timers">
-          <div class="timer white">White: <span id="whiteTimer">10:00</span></div>
-          <div class="timer black">Black: <span id="blackTimer">10:00</span></div>
+    <!-- Winner Modal -->
+    <div id="winnerModal" class="modal">
+      <div class="modal-card">
+        <div class="modal-icon"><i data-lucide="trophy"></i></div>
+        <h3 id="winnerText">Checkmate!</h3>
+        <div class="modal-actions">
+          <button id="playAgainBtn" class="primary ghost">
+            <i data-lucide="rotate-ccw"></i><span>Play Again</span>
+          </button>
+          <button id="mainMenuBtn" class="primary">
+            <i data-lucide="home"></i><span>Main Menu</span>
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Captured Pieces (top bar) -->
-    <div id="capturedContainer">
-      <div id="whiteCaptured" class="captured-row"></div>
-      <div id="blackCaptured" class="captured-row"></div>
-    </div>
-  </div>
-
-  <!-- 3-dot Menu Modal -->
-  <div id="menuModal" class="menu-modal vertical">
-    <label class="toggle">
-      <input type="checkbox" id="themeToggleMenu" />
-      <i data-lucide="moon-star"></i> Theme
-    </label>
-    <button id="quitGameBtn" class="menu-btn">
-      <i data-lucide="log-out"></i> Quit Game
-    </button>
-  </div>
-
-  <!-- Winner Modal -->
-  <div id="winnerModal" class="modal">
-    <div class="modal-content">
-      <h2 id="winnerText">Checkmate!</h2>
-      <div class="modal-actions">
-        <button class="btn primary" onclick="newGame()">
-          <i data-lucide="rotate-ccw"></i> Play Again
-        </button>
-        <button class="btn" onclick="resetToStartMenu()">
-          <i data-lucide="home"></i> Main Menu
-        </button>
+    <!-- Promotion Modal -->
+    <div id="promotionModal" class="sheet">
+      <div class="sheet-card">
+        <h4>Choose promotion</h4>
+        <div class="promotion-options">
+          <button data-piece="q"><img alt="Queen" /></button>
+          <button data-piece="r"><img alt="Rook" /></button>
+          <button data-piece="b"><img alt="Bishop" /></button>
+          <button data-piece="n"><img alt="Knight" /></button>
+        </div>
       </div>
     </div>
-    <div class="modal-backdrop"></div>
+
   </div>
 
-  <!-- Promotion Modal -->
-  <div id="promotionModal" class="promotion-modal hidden">
-    <div class="promotion-card">
-      <h3>Promote Pawn</h3>
-      <div class="promotion-options">
-        <button data-piece="q"><img alt="Queen" /></button>
-        <button data-piece="r"><img alt="Rook" /></button>
-        <button data-piece="b"><img alt="Bishop" /></button>
-        <button data-piece="n"><img alt="Knight" /></button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Libraries & App -->
+  <!-- Libs -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-  <script src="chessillegal.js" onerror="alert('❌ Failed to load chessillegal.js')"></script>
-  <script src="app.js" onerror="alert('❌ Failed to load app.js! Check file path or server config.')"></script>
+  <script src="chessillegal.js"></script>
+  <script src="app.js"></script>
 
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
-      const themeMenu = document.getElementById("themeToggleMenu");
-      themeMenu.checked = document.body.classList.contains("dark");
-      themeMenu.addEventListener("change", () => {
-        document.body.classList.toggle("dark", themeMenu.checked);
-      });
     });
   </script>
 </body>
