@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  />
   <title>ChessProEvolution</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="style.css" />
@@ -16,12 +19,12 @@
     </header>
 
     <!-- 3-dot Menu Button -->
-    <button id="menuBtn" class="menu-button" title="Menu">
+    <button id="menuBtn" class="menu-button" title="Menu" aria-label="Menu">
       <i data-lucide="more-horizontal"></i>
     </button>
 
     <!-- Start Menu -->
-    <div id="startMenu">
+    <div id="startMenu" class="card">
       <h2>Select Game Mode</h2>
 
       <label>
@@ -29,6 +32,7 @@
         <select id="modeSelect">
           <option value="pvp" selected>Player vs Player</option>
           <option value="illegal">🚨 Illegal PvP</option>
+          <option value="illegal-ultra">🕶️ Illegal Ultra PvP (no hints)</option>
         </select>
       </label>
 
@@ -47,7 +51,7 @@
           <option value="none">🚫 No Voice</option>
           <option value="en-US" selected>🇺🇸 English (US)</option>
           <option value="en-GB">🇬🇧 English (UK)</option>
-          <option value="hi">🇮🇳 Hindi</option>
+          <option value="hi-IN">🇮🇳 Hindi</option>
           <option value="fr">🇫🇷 French</option>
           <option value="es">🇪🇸 Spanish</option>
           <option value="de">🇩🇪 German</option>
@@ -55,17 +59,16 @@
         </select>
       </label>
 
-      <!-- Hidden voice select -->
-      <select id="voiceSelect" style="display: none;"></select>
+      <!-- Hidden voice select (auto-filled) -->
+      <select id="voiceSelect" style="display:none"></select>
 
-      <!-- ✅ Updated Start Button -->
       <button id="startGameBtn" class="start-btn" data-original-class="start-btn">
-  <i data-lucide="play"></i> Start Game
+        <i data-lucide="play"></i> Start Game
       </button>
     </div>
 
     <!-- Game Area -->
-    <div id="boardWrapper" style="display: none;">
+    <div id="boardWrapper" style="display:none">
       <div id="status" class="status-floating">Ready</div>
       <div id="board"></div>
       <div id="info">
@@ -76,7 +79,7 @@
       </div>
     </div>
 
-    <!-- ✅ Captured Pieces Container at bottom -->
+    <!-- Captured Pieces (top bar) -->
     <div id="capturedContainer">
       <div id="whiteCaptured" class="captured-row"></div>
       <div id="blackCaptured" class="captured-row"></div>
@@ -85,40 +88,52 @@
 
   <!-- 3-dot Menu Modal -->
   <div id="menuModal" class="menu-modal vertical">
-    <label>
+    <label class="toggle">
       <input type="checkbox" id="themeToggleMenu" />
       <i data-lucide="moon-star"></i> Theme
     </label>
-    <button id="quitGameBtn" class="menu-btn"><i data-lucide="log-out"></i> Quit Game</button>
+    <button id="quitGameBtn" class="menu-btn">
+      <i data-lucide="log-out"></i> Quit Game
+    </button>
   </div>
 
   <!-- Winner Modal -->
   <div id="winnerModal" class="modal">
-    <h2 id="winnerText">Checkmate!</h2>
-    <button onclick="newGame()"><i data-lucide="rotate-ccw"></i> Play Again</button>
-    <button onclick="resetToStartMenu()"><i data-lucide="home"></i> Main Menu</button>
+    <div class="modal-content">
+      <h2 id="winnerText">Checkmate!</h2>
+      <div class="modal-actions">
+        <button class="btn primary" onclick="newGame()">
+          <i data-lucide="rotate-ccw"></i> Play Again
+        </button>
+        <button class="btn" onclick="resetToStartMenu()">
+          <i data-lucide="home"></i> Main Menu
+        </button>
+      </div>
+    </div>
+    <div class="modal-backdrop"></div>
   </div>
 
   <!-- Promotion Modal -->
   <div id="promotionModal" class="promotion-modal hidden">
-    <div class="promotion-options">
-      <button data-piece="q"><img src="./pieces/wq.png" alt="Queen" /></button>
-      <button data-piece="r"><img src="./pieces/wr.png" alt="Rook" /></button>
-      <button data-piece="b"><img src="./pieces/wb.png" alt="Bishop" /></button>
-      <button data-piece="n"><img src="./pieces/wn.png" alt="Knight" /></button>
+    <div class="promotion-card">
+      <h3>Promote Pawn</h3>
+      <div class="promotion-options">
+        <button data-piece="q"><img alt="Queen" /></button>
+        <button data-piece="r"><img alt="Rook" /></button>
+        <button data-piece="b"><img alt="Bishop" /></button>
+        <button data-piece="n"><img alt="Knight" /></button>
+      </div>
     </div>
   </div>
 
-  <!-- Scripts -->
+  <!-- Libraries & App -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
   <script src="chessillegal.js" onerror="alert('❌ Failed to load chessillegal.js')"></script>
   <script src="app.js" onerror="alert('❌ Failed to load app.js! Check file path or server config.')"></script>
 
-  <!-- Icons + Theme Toggle -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       lucide.createIcons();
-
       const themeMenu = document.getElementById("themeToggleMenu");
       themeMenu.checked = document.body.classList.contains("dark");
       themeMenu.addEventListener("change", () => {
