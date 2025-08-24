@@ -1,12 +1,124 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ChessProEvolution</title>
-  <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="style.css" />
+  <title>ChessProEvolution — Single File</title>
+
+  <!-- Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* ===== CSS (from your combined styles) ===== */
+
+    /* Reset + Base */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { overflow: hidden; touch-action: none; height:100%; }
+    :root{
+      --bg: #f0f0f0; --text: #111; --accent: #3b82f6;
+      --board-light: #eeeed2; --board-dark: #769656;
+      --selected: #a3c4f3; --last-move: #f6f669; --check: #ff6b6b;
+    }
+    body.dark{
+      --bg:#1e1e2f; --text:#fff; --board-light:#baca44; --board-dark:#445533;
+      --selected:#7fa7f3; --last-move:#c2c258; --check:#ff4f4f;
+    }
+
+    body { font-family: sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; justify-content: center; padding: 1rem; }
+
+    /* App Layout */
+    #app { max-width: 600px; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+
+    /* Header */
+    header { position: fixed; top: 1rem; left: 1rem; z-index: 10; display:flex; align-items:center; gap:.5rem;}
+    header h1 { font-size: 1.4rem; color: #000; font-weight: bold; }
+
+    /* Floating 3-dot Menu Button */
+    .menu-button { position: fixed; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; z-index: 1000; color: var(--text); }
+
+    /* Start Menu */
+    #startMenu {
+      background: linear-gradient(135deg, var(--board-light), #fff);
+      padding: 2rem 1.5rem;
+      border-radius: 1.5rem;
+      display: flex; flex-direction: column; gap: 1.2rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1); width:100%;
+      max-width: 600px;
+    }
+    #startMenu h2 { text-align:center; font-size:1.5rem; font-weight:bold; color:var(--text); }
+    #startMenu label { display:flex; flex-direction:column; gap:.4rem; font-size:.95rem; color:var(--text); }
+    #startMenu select, #startMenu input[type="checkbox"] { padding:.5rem; border:1px solid #ccc; border-radius:.4rem; font-size:1rem; background:white; color:var(--text); }
+    #startGameBtn { padding:.75rem 1.5rem; border:none; background: linear-gradient(to right,var(--accent),#00bfff); color:white; font-weight:bold; font-size:1.1rem; border-radius:.8rem; cursor:pointer; box-shadow:0 4px 15px rgba(0,191,255,0.4); }
+
+    /* Board Wrapper */
+    #boardWrapper { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.75rem; position:relative; width:100%; max-width:600px; }
+
+    /* Floating Status */
+    #status { position:absolute; top:-2rem; font-size:.9rem; font-weight:bold; background:#000; color:#fff; padding:.3rem 1rem; border-radius:1rem; z-index:10; }
+
+    /* Board */
+    #board { display:grid; grid-template-columns:repeat(8,1fr); aspect-ratio:1; width:100%; max-width:100%; border:3px solid var(--board-dark); border-radius:1rem; overflow:hidden; }
+    .square { position:relative; width:100%; aspect-ratio:1; display:flex; align-items:center; justify-content:center; }
+    .square.light { background: var(--board-light); }
+    .square.dark  { background: var(--board-dark); }
+    .square img.piece { width:85%; height:85%; object-fit:contain; pointer-events:none; animation: pieceEntry 0.2s ease; transition:transform .1s; }
+    .square.selected { outline:3px solid var(--selected); }
+    .square.last-move { background: var(--last-move); }
+    .square.check { background: var(--check); }
+    .square.legal::after {
+      content: '';
+      position:absolute;
+      width:30%; height:30%;
+      background: rgba(0,0,0,0.2);
+      border-radius:50%;
+    }
+
+    .rank-label, .file-label { position:absolute; font-size:0.6rem; color:var(--text); pointer-events:none; }
+    .rank-label { top:2px; left:2px; }
+    .file-label { bottom:2px; right:2px; }
+
+    /* Timers */
+    #timers { display:flex; justify-content:center; align-items:center; gap:12rem; margin-top:.6rem; width:100%; box-sizing:border-box; }
+    .timer { position:relative; display:inline-flex; align-items:center; justify-content:center; gap:.3rem; font-size:.8rem; padding:.2rem .6rem; border-radius:.5rem; font-weight:bold; border:2px solid #000; min-width:90px; text-align:center; transition:all .3s; overflow:hidden; }
+    .timer::after { content:''; position:absolute; bottom:0; left:0; height:4px; background:var(--accent); width:var(--progress,100%); transition:width 1s linear; }
+    .timer.white { background:#fff; color:#000; }
+    .timer.black { background:#000; color:#fff; }
+    .timer.active { box-shadow:0 0 15px rgba(0,191,255,.8); border-color:#00bfff; z-index:2; }
+    .timer.low-time { animation: lowTimePulse 1s ease-in-out infinite; border-color:#ff5e5e; box-shadow:0 0 12px rgba(255,94,94,.8); color:#fff !important; }
+    @keyframes lowTimePulse { 0%,100%{ box-shadow:0 0 10px rgba(255,94,94,.7);} 50%{ box-shadow:0 0 25px rgba(255,94,94,1);} }
+
+    /* Winner modal */
+    #winnerModal { display:none; position:fixed; inset:0; background: radial-gradient(circle at center, rgba(0,0,0,.95), rgba(0,0,0,1)); color:white; z-index:1000; flex-direction:column; justify-content:center; align-items:center; text-align:center; overflow:hidden; }
+    #winnerModal.show { display:flex; }
+    #winnerText { font-size:2.8rem; font-weight:bold; position:relative; animation:pulseGlow 1.5s infinite; text-shadow:0 0 10px #fff, 0 0 20px var(--accent), 0 0 40px var(--accent); z-index:2; }
+    #winnerModal button { margin-top:2rem; padding:.8rem 2rem; font-size:1.2rem; background: linear-gradient(135deg, var(--accent), #00bfff); border:none; color:white; font-weight:bold; border-radius:1rem; cursor:pointer; box-shadow:0 0 25px rgba(0,191,255,0.6); }
+
+    /* Promotion modal */
+    .promotion-modal { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background: rgba(40,40,40,.95); padding:1rem; border-radius:1rem; box-shadow:0 0 30px rgba(255,255,255,.2); z-index:9999; display:flex; align-items:center; justify-content:center; }
+    .promotion-modal.hidden { display:none; }
+    .promotion-options { display:flex; gap:.5rem; }
+    .promotion-options button { background:none; border:none; cursor:pointer; padding:.25rem; transition:transform .2s ease; }
+    .promotion-options button:hover { transform:scale(1.2); }
+    .promotion-options img { width:50px; height:50px; pointer-events:none; }
+
+    /* Captured container */
+    #capturedContainer { position:absolute; top:80px; left:12px; right:12px; justify-content:space-between; align-items:center; padding:6px 12px; background: rgba(0,120,255,.25); backdrop-filter: blur(8px); border:1px solid rgba(0,120,255,.3); border-radius:8px; box-sizing:border-box; z-index:5; pointer-events:none; opacity:0; transform:translateY(20px); transition:all .4s ease; display:flex; }
+    #capturedContainer.show { opacity:1; transform:translateY(0); }
+    .captured-row { display:flex; gap:6px; flex-wrap:wrap; align-items:center; pointer-events:auto; min-height:30px; }
+    .captured-piece img { width:28px; height:28px; pointer-events:none; }
+    .captured-piece .count { position:absolute; bottom:-5px; right:-6px; font-size:11px; background:#000; color:#fff; padding:1px 4px; border-radius:6px; font-weight:bold; }
+
+    /* Menu modal */
+    .menu-modal { position:absolute; top:3.2rem; right:1rem; background:var(--bg); border:1px solid #ccc; padding:.5rem; display:none; flex-direction:column; gap:.4rem; border-radius:.5rem; z-index:999; }
+    #menuModal.show { display:flex; }
+    .menu-modal label, .menu-modal button { background:none; border:none; color:inherit; font-size:.9rem; text-align:left; cursor:pointer; display:flex; align-items:center; gap:.5rem; }
+    .menu-modal .menu-btn { background:#e53935; color:white; padding:6px 10px; border-radius:6px; }
+    .menu-modal .menu-btn:hover { background:#c62828; }
+
+    /* small helpers */
+    @keyframes pieceEntry { from { transform: translateY(-6px) scale(.98); opacity:0 } to { transform: none; opacity:1 } }
+    @keyframes pulseGlow { 0% { transform:translateY(0) } 50%{ transform:translateY(-4px)} 100% { transform:translateY(0)} }
+  </style>
 </head>
 <body>
   <div id="app">
@@ -29,6 +141,7 @@
         <select id="modeSelect">
           <option value="pvp" selected>Player vs Player</option>
           <option value="illegal">🚨 Illegal PvP</option>
+          <option value="illegal-ultra">🚨 Illegal Ultra (no hints)</option>
         </select>
       </label>
 
@@ -47,7 +160,7 @@
           <option value="none">🚫 No Voice</option>
           <option value="en-US" selected>🇺🇸 English (US)</option>
           <option value="en-GB">🇬🇧 English (UK)</option>
-          <option value="hi">🇮🇳 Hindi</option>
+          <option value="hi-IN">🇮🇳 Hindi</option>
           <option value="fr">🇫🇷 French</option>
           <option value="es">🇪🇸 Spanish</option>
           <option value="de">🇩🇪 German</option>
@@ -58,9 +171,9 @@
       <!-- Hidden voice select -->
       <select id="voiceSelect" style="display: none;"></select>
 
-      <!-- ✅ Updated Start Button -->
+      <!-- Start Button -->
       <button id="startGameBtn" class="start-btn" data-original-class="start-btn">
-  <i data-lucide="play"></i> Start Game
+        <i data-lucide="play"></i> Start Game
       </button>
     </div>
 
@@ -76,7 +189,7 @@
       </div>
     </div>
 
-    <!-- ✅ Captured Pieces Container at bottom -->
+    <!-- Captured Pieces Container -->
     <div id="capturedContainer">
       <div id="whiteCaptured" class="captured-row"></div>
       <div id="blackCaptured" class="captured-row"></div>
@@ -109,22 +222,612 @@
     </div>
   </div>
 
-  <!-- Scripts -->
+  <!-- Captured / audio resources are expected in same folder (move.mp3, win.mp3, draw.mp3, ./pieces/*) -->
+
+  <!-- chess.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-  <script src="chessillegal.js" onerror="alert('❌ Failed to load chessillegal.js')"></script>
-  <script src="app.js" onerror="alert('❌ Failed to load app.js! Check file path or server config.')"></script>
 
-  <!-- Icons + Theme Toggle -->
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      lucide.createIcons();
+    /**************************************************
+     * IllegalChess (illegal moves allowed, ignores checks)
+     **************************************************/
+    class IllegalChess {
+      constructor() {
+        this.chess = new Chess();
+        this._kingCaptured = false;
+      }
 
-      const themeMenu = document.getElementById("themeToggleMenu");
-      themeMenu.checked = document.body.classList.contains("dark");
-      themeMenu.addEventListener("change", () => {
-        document.body.classList.toggle("dark", themeMenu.checked);
+      turn() { return this.chess.turn(); }
+      get(square) { return this.chess.get(square); }
+
+      move({ from, to, promotion }) {
+        const piece = this.chess.get(from);
+        if (!piece || piece.color !== this.turn()) return null;
+
+        // allow moves ignoring check restrictions
+        const probe = new Chess(this.chess.fen());
+        const legal = probe.moves({ square: from, verbose: true, legal: false });
+        const validMove = legal.find(m => m.to === to && (promotion ? m.promotion === promotion : true));
+        if (!validMove) return null;
+
+        const captured = this.chess.get(to);
+        const isPromotion = piece.type === "p" && (to.endsWith("8") || to.endsWith("1"));
+        const finalType = isPromotion ? (promotion || "q") : piece.type;
+
+        this.chess.remove(from);
+        this.chess.put({ type: finalType, color: piece.color }, to);
+
+        if (captured?.type === "k") this._kingCaptured = true;
+
+        this._swapTurn();
+
+        return {
+          from,
+          to,
+          color: piece.color,
+          piece: piece.type,
+          promotion: isPromotion ? finalType : undefined,
+          flags: captured ? "c" : "",
+        };
+      }
+
+      moves({ square, verbose }) {
+        const piece = this.chess.get(square);
+        if (!piece || piece.color !== this.turn()) return [];
+        const legal = new Chess(this.chess.fen()).moves({ square, verbose: true, legal: false });
+        return verbose ? legal.map(m => ({ from: m.from, to: m.to, promotion: m.promotion, flags: m.flags })) : legal.map(m => m.to);
+      }
+
+      in_check() { return false; }
+      in_checkmate() { return false; }
+      in_draw() { return this.chess.in_draw(); }
+
+      game_over() {
+        const board = this.chess.board();
+        let whiteKing = false, blackKing = false;
+        for (const row of board) for (const cell of row) {
+          if (cell?.type === 'k') cell.color === 'w' ? whiteKing = true : blackKing = true;
+        }
+        return !whiteKing || !blackKing || this.chess.in_draw();
+      }
+
+      board() { return this.chess.board(); }
+      fen() { return this.chess.fen(); }
+
+      _swapTurn() {
+        const parts = this.chess.fen().split(" ");
+        parts[1] = parts[1] === "w" ? "b" : "w";
+        this.chess.load(parts.join(" "));
+      }
+    }
+
+    /**************************************************
+     * App State
+     **************************************************/
+    let game = null;
+    let gameMode = 'pvp'; // 'pvp' | 'illegal' | 'illegal-ultra'
+    let lastMove = null;
+    let selectedSquare = null;
+    let timerInterval = null;
+    let selectedVoice = null;
+    let selectedLang = "none";
+    let whiteTimeLeft = 600;
+    let blackTimeLeft = 600;
+    let currentTimerColor = "w";
+    let selectedDuration = 600;
+    let legalMoves = [];
+    let boardSquares = [];
+    let pendingPromotion = null;
+    const capturedPieces = { w: [], b: [] };
+
+    // DOM
+    const whiteCapturedEl = () => document.getElementById("whiteCaptured");
+    const blackCapturedEl = () => document.getElementById("blackCaptured");
+    const promotionModal = () => document.getElementById("promotionModal");
+    const langSelect = () => document.getElementById("langSelect");
+    const voiceSelect = () => document.getElementById("voiceSelect");
+    const menuBtn = () => document.getElementById("menuBtn");
+    const menuModal = () => document.getElementById("menuModal");
+    const themeToggleMenu = () => document.getElementById("themeToggleMenu");
+    const startBtn = () => document.getElementById("startGameBtn");
+    const capturedBox = () => document.getElementById("capturedContainer");
+    const startMenu = () => document.getElementById("startMenu");
+    const timerSelect = () => document.getElementById("timerSelect");
+    const statusEl = () => document.getElementById("status");
+    const whiteTimerEl = () => document.getElementById("whiteTimer");
+    const blackTimerEl = () => document.getElementById("blackTimer");
+    const boardEl = () => document.getElementById("board");
+    const winnerText = () => document.getElementById("winnerText");
+    const winnerModal = () => document.getElementById("winnerModal");
+    const modeSelect = () => document.getElementById("modeSelect");
+    const boardWrapper = () => document.getElementById("boardWrapper");
+
+    // languages allowed for voice selection
+    const allowedLangs = [
+      { code: "none", label: "🚫 No Voice" },
+      { code: "en-US", label: "🇺🇸 English (US)" },
+      { code: "en-GB", label: "🇬🇧 English (UK)" },
+      { code: "hi-IN", label: "🇮🇳 Hindi" },
+      { code: "fr", label: "🇫🇷 French" },
+      { code: "de", label: "🇩🇪 German" },
+      { code: "es", label: "🇪🇸 Spanish" },
+      { code: "ja", label: "🇯🇵 Japanese" }
+    ];
+
+    function normalizeLang(code) {
+      return code ? code.toLowerCase().replace("_", "-") : "";
+    }
+
+    async function loadVoices() {
+      return new Promise(resolve => {
+        const tryLoad = () => {
+          const voices = speechSynthesis.getVoices();
+          if (voices.length) {
+            const filtered = voices.filter(v => {
+              const lang = normalizeLang(v.lang);
+              return allowedLangs.some(l => l.code !== "none" && (lang === normalizeLang(l.code) || lang.startsWith(l.code.split("-")[0])));
+            });
+
+            voiceSelect().innerHTML = filtered
+              .map(v => `<option value="${v.name}" data-lang="${v.lang}">${v.name} (${v.lang})</option>`)
+              .join("");
+
+            if (selectedLang !== "none") {
+              let bestMatch = filtered.find(v => normalizeLang(v.lang) === normalizeLang(selectedLang));
+              if (!bestMatch) bestMatch = filtered.find(v => normalizeLang(v.lang).startsWith(selectedLang.split("-")[0].toLowerCase()));
+              selectedVoice = bestMatch || filtered[0] || null;
+              if (selectedVoice) voiceSelect().value = selectedVoice.name;
+            } else {
+              selectedVoice = null;
+              voiceSelect().value = "";
+            }
+            resolve();
+          } else {
+            setTimeout(tryLoad, 150);
+          }
+        };
+        tryLoad();
       });
+    }
+
+    speechSynthesis.onvoiceschanged = () => loadVoices();
+
+    // audio preloads
+    const soundCache = {};
+    function preloadSound(key, src, volume = 0.8) {
+      try {
+        const audio = new Audio(src); audio.preload = "auto"; audio.volume = volume; soundCache[key] = audio;
+      } catch (e) {}
+    }
+    function playSound(key) {
+      try {
+        if (soundCache[key]) { const s = soundCache[key].cloneNode(); s.volume = soundCache[key].volume; s.play().catch(()=>{}); }
+      } catch (e) {}
+    }
+    preloadSound("move", "move.mp3", 0.8);
+    preloadSound("win", "win.mp3", 1.0);
+    preloadSound("draw", "draw.mp3", 1.0);
+
+    function playMoveFeedback() {
+      playSound("move");
+      navigator.vibrate?.([100]);
+    }
+
+    // unlock audio/voices on first interaction
+    window.addEventListener("click", () => {
+      loadVoices().catch(()=>{});
+      const unlock = new Audio(); unlock.play().catch(()=>{});
+    }, { once: true });
+
+ // narration
+    function speakNarration(move) {
+      if (!move || selectedLang === "none" || !selectedVoice) return;
+      const from = move.from?.toUpperCase();
+      const to = move.to?.toUpperCase();
+      const colorEn = move.color === "w" ? "White" : "Black";
+      const pieceMapEn = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen", k: "king" };
+
+      const isCapture = typeof move.flags === "string"
+        ? move.flags.includes("c")
+        : Array.isArray(move.flags) && move.flags.includes("c");
+
+      let sentence = "";
+      if (normalizeLang(selectedLang) === "hi-in") {
+        const pieceMapHi = { p: "प्यादा", n: "घोड़ा", b: "ऊँट", r: "हाथी", q: "वज़ीर", k: "राजा" };
+        const colorHi = move.color === "w" ? "सफ़ेद" : "काला";
+        sentence = isCapture ? `${colorHi} ${pieceMapHi[move.piece]} ने ${to} पर मोहरा मारा` : `${colorHi} ${pieceMapHi[move.piece]} ${from} से ${to} चला`;
+        if (game.in_checkmate?.() && game.in_checkmate()) sentence += `. मात! ${colorHi} जीत गया।`;
+        else if (game.in_check?.() && game.in_check()) sentence += `. ${colorHi} राजा शह में है।`;
+      } else {
+        const piece = pieceMapEn[move.piece] || "piece";
+        sentence = isCapture ? `${colorEn} ${piece} captured on ${to}` : `${colorEn} ${piece} moved from ${from} to ${to}`;
+        if (game.in_checkmate && game.in_checkmate()) sentence += `. Checkmate! ${colorEn} wins!`;
+        else if (game.in_check && game.in_check()) sentence += `. ${colorEn} king is in check.`;
+      }
+
+      const lowTime = currentTimerColor === "w" ? whiteTimeLeft : blackTimeLeft;
+      if (lowTime <= 10) sentence += normalizeLang(selectedLang) === "hi-in" ? `. समय ख़त्म होने वाला है।` : `. is running low on time.`;
+
+      try {
+        const utter = new SpeechSynthesisUtterance(sentence);
+        utter.voice = selectedVoice;
+        utter.lang = selectedVoice.lang || selectedLang;
+        utter.pitch = 1; utter.rate = 1;
+        speechSynthesis.cancel(); speechSynthesis.speak(utter);
+      } catch (e) { console.warn("Speech failed:", e); }
+    }
+
+    /* ===== Promotion modal helper (shows modal) ===== */
+    function showPromotionModal(color) {
+      const pm = promotionModal();
+      pm.classList.remove("hidden");
+      pm.querySelectorAll("button").forEach(btn => {
+        const type = btn.dataset.piece;
+        // show correct color art if available
+        const img = btn.querySelector("img");
+        if (img) img.src = `./pieces/${color}${type}.png`;
+      });
+    }
+
+    /* Single promotion click handler (consolidated) */
+    promotionModal().addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn || !pendingPromotion) return;
+      const selectedPiece = btn.dataset.piece;
+      pendingPromotion.promotion = selectedPiece;
+      const from = pendingPromotion.from, to = pendingPromotion.to;
+      const movingPiece = game.get(from);
+      const targetPiece = game.get(to);
+
+      const played = game.move(pendingPromotion);
+      if (played) {
+        if (targetPiece && targetPiece.color !== movingPiece.color && targetPiece.type !== "k") {
+          const capturerColor = targetPiece.color === "w" ? "b" : "w";
+          capturedPieces[capturerColor].push(targetPiece);
+          updateCapturedUI();
+        }
+        lastMove = { from, to };
+        selectedSquare = null;
+        legalMoves = [];
+        playMoveFeedback();
+        speakNarration(played);
+        renderBoard(true);
+        updateStatus();
+        currentTimerColor = game.turn();
+      }
+      pendingPromotion = null;
+      promotionModal().classList.add("hidden");
     });
+
+    function formatTime(secs) {
+      const m = Math.floor(secs/60).toString().padStart(2,'0');
+      const s = (secs%60).toString().padStart(2,'0');
+      return `${m}:${s}`;
+    }
+
+    function updateStatus() {
+      // king capture win detection
+      const boardData = game.board();
+      let whiteKing = false, blackKing = false;
+      for (const row of boardData) for (const cell of row) if (cell?.type === 'k') cell.color === 'w' ? whiteKing = true : blackKing = true;
+
+      if (!whiteKing || !blackKing) {
+        stopTimer();
+        const winner = whiteKing ? "White" : "Black";
+        winnerText().innerHTML = `<span>${winner} wins by king capture!</span>`;
+        winnerModal().className = "show shake glow-" + winner.toLowerCase();
+        playSound("win");
+        navigator.vibrate?.([200,100,200]);
+        return;
+      }
+
+      if (game.in_checkmate && game.in_checkmate()) {
+        stopTimer();
+        const loser = game.turn() === "w" ? "White" : "Black";
+        const winner = loser === "White" ? "Black" : "White";
+        winnerText().innerHTML = `<span>${winner} wins by checkmate!</span>`;
+        winnerModal().className = "show shake glow-" + winner.toLowerCase();
+        playSound("win");
+        navigator.vibrate?.([200,100,200]);
+        return;
+      }
+
+      if (game.in_draw && game.in_draw()) {
+        stopTimer();
+        winnerText().innerHTML = `<span>It's a draw!</span>`;
+        winnerModal().className = "show glow-white";
+        playSound("draw");
+        navigator.vibrate?.([300]);
+        return;
+      }
+
+      statusEl().textContent = `${game.turn() === "w" ? "White" : "Black"} to move`;
+    }
+
+    function updateTimerUI() {
+      const whiteBox = document.querySelector(".timer.white");
+      const blackBox = document.querySelector(".timer.black");
+      whiteBox.classList.toggle("active", currentTimerColor === "w");
+      blackBox.classList.toggle("active", currentTimerColor === "b");
+      whiteBox.classList.toggle("low-time", whiteTimeLeft <= 10);
+      blackBox.classList.toggle("low-time", blackTimeLeft <= 10);
+      whiteTimerEl().textContent = formatTime(whiteTimeLeft);
+      blackTimerEl().textContent = formatTime(blackTimeLeft);
+      const total = selectedDuration || 600;
+      const whitePercent = Math.max(0, (whiteTimeLeft/total)*100);
+      const blackPercent = Math.max(0, (blackTimeLeft/total)*100);
+      whiteBox.style.setProperty("--progress", `${whitePercent}%`);
+      blackBox.style.setProperty("--progress", `${blackPercent}%`);
+    }
+
+    function coordsToSquare(i,j){ return "abcdefgh"[j] + (8 - i); }
+
+    function findKing(color) {
+      for (let i=0;i<8;i++) for (let j=0;j<8;j++) {
+        const sq = coordsToSquare(i,j);
+        const piece = game.get(sq);
+        if (piece?.type === 'k' && piece.color === color) return sq;
+      }
+      return null;
+    }
+
+    /* Render board using DOM squares stored in boardSquares[][].
+       Important: In illegal-ultra mode we intentionally do NOT show
+       legalMoves (no dots) and we DO NOT highlight lastMove squares.
+    */
+    function renderBoard(animate = false) {
+      for (let i = 0; i < 8; i++) {
+        for (let j = 0; j < 8; j++) {
+          const square = boardSquares[i][j];
+          const squareId = coordsToSquare(i,j);
+          const piece = game.get(squareId);
+          square.innerHTML = piece ? `<img src="./pieces/${piece.color}${piece.type}.png" class="piece${animate && lastMove?.to === squareId ? ' animate-move' : ''}" />` : "";
+          square.classList.remove("selected", "last-move", "check", "legal");
+          // last-move highlight only when NOT in ultra mode
+          if (gameMode !== 'illegal-ultra' && lastMove && (squareId === lastMove.from || squareId === lastMove.to)) {
+            square.classList.add("last-move");
+          }
+          if (selectedSquare === squareId) square.classList.add("selected");
+          if (gameMode !== 'illegal-ultra' && legalMoves.includes(squareId)) square.classList.add("legal");
+          if (game.in_check && game.in_check()) {
+            const king = findKing(game.turn());
+            if (squareId === king) square.classList.add("check");
+          }
+        }
+      }
+      updateCapturedUI();
+      updateTimerUI();
+    }
+
+    function handleSquareClick(i,j) {
+      if (game.game_over && game.game_over()) return;
+
+      const square = coordsToSquare(i,j);
+      const piece = game.get(square);
+
+      if (selectedSquare) {
+        const from = selectedSquare;
+        const to = square;
+        const movingPiece = game.get(from);
+
+        if (!movingPiece || movingPiece.color !== game.turn()) {
+          selectedSquare = null; legalMoves = []; renderBoard(); return;
+        }
+
+        const isPromotion = movingPiece.type === "p" &&
+          ((movingPiece.color === "w" && to.endsWith("8")) || (movingPiece.color === "b" && to.endsWith("1")));
+
+        if (isPromotion) {
+          const legalPromotionMoves = game.moves({ square: from, verbose: true }).filter(m => m.to === to && m.promotion);
+          if (legalPromotionMoves.length > 0) {
+            pendingPromotion = { from, to };
+            showPromotionModal(movingPiece.color);
+            return;
+          }
+        }
+
+        const played = game.move({ from, to });
+        if (played) {
+          const captured = piece && piece.color !== movingPiece.color ? piece : null;
+          if (captured && captured.type !== "k") {
+            const capturerColor = captured.color === "w" ? "b" : "w";
+            capturedPieces[capturerColor].push(captured);
+          }
+
+          // set lastMove but DO NOT highlight in ultra mode (renderBoard checks gameMode)
+          lastMove = { from, to };
+          selectedSquare = null;
+          legalMoves = [];
+          playMoveFeedback();
+          speakNarration(played);
+          renderBoard(true);
+          updateStatus();
+          currentTimerColor = game.turn();
+          return;
+        } else {
+          // failed move -> change selection or clear
+          const fallback = selectedSquare !== square;
+          selectedSquare = fallback ? square : null;
+          legalMoves = fallback && gameMode !== 'illegal-ultra' ? game.moves({ square, verbose: true }).map(m => m.to) : [];
+          renderBoard();
+          return;
+        }
+      } else if (piece && piece.color === game.turn()) {
+        // select piece
+        selectedSquare = square;
+        legalMoves = (gameMode !== 'illegal-ultra') ? game.moves({ square, verbose: true }).map(m => m.to) : [];
+        renderBoard();
+        return;
+      }
+    }
+
+    function updateCapturedUI() {
+      const we = whiteCapturedEl(); const be = blackCapturedEl();
+      if (!we || !be) return;
+      we.innerHTML = ""; be.innerHTML = "";
+      const pieceOrder = ["q","r","b","n","p"];
+      function renderCaptured(color, container) {
+        const grouped = {};
+        capturedPieces[color].forEach(p => grouped[p.type] = (grouped[p.type]||0) + 1);
+        pieceOrder.forEach(type => {
+          if (grouped[type]) {
+            const wrapper = document.createElement("div");
+            wrapper.className = "captured-piece";
+            wrapper.title = `${grouped[type]} ${type}`;
+            const img = document.createElement("img");
+            img.src = `./pieces/${color}${type}.png`;
+            wrapper.appendChild(img);
+            if (grouped[type] > 1) {
+              const count = document.createElement("span");
+              count.className = "count";
+              count.textContent = `×${grouped[type]}`;
+              wrapper.appendChild(count);
+            }
+            container.appendChild(wrapper);
+          }
+        });
+      }
+      renderCaptured("w", be); // black captured white shown on black side
+      renderCaptured("b", we);
+    }
+
+    function initBoard() {
+      const board = boardEl();
+      board.innerHTML = "";
+      boardSquares = [];
+      for (let i=0;i<8;i++){
+        const row = [];
+        for (let j=0;j<8;j++){
+          const sq = document.createElement("div");
+          sq.className = "square " + ((i+j)%2===0 ? "light":"dark");
+          sq.dataset.row = i; sq.dataset.col = j;
+          sq.addEventListener("click", () => handleSquareClick(i,j));
+          // file / rank labels
+          if (i === 7) {
+            const fileLabel = document.createElement("div"); fileLabel.className = "file-label"; fileLabel.textContent = "abcdefgh"[j]; sq.appendChild(fileLabel);
+          }
+          if (j === 0) {
+            const rankLabel = document.createElement("div"); rankLabel.className = "rank-label"; rankLabel.textContent = 8 - i; sq.appendChild(rankLabel);
+          }
+          board.appendChild(sq); row.push(sq);
+        }
+        boardSquares.push(row);
+      }
+      renderBoard();
+      updateStatus();
+      updateTimerUI();
+    }
+
+    function resetTimer() {
+      stopTimer();
+      updateTimerUI();
+      currentTimerColor = game.turn();
+      timerInterval = setInterval(() => {
+        if (currentTimerColor === "w") {
+          whiteTimeLeft--;
+          if (whiteTimeLeft <= 0) return decideWinnerByPoints();
+        } else {
+          blackTimeLeft--;
+          if (blackTimeLeft <= 0) return decideWinnerByPoints();
+        }
+        updateTimerUI();
+      }, 1000);
+    }
+    function stopTimer() { clearInterval(timerInterval); }
+
+    function decideWinnerByPoints() {
+      stopTimer();
+      const values = { p:1, n:3, b:3, r:5, q:9 };
+      const score = { w:0, b:0 };
+      for (let i=0;i<8;i++) for (let j=0;j<8;j++){
+        const piece = game.get(coordsToSquare(i,j));
+        if (piece && piece.type !== 'k') score[piece.color] += values[piece.type] || 0;
+      }
+      let result = "Draw by equal points!";
+      if (score.w > score.b) result = "White wins on points!";
+      else if (score.b > score.w) result = "Black wins on points!";
+      winnerText().innerHTML = `<span>${result}</span>`;
+      winnerModal().className = "show glow-white";
+      playSound("draw");
+      navigator.vibrate?.([100,100,100]);
+    }
+
+    function newGame() {
+      const mode = modeSelect()?.value || "pvp";
+      gameMode = mode;
+      game = mode === "illegal" || mode === "illegal-ultra" ? new IllegalChess() : new Chess();
+      selectedSquare = null; lastMove = null; legalMoves = [];
+      winnerModal().className = "";
+
+      const mins = parseInt(timerSelect()?.value || "10");
+      whiteTimeLeft = blackTimeLeft = mins * 60;
+      selectedDuration = mins * 60;
+      capturedPieces.w = []; capturedPieces.b = []; updateCapturedUI();
+
+      initBoard();
+      resetTimer();
+      updateStatus();
+      // show captured box when started
+      capturedBox()?.classList.add("show");
+    }
+
+    // UI wiring
+    (function wireUI(){
+      // start button
+      startBtn().onclick = () => {
+        newGame();
+        startMenu().style.display = "none";
+        boardWrapper().style.display = "flex";
+      };
+
+       // quit
+      document.getElementById("quitGameBtn").onclick = () => {
+        if (boardWrapper().style.display === "flex") {
+          if (confirm("Do you want to quit the current game and return to the main menu?")) {
+            resetToStartMenu();
+            menuModal().classList.remove("show");
+          }
+        }
+      };
+
+      menuBtn().onclick = (e) => { e.stopPropagation(); menuModal().classList.toggle("show"); };
+      document.addEventListener("click", (e)=> { if (!menuModal().contains(e.target) && e.target !== menuBtn()) menuModal().classList.remove("show"); });
+
+      themeToggleMenu()?.addEventListener("change", () => document.body.classList.toggle("dark", themeToggleMenu().checked) );
+
+      langSelect().addEventListener("change", async () => {
+        selectedLang = langSelect().value;
+        await loadVoices();
+      });
+
+      voiceSelect().addEventListener("change", () => {
+        const voiceName = voiceSelect().value; const allVoices = speechSynthesis.getVoices();
+        selectedVoice = allVoices.find(v => v.name === voiceName) || null;
+      });
+
+      // toggle DOM icon draw on DOM load
+      document.addEventListener("DOMContentLoaded", () => { try { lucide.createIcons(); } catch(e){} });
+    })();
+
+    function resetToStartMenu() {
+      boardWrapper().style.display = "none";
+      winnerModal().classList.remove("show");
+      if (capturedBox()) capturedBox().classList.remove("show");
+      const whiteCaptured = document.getElementById("whiteCaptured"), blackCaptured = document.getElementById("blackCaptured");
+      if (whiteCaptured) whiteCaptured.innerHTML = "";
+      if (blackCaptured) blackCaptured.innerHTML = "";
+      startMenu().removeAttribute("style");
+    }
+
+    // quick init: enable voice loading on first touch to avoid mobile restrictions
+    document.body.addEventListener("click", () => {
+      loadVoices().catch(()=>{});
+      const dummy = new Audio(); dummy.play().catch(()=>{});
+    }, { once: true });
+
+    // make lucide icons appear ASAP
+    try { lucide.createIcons(); } catch(e) {}
+
   </script>
 </body>
 </html>
