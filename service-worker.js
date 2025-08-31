@@ -26,8 +26,8 @@ const PRECACHE_ASSETS = [
   "./vendor/chess.min.js",
 
   // Screenshots & icons
-  "./icons/icon-192x192.png",
-  "./icons/icon-512x512.png",
+  "./icon-192x192.png",
+  "./icon-512x512.png",
 ];
 
 // Install
@@ -84,8 +84,8 @@ self.addEventListener('push', event => {
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: './icons/icon-192x192.png',
-      badge: './icons/icon-192x192.png'
+      icon: './icon-192x192.png',
+      badge: './icon-192x192.png'
     })
   );
 });
