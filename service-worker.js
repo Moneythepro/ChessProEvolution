@@ -26,11 +26,8 @@ const PRECACHE_ASSETS = [
   "./vendor/chess.min.js",
 
   // Screenshots & icons
-  "./screenshots/screen1.png",
-  "./screenshots/screen2.png",
   "./icons/icon-192x192.png",
   "./icons/icon-512x512.png",
-  "./icons/icon-512x512-maskable.png"
 ];
 
 // Install
