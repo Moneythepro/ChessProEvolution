@@ -1,7 +1,7 @@
 /* service-worker.js */
 const CACHE_VERSION = 'v5';
 const CACHE_NAME = `chess-pro-${CACHE_VERSION}`;
-const OFFLINE_URL = './offline.html';
+const OFFLINE_URL = './index.html';
 
 const PRECACHE_ASSETS = [
   "./",
