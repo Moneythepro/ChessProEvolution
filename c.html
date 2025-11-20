@@ -1,0 +1,223 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Boombae Community Demo</title>
+  <style>
+    /* Minimal mobile-first styling */
+    :root{--accent:#ff6b6b;--muted:#6b6b6b;--bg:#0f1724;--card:#0b1220;color-scheme: dark}
+    *{box-sizing:border-box;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#071022 0%, #071a2a 100%);color:#e6eef8}
+    .app{max-width:980px;margin:20px auto;padding:16px}
+    header{display:flex;gap:12px;align-items:center}
+    h1{font-size:20px;margin:0}
+    .grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
+    @media(min-width:880px){.grid{grid-template-columns:repeat(2,1fr)}}.card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.03);padding:12px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6)}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+textarea, input, select, button{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.05);background:transparent;color:inherit}
+button{cursor:pointer;background:var(--accent);color:#08101a;border:none;font-weight:600}
+small{color:var(--muted)}
+
+.row{display:flex;gap:8px}
+.row .half{flex:1}
+.result{white-space:pre-wrap;margin-top:8px;background:linear-gradient(90deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));padding:10px;border-radius:8px}
+
+/* leaderboard */
+.leaderboard-list{list-style:none;padding:0;margin:0}
+.leaderboard-list li{display:flex;justify-content:space-between;padding:8px 6px;border-bottom:1px dashed rgba(255,255,255,0.02)}
+
+/* meme area */
+.meme-preview{width:100%;height:240px;background:#08121a;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.meme-preview img{max-width:100%;max-height:100%;object-fit:contain}
+.meme-text{position:absolute;left:12px;right:12px;text-align:center;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;text-shadow:0 4px 12px rgba(0,0,0,0.7)}
+.meme-top{top:12px}
+.meme-bottom{bottom:12px}
+
+footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Boombae Community Demo</h1>
+      <small>Slots: Trivia ● Leaderboard ● Rewards ● Memes ● Daily Fun Feed ● Mini Games</small>
+    </header><div class="grid">
+  <!-- Trivia Card -->
+  <section class="card">
+    <h3>Trivia (Open Trivia DB)</h3>
+    <div>
+      <label for="triviaCategory">Category</label>
+      <select id="triviaCategory"></select>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <div class="half"><label for="triviaAmount">Questions</label><input id="triviaAmount" type="number" value="1" min="1" max="10"></div>
+      <div class="half"><label for="triviaDifficulty">Difficulty</label><select id="triviaDifficulty"><option value="any">Any</option><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></div>
+    </div>
+    <div style="margin-top:8px" class="row"><button id="getTrivia">Get Trivia</button><button id="answerButton">Submit Answer</button></div>
+    <div id="triviaArea" class="result">No question yet.</div>
+  </section>
+
+  <!-- Leaderboard & Rewards Card -->
+  <section class="card">
+    <h3>Leaderboard & Rewards</h3>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input id="playerName" placeholder="Your name (for leaderboard)">
+      <button id="addPlayer">Add / Select</button>
+    </div>
+    <div style="margin-top:8px;display:flex;gap:8px">
+      <button id="awardPoint">+1 Point</button>
+      <button id="spendPoint">Spend 5 Points (Reward)</button>
+    </div>
+    <small>Selected player: <span id="selectedPlayer">—</span></small>
+    <hr style="margin:8px 0;border:none;border-top:1px solid rgba(255,255,255,0.03)">
+    <h4 style="margin:0 0 8px 0">Leaderboard</h4>
+    <ul id="leaderboard" class="leaderboard-list"></ul>
+    <div style="margin-top:8px"><button id="clearLB">Clear Leaderboard</button></div>
+  </section>
+
+  <!-- Meme Generator -->
+  <section class="card">
+    <h3>Meme Maker (Templates)</h3>
+    <div style="display:flex;gap:8px">
+      <select id="memeTemplate"></select>
+      <input id="memeTop" placeholder="Top text">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <input id="memeBottom" placeholder="Bottom text">
+      <button id="renderMeme">Render</button>
+    </div>
+    <div class="meme-preview" id="memePreview"><div style="color:var(--muted)">No template loaded</div></div>
+    <small>Note: this renders overlay locally. Use template list from Imgflip.</small>
+  </section>
+
+  <!-- Daily Fun Feed -->
+  <section class="card">
+    <h3>Daily Fun Feed</h3>
+    <div style="display:flex;gap:8px">
+      <button id="getJoke">Get Joke</button>
+      <button id="getCat">Random Cat</button>
+      <button id="getFact">Random Fact</button>
+    </div>
+    <div id="funFeed" class="result" style="margin-top:8px">Nothing yet.</div>
+  </section>
+
+  <!-- Mini Games Card -->
+  <section class="card">
+    <h3>Mini Games</h3>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button id="drawCard">Draw a Card</button>
+      <button id="coinFlip">Flip Coin</button>
+    </div>
+    <div id="gameArea" class="result">No action yet.</div>
+  </section>
+
+</div>
+
+<footer>Demo stores data in browser localStorage (leaderboard & rewards). Replace with real backend later.</footer>
+
+  </div>  <script>
+    /* ---------- Utilities ---------- */
+    function qs(id){return document.getElementById(id)}
+    function sanitizeHTML(s){if(!s) return ''; return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')}
+
+    /* ---------- Leaderboard & Rewards (localStorage) ---------- */
+    const LB_KEY = 'bb_leaderboard_v1';
+    let leaderboard = JSON.parse(localStorage.getItem(LB_KEY) || '[]');
+    let selected = null;
+
+    function saveLB(){localStorage.setItem(LB_KEY, JSON.stringify(leaderboard)); renderLB();}
+    function renderLB(){
+      const ul = qs('leaderboard'); ul.innerHTML='';
+      leaderboard.sort((a,b)=>b.points-a.points);
+      leaderboard.forEach(p=>{const li=document.createElement('li');li.innerHTML=`<span>${sanitizeHTML(p.name)}</span><strong>${p.points}</strong>`;li.addEventListener('click',()=>{selected=p.name;qs('selectedPlayer').textContent=selected});ul.appendChild(li)});
+    }
+
+    function addOrSelect(name){name=name.trim(); if(!name) return alert('Enter a name');
+      const idx = leaderboard.findIndex(p=>p.name.toLowerCase()===name.toLowerCase());
+      if(idx===-1){leaderboard.push({name, points:0});} else {selected=leaderboard[idx].name}
+      selected = name; qs('selectedPlayer').textContent=selected; saveLB();}
+
+    function awardPoint(){if(!selected) return alert('Select a player first');
+      const p = leaderboard.find(x=>x.name===selected); p.points+=1; saveLB();}
+    function spendReward(){if(!selected) return alert('Select a player first');
+      const p = leaderboard.find(x=>x.name===selected); if(p.points<5) return alert('Not enough points (need 5)'); p.points-=5; saveLB(); alert(selected+" redeemed a reward!")}
+
+    qs('addPlayer').onclick=()=>addOrSelect(qs('playerName').value);
+    qs('awardPoint').onclick=awardPoint; qs('spendPoint').onclick=spendReward; qs('clearLB').onclick=()=>{if(confirm('Clear leaderboard?')){leaderboard=[];saveLB();qs('selectedPlayer').textContent='—'}}
+    renderLB();
+
+    /* ---------- Trivia (Open Trivia DB) ---------- */
+    let currentQuestion = null; let currentAnswer = null; let currentCorrect = null;
+    async function loadCategories(){
+      try{
+        const r = await fetch('https://opentdb.com/api_category.php'); const j=await r.json();
+        const select = qs('triviaCategory'); select.innerHTML=''; select.appendChild(new Option('Any','any'));
+        j.trivia_categories.forEach(c=>select.appendChild(new Option(c.name,c.id)));
+      }catch(e){console.warn(e)}
+    }
+    async function getTrivia(){
+      const cat = qs('triviaCategory').value; const amt = Number(qs('triviaAmount').value)||1; const diff = qs('triviaDifficulty').value;
+      let url = `https://opentdb.com/api.php?amount=${amt}` + (cat!=='any'?`&category=${cat}`:'') + (diff!=='any'?`&difficulty=${diff}`:'');
+      qs('triviaArea').textContent='Loading question...';
+      try{const r=await fetch(url); const j=await r.json(); if(j.response_code!==0){qs('triviaArea').textContent='No questions available.'; return}
+        const q = j.results[0]; currentQuestion = q.question; currentCorrect = q.correct_answer; currentAnswer = null;
+        const choices = q.incorrect_answers.concat(q.correct_answer).sort(()=>Math.random()-0.5);
+        qs('triviaArea').innerHTML=`Q: ${q.question}<br><br>` + choices.map((c,i)=>`<label style="display:block;margin:6px 0"><input type="radio" name="tchoice" value="${sanitizeHTML(c)}"> ${c}</label>`).join('');
+      }catch(e){qs('triviaArea').textContent='Failed to load question.'}
+    }
+    qs('getTrivia').onclick=getTrivia;
+    qs('answerButton').onclick=()=>{
+      const chosen = document.querySelector('input[name="tchoice"]:checked');
+      if(!chosen) return alert('Select an answer');
+      const isCorrect = chosen.value===currentCorrect;
+      if(isCorrect){qs('triviaArea').innerHTML += '\n\n✅ Correct!'; if(selected) {const p=leaderboard.find(x=>x.name===selected); if(p){p.points+=3; saveLB();}} }
+      else {qs('triviaArea').innerHTML += `\n\n❌ Wrong. Correct: ${currentCorrect}`}
+    }
+    loadCategories();
+
+    /* ---------- Meme Templates (Imgflip list) ---------- */
+    async function loadMemeTemplates(){
+      try{
+        const r = await fetch('https://api.imgflip.com/get_memes'); const j=await r.json(); if(!j.success) return;
+        const sel = qs('memeTemplate'); sel.innerHTML=''; j.data.memes.slice(0,50).forEach(m=>sel.appendChild(new Option(m.name, JSON.stringify({url:m.url,w:m.width,h:m.height}))));
+      }catch(e){console.warn(e)}
+    }
+    function renderMeme(){
+      const template = JSON.parse(qs('memeTemplate').value||null);
+      const top = qs('memeTop').value; const bottom = qs('memeBottom').value;
+      const preview = qs('memePreview'); preview.innerHTML='';
+      if(!template){preview.innerHTML='<div style="color:var(--muted)">Pick a template</div>'; return}
+      const img = document.createElement('img'); img.src = template.url; preview.appendChild(img);
+      const tdiv = document.createElement('div'); tdiv.className='meme-text meme-top'; tdiv.style.fontSize='20px'; tdiv.textContent = top; preview.appendChild(tdiv);
+      const bdiv = document.createElement('div'); bdiv.className='meme-text meme-bottom'; bdiv.style.fontSize='20px'; bdiv.textContent = bottom; preview.appendChild(bdiv);
+    }
+    qs('renderMeme').onclick=renderMeme; loadMemeTemplates();
+
+    /* ---------- Daily Fun Feed (Joke, Cat, Fact) ---------- */
+    qs('getJoke').onclick=async ()=>{
+      qs('funFeed').textContent='Loading joke...';
+      try{const r=await fetch('https://v2.jokeapi.dev/joke/Any'); const j=await r.json(); if(j.type==='single') qs('funFeed').textContent=j.joke; else qs('funFeed').textContent=j.setup+'\n\n'+j.delivery;}catch(e){qs('funFeed').textContent='Failed to load joke.'}
+    }
+    qs('getCat').onclick=async ()=>{
+      qs('funFeed').textContent='Loading cat...';
+      try{const r=await fetch('https://api.thecatapi.com/v1/images/search'); const j=await r.json(); qs('funFeed').innerHTML = `<img src="${j[0].url}" style="max-width:100%;border-radius:8px">` }catch(e){qs('funFeed').textContent='Failed to load cat image.'}
+    }
+    qs('getFact').onclick=async ()=>{
+      qs('funFeed').textContent='Loading fact...';
+      try{const r=await fetch('https://uselessfacts.jsph.pl/random.json?language=en'); const j=await r.json(); qs('funFeed').textContent=j.text}catch(e){qs('funFeed').textContent='Failed to load fact.'}
+    }
+
+    /* ---------- Mini Games: Deck of Cards + Coin Flip ---------- */
+    let deckId = null;
+    async function ensureDeck(){ if(deckId) return; const r=await fetch('https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1'); const j=await r.json(); deckId=j.deck_id}
+    qs('drawCard').onclick=async ()=>{
+      qs('gameArea').textContent='Drawing...'; try{await ensureDeck(); const r=await fetch(`https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`); const j=await r.json(); if(j.success && j.cards && j.cards.length){ const c=j.cards[0]; qs('gameArea').innerHTML=`<img src="${c.image}" style="max-width:120px"> <div>${c.value} of ${c.suit}</div>`; if(selected){const p=leaderboard.find(x=>x.name===selected); if(p){p.points+=1; saveLB();}} } else qs('gameArea').textContent='No card drawn.' }catch(e){qs('gameArea').textContent='Error drawing card.'}}
+    qs('coinFlip').onclick=()=>{const r=Math.random()>0.5?'Heads':'Tails'; qs('gameArea').textContent='Coin: '+r; if(selected&&r==='Heads'){const p=leaderboard.find(x=>x.name===selected); if(p){p.points+=1; saveLB();}}}
+
+    /* ---------- Helpful hint: clear localStorage if needed ---------- */
+    // localStorage.removeItem(LB_KEY);
+  </script></body>
+</html>
