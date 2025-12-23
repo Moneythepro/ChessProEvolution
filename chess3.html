@@ -271,15 +271,15 @@
 
     <script>
         // --- 1. CONFIGURATION ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyALVuzOvet0v-RwmkfV2wcw4yfBXmX7hAI",
-            authDomain: "vale-148c5.firebaseapp.com",
-            databaseURL: "https://vale-148c5-default-rtdb.firebaseio.com", 
-            projectId: "vale-148c5",
-            storageBucket: "vale-148c5.firebasestorage.app",
-            messagingSenderId: "45465621562",
-            appId: "1:45465621562:web:d3291199a3368765e81103"
-        };
+        
+  const firebaseConfig = {
+    apiKey: "AIzaSyALVuzOvet0v-RwmkfV2wcw4yfBXmX7hAI",
+    authDomain: "vale-148c5.firebaseapp.com",
+    projectId: "vale-148c5",
+    storageBucket: "vale-148c5.firebasestorage.app",
+    messagingSenderId: "45465621562",
+    appId: "1:45465621562:web:d3291199a3368765e81103"
+  };
         
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
@@ -430,7 +430,7 @@
                         const pDiv = document.createElement('div');
                         pDiv.className = 'piece';
                         if(gameState.orientation === 'b') pDiv.classList.add('flipped');
-                        pDiv.style.backgroundImage = `url('main/pieces/${piece.color}${piece.type}.png')`;
+                        pDiv.style.backgroundImage = `url('pieces/${piece.color}${piece.type}.png')`;
                         div.appendChild(pDiv);
                     }
                     boardEl.appendChild(div);
