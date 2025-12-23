@@ -436,7 +436,7 @@
                             p.className = 'piece';
                             // Point to images folder
                             const imgName = `${piece.color}${piece.type}.png`; 
-                            p.style.backgroundImage = `url('main/pieces/${imgName}')`;
+                            p.style.backgroundImage = `url('pieces/${imgName}')`;
                             
                             // Rotate pieces back if board is flipped so they are upright
                             if(gameState.orientation === 'black') p.classList.add('flipped');
